@@ -81,6 +81,13 @@ Version 12.0 transitions `file_picker` to a **federated plugin architecture**.
      - `LinuxOptions` / `FilePickerLinuxOptions`
      - `WebOptions` / `FilePickerWebOptions`
 
+5. **`PlatformFile.size` Removed**:
+   - The `size` property is gone. Reading a file's length is now a method, because on some platforms it means touching the disk.
+   - **v11**: `int bytes = file.size;`
+   - **v12**: `int bytes = await file.length();`
+   - Since 12.2.0 there is also `int? lengthSync()`, which returns the length the native picker already reported without doing any I/O, or `null` when it did not report one. Use `file.lengthSync() ?? await file.length()` when you want a value either way.
+
+
 ## Documentation
 For platform-specific setup, see the README of the platform package you're targeting (e.g. [`file_picker_darwin`](https://pub.dev/packages/file_picker_darwin) for macOS entitlements, [`android_file_picker`](https://pub.dev/packages/android_file_picker) for Android notes). For the full API, see the [official API reference on pub.dev](https://pub.dev/documentation/file_picker/latest/file_picker/FilePicker-class.html).
 
