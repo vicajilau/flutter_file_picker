@@ -1,4 +1,4 @@
-![fluter_file_picker](https://user-images.githubusercontent.com/27860743/64064695-b88dab00-cbfc-11e9-814f-30921b66035f.png)
+![File Picker](https://raw.githubusercontent.com/vicajilau/flutter_file_picker/main/.github/assets/readme_banner.svg)
 <p align="center">
   <a href="https://pub.dartlang.org/packages/file_picker">
     <img alt="File Picker" src="https://img.shields.io/pub/v/file_picker.svg">
