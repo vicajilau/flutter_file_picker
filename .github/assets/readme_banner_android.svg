@@ -1,0 +1,72 @@
+<svg width="1200" height="320" viewBox="0 0 1200 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="File Picker for Android">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4338CA"/>
+      <stop offset="55%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="folderBack" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.18"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="320" rx="28" fill="url(#bg)"/>
+
+  <!-- Android (bugdroid) watermark, geometry adapted from the official
+       Creative Commons Android robot: https://commons.wikimedia.org/wiki/File:Android_robot.svg -->
+  <g transform="translate(1040,69) scale(0.8)" fill="#FFFFFF" opacity="0.14">
+    <ellipse cy="41" rx="91" ry="84"/>
+    <rect rx="22" height="182" width="182" y="20" x="-91"/>
+    <g>
+      <rect rx="6.5" transform="rotate(29)" height="86" width="13" y="-86" x="14"/>
+      <rect rx="24" height="133" width="48" y="41" x="-143"/>
+      <rect rx="24" height="133" width="48" y="138" x="-58"/>
+    </g>
+    <g transform="scale(-1,1)">
+      <rect rx="6.5" transform="rotate(29)" height="86" width="13" y="-86" x="14"/>
+      <rect rx="24" height="133" width="48" y="41" x="-143"/>
+      <rect rx="24" height="133" width="48" y="138" x="-58"/>
+    </g>
+    <circle cx="-42" r="7" fill="#2563EB"/>
+    <circle cx="42" r="7" fill="#2563EB"/>
+  </g>
+  <circle cx="150" cy="30" r="10" fill="#FFFFFF" opacity="0.35"/>
+  <circle cx="330" cy="55" r="6" fill="#FFFFFF" opacity="0.3"/>
+  <circle cx="95" cy="230" r="7" fill="#FFFFFF" opacity="0.3"/>
+
+  <!-- floating file cards -->
+  <g transform="translate(150,150) rotate(-14)">
+    <rect x="-46" y="-60" width="92" height="118" rx="14" fill="#FDBA74"/>
+    <rect x="-30" y="-38" width="60" height="8" rx="4" fill="#FFFFFF" opacity="0.85"/>
+    <rect x="-30" y="-20" width="60" height="8" rx="4" fill="#FFFFFF" opacity="0.65"/>
+    <rect x="-30" y="-2" width="38" height="8" rx="4" fill="#FFFFFF" opacity="0.65"/>
+  </g>
+
+  <g transform="translate(238,128) rotate(9)">
+    <rect x="-46" y="-62" width="92" height="122" rx="14" fill="#5EEAD4"/>
+    <circle cx="-14" cy="-30" r="12" fill="#FFFFFF" opacity="0.9"/>
+    <path d="M -32 8 L -8 -16 L 10 2 L 22 -10 L 34 2 L 34 8 Z" fill="#FFFFFF" opacity="0.85"/>
+  </g>
+
+  <g transform="translate(196,196) rotate(-3)">
+    <rect x="-50" y="-64" width="100" height="128" rx="16" fill="#FFFFFF"/>
+    <rect x="-32" y="-40" width="64" height="9" rx="4.5" fill="#93C5FD"/>
+    <rect x="-32" y="-20" width="64" height="9" rx="4.5" fill="#BFDBFE"/>
+    <rect x="-32" y="0" width="40" height="9" rx="4.5" fill="#BFDBFE"/>
+    <path d="M -14 32 L -2 44 L 22 20" fill="none" stroke="#34D399" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- open folder in front -->
+  <path d="M 60 250 L 340 250 L 322 168 Q 318 152 300 152 L 210 152 L 196 130 Q 190 120 176 120 L 96 120 Q 82 120 78 134 Z" fill="url(#folderBack)" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"/>
+
+  <!-- title -->
+  <text x="440" y="150" font-family="Helvetica, Arial, sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">File Picker</text>
+  <text x="442" y="196" font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="400" fill="#E0E7FF">Android implementation</text>
+
+  <!-- platform pill -->
+  <g font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="600" fill="#1E293B">
+    <rect x="442" y="228" width="96" height="38" rx="19" fill="#FFFFFF" opacity="0.92"/>
+    <text x="490" y="253" text-anchor="middle">Android</text>
+  </g>
+</svg>

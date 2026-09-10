@@ -1,3 +1,5 @@
+![File Picker for Windows](https://raw.githubusercontent.com/vicajilau/flutter_file_picker/main/.github/assets/readme_banner_windows.svg)
+
 # windows_file_picker
 
 The Windows implementation of `file_picker`.

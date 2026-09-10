@@ -1,3 +1,5 @@
+![File Picker for Android](https://raw.githubusercontent.com/vicajilau/flutter_file_picker/main/.github/assets/readme_banner_android.svg)
+
 # android_file_picker
 
 The Android implementation of `file_picker`.
