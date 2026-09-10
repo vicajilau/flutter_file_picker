@@ -1,3 +1,7 @@
+## 4.0.0
+
+- **BREAKING CHANGE**: `PlatformFile.length()` now returns `Future<int?>` instead of `Future<int>`, matching `lengthSync()`. `null` means the length could not be determined (e.g. a failed disk read), distinct from a genuinely empty file, which still returns `0`. Previously both cases returned `0`, with no way to tell them apart. [#2197](https://github.com/vicajilau/flutter_file_picker/issues/2197)
+
 ## 3.3.0
 
 - Added `PlatformFile.lengthSync()`, a nullable `int` returning the file's length in bytes as provided by the underlying file picker result, or `null` when it did not report one. Named to pair with the existing `length()`, the same way `dart:io`'s `File` does.

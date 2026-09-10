@@ -66,7 +66,7 @@ base class WebPlatformFile extends PlatformFile {
 
   /// Asynchronously calculates and returns the size of the file in bytes.
   @override
-  Future<int> length() async {
+  Future<int?> length() async {
     final len = _bytesLength;
     if (len != null && len > 0) return len;
     final bytes = _bytes;
@@ -74,7 +74,7 @@ base class WebPlatformFile extends PlatformFile {
     try {
       return await xFile.length();
     } catch (_) {
-      return 0;
+      return null;
     }
   }
 

@@ -42,8 +42,10 @@ abstract base class PlatformFile {
   /// [length] instead, which falls back to reading the file to find out.
   int? lengthSync();
 
-  /// Get the length of the file in bytes.
-  Future<int> length();
+  /// Get the length of the file in bytes, or `null` if it could not be
+  /// determined (e.g. a failed disk read), distinct from a genuinely empty
+  /// file, which returns `0`.
+  Future<int?> length();
 
   /// Read the bytes of the file as a single chunk.
   ///

@@ -1,27 +1,10 @@
 import 'dart:async';
+import 'dart:typed_data';
 
-import 'package:android_file_picker/android_file_picker.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
-import 'package:flutter/foundation.dart';
 
 /// The primary entry point for picking files and directories across platforms.
 abstract final class FilePicker {
-  /// Internal helper function to ease the transition and resolve backward compatibility
-  /// between deprecated `androidSafOptions` and `androidOptions`.
-  static AndroidOptions _resolveAndroidOptions(
-    Object? androidSafOptions,
-    AndroidOptions androidOptions,
-  ) {
-    if (androidSafOptions != null) {
-      if (androidSafOptions is AndroidSAFOptions) {
-        return FilePickerAndroidOptions(safOptions: androidSafOptions);
-      } else if (androidSafOptions is AndroidOptions) {
-        return androidSafOptions;
-      }
-    }
-    return androidOptions;
-  }
-
   /// Retrieves the file(s) from the underlying platform.
   ///
   /// Opens a native file explorer and lets the user select one or multiple files.
@@ -45,31 +28,6 @@ abstract final class FilePicker {
     List<String>? allowedExtensions,
     Function(FilePickerStatus)? onFileLoading,
     int compressionQuality = 0,
-    @Deprecated(
-      'use pickFile for single-file selection; this parameter will be removed in a future release',
-    )
-    bool allowMultiple = true,
-    @Deprecated(
-      'Use PlatformFile.readAsBytes(); this parameter will be removed in a future release',
-    )
-    bool withData = kIsWeb,
-    @Deprecated(
-      'Use PlatformFile.readAsByteStream(); this parameter will be removed in a future release',
-    )
-    bool withReadStream = false,
-    @Deprecated(
-      'Use WindowsOptions.lockParentWindow or LinuxOptions.lockParentWindow instead; this parameter will be removed in a future release.',
-    )
-    bool lockParentWindow = false,
-    @Deprecated(
-      'Use PlatformFile.readAsByteStream(); this parameter will be removed in a future release',
-    )
-    bool readSequential = false,
-    @Deprecated(
-      'Use WebOptions.cancelUploadOnWindowBlur instead; this parameter will be removed in a future release.',
-    )
-    bool cancelUploadOnWindowBlur = true,
-    @Deprecated('Use androidOptions instead.') Object? androidSafOptions,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
@@ -84,7 +42,7 @@ abstract final class FilePicker {
       allowedExtensions: allowedExtensions,
       onFileLoading: onFileLoading,
       compressionQuality: compressionQuality,
-      androidOptions: _resolveAndroidOptions(androidSafOptions, androidOptions),
+      androidOptions: androidOptions,
       darwinOptions: darwinOptions,
       windowsOptions: windowsOptions,
       linuxOptions: linuxOptions,
@@ -113,15 +71,6 @@ abstract final class FilePicker {
     List<String>? allowedExtensions,
     Function(FilePickerStatus)? onFileLoading,
     int compressionQuality = 0,
-    @Deprecated(
-      'Use WindowsOptions.lockParentWindow or LinuxOptions.lockParentWindow instead; this parameter will be removed in a future release.',
-    )
-    bool lockParentWindow = false,
-    @Deprecated(
-      'Use WebOptions.cancelUploadOnWindowBlur instead; this parameter will be removed in a future release.',
-    )
-    bool cancelUploadOnWindowBlur = true,
-    @Deprecated('Use androidOptions instead.') Object? androidSafOptions,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
@@ -136,7 +85,7 @@ abstract final class FilePicker {
       allowedExtensions: allowedExtensions,
       onFileLoading: onFileLoading,
       compressionQuality: compressionQuality,
-      androidOptions: _resolveAndroidOptions(androidSafOptions, androidOptions),
+      androidOptions: androidOptions,
       darwinOptions: darwinOptions,
       windowsOptions: windowsOptions,
       linuxOptions: linuxOptions,
@@ -186,12 +135,7 @@ abstract final class FilePicker {
   /// Returns a [String] containing the selected directory path, or `null` if canceled.
   static Future<String?> getDirectoryPath({
     String? dialogTitle,
-    @Deprecated(
-      'Use WindowsOptions.lockParentWindow or LinuxOptions.lockParentWindow instead; this parameter will be removed in a future release.',
-    )
-    bool lockParentWindow = false,
     String? initialDirectory,
-    @Deprecated('Use androidOptions instead.') Object? androidSafOptions,
     AndroidOptions androidOptions = const AndroidOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
@@ -200,7 +144,7 @@ abstract final class FilePicker {
     return FilePickerPlatform.instance.getDirectoryPath(
       dialogTitle: dialogTitle,
       initialDirectory: initialDirectory,
-      androidOptions: _resolveAndroidOptions(androidSafOptions, androidOptions),
+      androidOptions: androidOptions,
       windowsOptions: windowsOptions,
       linuxOptions: linuxOptions,
       webOptions: webOptions,
@@ -231,10 +175,6 @@ abstract final class FilePicker {
     FileType type = FileType.any,
     List<String>? allowedExtensions,
     Function(FilePickerStatus)? onFileSaving,
-    @Deprecated(
-      'Use WindowsOptions.lockParentWindow or LinuxOptions.lockParentWindow instead; this parameter will be removed in a future release.',
-    )
-    bool lockParentWindow = false,
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
