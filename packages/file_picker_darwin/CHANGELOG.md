@@ -1,3 +1,7 @@
+## 1.2.0
+
+- Added `DarwinOptions.acceptLabel`, letting callers set the confirm button text (`NSOpenPanel.prompt`) on macOS for `pickFile()`/`pickFiles()`. Has no effect on iOS, `UIDocumentPickerViewController` has no equivalent there. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+
 ## 1.1.0
 
 - Implemented `PlatformFile.lengthSync()`, returning the length iOS/macOS already reports for a picked file synchronously, without doing any I/O.

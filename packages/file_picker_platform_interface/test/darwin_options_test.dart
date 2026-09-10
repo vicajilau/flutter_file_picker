@@ -26,4 +26,16 @@ void main() {
       },
     );
   });
+
+  group('DarwinOptions.acceptLabel', () {
+    test('defaults to null', () {
+      const options = DarwinOptions();
+      expect(options.acceptLabel, isNull);
+    });
+
+    test('carries the provided value', () {
+      const options = DarwinOptions(acceptLabel: 'Choose');
+      expect(options.acceptLabel, equals('Choose'));
+    });
+  });
 }

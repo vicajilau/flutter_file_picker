@@ -69,6 +69,30 @@ void main() {
       },
     );
 
+    test('pickFile and pickFiles send acceptLabel', () async {
+      final picker = FilePickerDarwin();
+      final receivedLabels = <String?>[];
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(picker.methodChannel, (call) async {
+            receivedLabels.add(
+              (call.arguments as Map)['acceptLabel'] as String?,
+            );
+            return <Map<Object?, Object?>>[];
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null);
+      });
+
+      await picker.pickFile(
+        darwinOptions: const DarwinOptions(acceptLabel: 'Choose'),
+      );
+      await picker.pickFiles();
+
+      expect(receivedLabels, ['Choose', null]);
+    });
+
     test('rejects non-automatic representation with compression', () {
       final picker = FilePickerDarwin();
       const darwinOptions = DarwinOptions(

@@ -82,9 +82,8 @@ class FilePickerWindows extends FilePickerPlatform {
     int compressionQuality = 0,
     WindowsOptions windowsOptions = const FilePickerWindowsOptions(),
   }) async {
-    final (lockParentWindow, parentWindowHandle) = _resolveWindowsOptions(
-      windowsOptions,
-    );
+    final (lockParentWindow, parentWindowHandle, acceptLabel) =
+        _resolveWindowsOptions(windowsOptions);
 
     final port = ReceivePort();
     await Isolate.spawn(
@@ -98,6 +97,7 @@ class FilePickerWindows extends FilePickerPlatform {
         allowMultiple: allowMultiple,
         lockParentWindow: lockParentWindow,
         parentWindowHandle: parentWindowHandle,
+        acceptLabel: acceptLabel,
       ),
     );
 
@@ -134,15 +134,15 @@ class FilePickerWindows extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    final (lockParentWindow, parentWindowHandle) = _resolveWindowsOptions(
-      windowsOptions,
-    );
+    final (lockParentWindow, parentWindowHandle, acceptLabel) =
+        _resolveWindowsOptions(windowsOptions);
 
     return compute(_getDirectoryPathIsolate, {
       'dialogTitle': dialogTitle,
       'initialDirectory': initialDirectory,
       'lockParentWindow': lockParentWindow,
       'parentWindowHandle': parentWindowHandle,
+      'acceptLabel': acceptLabel,
     });
   }
 
@@ -152,6 +152,7 @@ class FilePickerWindows extends FilePickerPlatform {
     String? initialDirectory = args['initialDirectory'] as String?;
     bool lockParentWindow = args['lockParentWindow'] as bool? ?? false;
     int? parentWindowHandle = args['parentWindowHandle'] as int?;
+    String? acceptLabel = args['acceptLabel'] as String?;
 
     final hr = CoInitializeEx(
       COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE,
@@ -173,6 +174,9 @@ class FilePickerWindows extends FilePickerPlatform {
         fileDialog.setOptions(FILEOPENDIALOGOPTIONS(options));
 
         fileDialog.setTitle(arena.pcwstr(dialogTitle ?? 'Select Folder'));
+        if (acceptLabel != null && acceptLabel.isNotEmpty) {
+          fileDialog.setOkButtonLabel(arena.pcwstr(acceptLabel));
+        }
 
         if (initialDirectory != null && initialDirectory.isNotEmpty) {
           final item = arena.adopt(
@@ -229,9 +233,8 @@ class FilePickerWindows extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    final (lockParentWindow, parentWindowHandle) = _resolveWindowsOptions(
-      windowsOptions,
-    );
+    final (lockParentWindow, parentWindowHandle, acceptLabel) =
+        _resolveWindowsOptions(windowsOptions);
 
     final port = ReceivePort();
     await Isolate.spawn(
@@ -244,6 +247,7 @@ class FilePickerWindows extends FilePickerPlatform {
         lockParentWindow: lockParentWindow,
         confirmOverwrite: true,
         parentWindowHandle: parentWindowHandle,
+        acceptLabel: acceptLabel,
       ),
     );
 
@@ -282,6 +286,9 @@ class FilePickerWindows extends FilePickerPlatform {
         fileDialog.setOptions(FILEOPENDIALOGOPTIONS(options));
 
         fileDialog.setTitle(arena.pcwstr(args.dialogTitle ?? 'Select File'));
+        if (args.acceptLabel case final label? when label.isNotEmpty) {
+          fileDialog.setOkButtonLabel(arena.pcwstr(label));
+        }
         _setFileTypeFilters(
           arena,
           fileDialog,
@@ -348,6 +355,9 @@ class FilePickerWindows extends FilePickerPlatform {
         fileDialog.setOptions(FILEOPENDIALOGOPTIONS(options));
 
         fileDialog.setTitle(arena.pcwstr(args.dialogTitle ?? 'Save File'));
+        if (args.acceptLabel case final label? when label.isNotEmpty) {
+          fileDialog.setOkButtonLabel(arena.pcwstr(label));
+        }
         _setFileTypeFilters(
           arena,
           fileDialog,
@@ -426,13 +436,13 @@ class FilePickerWindows extends FilePickerPlatform {
     };
   }
 
-  /// Reads `lockParentWindow` from [windowsOptions] regardless of its
-  /// runtime type, since callers construct the base [WindowsOptions] (the
-  /// only publicly exported type) rather than the internal
-  /// [FilePickerWindowsOptions]. `parentWindowHandle` is Windows-specific and
-  /// is only available when [windowsOptions] happens to be a
-  /// [FilePickerWindowsOptions].
-  static (bool lockParentWindow, int? parentWindowHandle)
+  /// Reads `lockParentWindow` and `acceptLabel` from [windowsOptions]
+  /// regardless of its runtime type, since callers construct the base
+  /// [WindowsOptions] (the only publicly exported type) rather than the
+  /// internal [FilePickerWindowsOptions]. `parentWindowHandle` is
+  /// Windows-specific and is only available when [windowsOptions] happens to
+  /// be a [FilePickerWindowsOptions].
+  static (bool lockParentWindow, int? parentWindowHandle, String? acceptLabel)
   _resolveWindowsOptions(WindowsOptions windowsOptions) {
     return (
       windowsOptions.lockParentWindow,
@@ -440,6 +450,7 @@ class FilePickerWindows extends FilePickerPlatform {
         FilePickerWindowsOptions opts => opts.parentWindowHandle,
         _ => null,
       },
+      windowsOptions.acceptLabel,
     );
   }
 

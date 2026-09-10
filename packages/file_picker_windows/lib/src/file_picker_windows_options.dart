@@ -4,6 +4,7 @@ import 'package:file_picker_platform_interface/file_picker_platform_interface.da
 final class FilePickerWindowsOptions extends WindowsOptions {
   const FilePickerWindowsOptions({
     this.parentWindowHandle,
+    super.acceptLabel,
     super.lockParentWindow,
   });
 

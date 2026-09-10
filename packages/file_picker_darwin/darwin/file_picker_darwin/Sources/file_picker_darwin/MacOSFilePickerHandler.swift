@@ -106,6 +106,9 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
                 dialog.title = title
                 dialog.message = title
             }
+            if let acceptLabel = args["acceptLabel"] as? String, !acceptLabel.isEmpty {
+                dialog.prompt = acceptLabel
+            }
             dialog.showsHiddenFiles = false
             let allowMultiple = (args["allowMultipleSelection"] as? Bool) ?? (args["allowMultiple"] as? Bool) ?? false
             dialog.allowsMultipleSelection = allowMultiple

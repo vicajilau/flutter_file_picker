@@ -1,3 +1,7 @@
+## 3.4.0
+
+- Added `acceptLabel` to `WindowsOptions` and `DarwinOptions`, letting callers set the confirm button text of the file dialog. On Windows it applies to `pickFile()`, `pickFiles()`, `getDirectoryPath()`, and `saveFile()`; on macOS only to `pickFile()`/`pickFiles()` (`getDirectoryPath()`/`saveFile()` do not accept `DarwinOptions`). Has no effect on iOS, Android or Web. `LinuxOptions.acceptLabel` already existed. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+
 ## 3.3.0
 
 - Added `PlatformFile.lengthSync()`, a nullable `int` returning the file's length in bytes as provided by the underlying file picker result, or `null` when it did not report one. Named to pair with the existing `length()`, the same way `dart:io`'s `File` does.
