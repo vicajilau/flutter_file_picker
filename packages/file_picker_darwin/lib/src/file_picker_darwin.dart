@@ -117,6 +117,7 @@ class FilePickerDarwin extends FilePickerPlatform {
             'compressionQuality': compressionQuality,
             'assetRepresentationMode':
                 darwinOptions.assetRepresentationMode.name,
+            'acceptLabel': darwinOptions.acceptLabel,
           });
 
       if (result == null) {

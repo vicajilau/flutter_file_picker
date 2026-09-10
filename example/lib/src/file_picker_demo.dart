@@ -107,11 +107,15 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
           allowedExtensions: _allowedExtensionsFromInput(),
           dialogTitle: _dialogTitleController.text,
           initialDirectory: _initialDirectoryController.text,
-          windowsOptions: WindowsOptions(lockParentWindow: _lockParentWindow),
+          windowsOptions: WindowsOptions(
+            lockParentWindow: _lockParentWindow,
+            acceptLabel: _acceptLabelFromInput(),
+          ),
           linuxOptions: LinuxOptions(
             lockParentWindow: _lockParentWindow,
             acceptLabel: _acceptLabelFromInput(),
           ),
+          darwinOptions: DarwinOptions(acceptLabel: _acceptLabelFromInput()),
           withData: _withData,
           androidSafOptions: _androidSafOptionsFromFlags(),
         );
@@ -123,11 +127,15 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
           allowedExtensions: _allowedExtensionsFromInput(),
           dialogTitle: _dialogTitleController.text,
           initialDirectory: _initialDirectoryController.text,
-          windowsOptions: WindowsOptions(lockParentWindow: _lockParentWindow),
+          windowsOptions: WindowsOptions(
+            lockParentWindow: _lockParentWindow,
+            acceptLabel: _acceptLabelFromInput(),
+          ),
           linuxOptions: LinuxOptions(
             lockParentWindow: _lockParentWindow,
             acceptLabel: _acceptLabelFromInput(),
           ),
+          darwinOptions: DarwinOptions(acceptLabel: _acceptLabelFromInput()),
           androidSafOptions: _androidSafOptionsFromFlags(),
         );
         printInDebug("pickedFile: $file");
@@ -569,7 +577,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
         child: TextField(
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
-            labelText: 'Accept Label (Linux)',
+            labelText: 'Accept Label (Linux/Windows/macOS)',
           ),
           controller: _acceptLabelController,
         ),

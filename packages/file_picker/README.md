@@ -143,6 +143,20 @@ compatible representation. Non-automatic modes require
 `compressionQuality: 0` and only affect media selected from the iOS photo
 library.
 
+#### Confirm button text
+```dart
+List<PlatformFile> files = await FilePicker.pickFiles(
+  windowsOptions: const WindowsOptions(acceptLabel: 'Choose'),
+  linuxOptions: const LinuxOptions(acceptLabel: 'Choose'),
+  darwinOptions: const DarwinOptions(acceptLabel: 'Choose'),
+);
+```
+
+Sets the confirm button text of the file dialog. Supported on Windows
+(`pickFile()`, `pickFiles()`, `getDirectoryPath()`, `saveFile()`), Linux (same
+four), and macOS (`pickFile()`/`pickFiles()` only). Has no effect on iOS,
+Android, or Web.
+
 #### Pick a directory
 ```dart
 String? selectedDirectory = await FilePicker.getDirectoryPath();

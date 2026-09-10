@@ -17,6 +17,7 @@ class OpenSaveFileArgs {
     this.lockParentWindow = false,
     this.confirmOverwrite = false,
     this.parentWindowHandle,
+    this.acceptLabel,
   });
 
   /// SendPort used to reply to the main isolate.
@@ -48,4 +49,7 @@ class OpenSaveFileArgs {
 
   /// The HWND handle of the parent window.
   final int? parentWindowHandle;
+
+  /// The label for the dialog's confirm ("OK") button.
+  final String? acceptLabel;
 }

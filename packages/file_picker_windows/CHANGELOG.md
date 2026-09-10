@@ -1,3 +1,9 @@
+## 1.3.0
+
+#### Desktop (Windows)
+
+- Added `WindowsOptions.acceptLabel`, letting callers set the confirm ("OK") button text on `pickFile()`, `pickFiles()`, `getDirectoryPath()`, and `saveFile()` dialogs, via `IFileDialog.SetOkButtonLabel`. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+
 ## 1.2.0
 
 #### Desktop (Windows)
