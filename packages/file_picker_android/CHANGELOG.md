@@ -1,6 +1,6 @@
 ## 1.1.1
 
-- Fixed `saveFile()` garbling the file name for extensions Android doesn't recognize, e.g. saving `trace.gpx` produced `trace.gpx.xml.gpx`. The extension was unknown to the device's `MimeTypeMap`, so the mime type fell back to sniffing the file's content, which detected generic XML and returned `text/xml`. The system's document picker then "corrected" the suggested file name to match that mime type's own default extension, and a later cleanup step meant to append a missing extension appended the original one on top instead of replacing the mismatched one. Extensions unknown to the device now get a wildcard mime type instead of a sniffed one, and the cleanup step now replaces a mismatched extension rather than assuming there is none. [#2199](https://github.com/vicajilau/flutter_file_picker/issues/2199)
+- Fixed `saveFile()` garbling the file name for extensions Android doesn't recognize, e.g. saving `trace.gpx` produced `trace.gpx.xml.gpx`. [#2199](https://github.com/vicajilau/flutter_file_picker/issues/2199)
 
 ## 1.1.0
 
