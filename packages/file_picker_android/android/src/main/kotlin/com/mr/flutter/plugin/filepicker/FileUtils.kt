@@ -308,6 +308,18 @@ object FileUtils {
             MimeTypeMap.getSingleton()
                 .getMimeTypeFromExtension(extension.lowercase(Locale.getDefault()))
                 ?.let { return it }
+
+            // The extension is unknown to the device's MimeTypeMap (e.g. a
+            // niche format like .gpx). Falling through to content sniffing
+            // here would sniff the underlying format rather than the
+            // extension, e.g. a .gpx file is valid XML and sniffs as
+            // text/xml, whose own registered default extension is .xml, not
+            // .gpx. The system's "create document" picker honors that
+            // declared type and "corrects" the suggested file name by
+            // appending its own extension, corrupting the one the caller
+            // asked for. A wildcard type has no default extension of its
+            // own, so the picker leaves the requested name alone.
+            return "*/*"
         }
 
         val detectedType = guessMimeTypeFromBytes(bytes)
@@ -459,6 +471,15 @@ object FileUtils {
         val normalizedCollisionRegex = Regex("^(.*) \\((\\d+)\\)\\.$escapedExtension$")
         // Regular "name.ext"
         val plainNameRegex = Regex("^(.*)\\.$escapedExtension$")
+        // The system's document picker can append its own extension on top
+        // of ours when the MIME type we declared doesn't match what it
+        // expects for our extension (e.g. "trace.gpx" becoming
+        // "trace.gpx.xml"). Detect our extension immediately followed by
+        // exactly one more extension and strip both, recovering the true
+        // base name, instead of leaving the mismatched extension in place
+        // and appending ours on top of it (which would produce
+        // "trace.gpx.xml.gpx").
+        val systemAppendedExtensionRegex = Regex("^(.*)\\.$escapedExtension\\.[^./\\\\]+$")
 
         return when {
             androidCollisionRegex.matches(currentName) -> {
@@ -471,6 +492,10 @@ object FileUtils {
             }
             plainNameRegex.matches(currentName) -> {
                 val match = plainNameRegex.matchEntire(currentName)!!
+                match.groupValues[1] to null
+            }
+            systemAppendedExtensionRegex.matches(currentName) -> {
+                val match = systemAppendedExtensionRegex.matchEntire(currentName)!!
                 match.groupValues[1] to null
             }
             else -> {

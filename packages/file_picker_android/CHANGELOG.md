@@ -1,3 +1,7 @@
+## 1.1.1
+
+- Fixed `saveFile()` garbling the file name for extensions Android doesn't recognize, e.g. saving `trace.gpx` produced `trace.gpx.xml.gpx`. [#2199](https://github.com/vicajilau/flutter_file_picker/issues/2199)
+
 ## 1.1.0
 
 - Implemented `PlatformFile.lengthSync()`, returning the length Android already reports for a picked file synchronously.
