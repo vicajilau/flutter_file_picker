@@ -4,6 +4,14 @@
 - **BREAKING CHANGE**: `PlatformFile.length()` now returns `Future<int?>` instead of `Future<int>`, matching `lengthSync()`. `null` means the length could not be determined (e.g. a failed disk read), distinct from a genuinely empty file, which still returns `0`. Previously both cases returned `0`, with no way to tell them apart. [#2197](https://github.com/vicajilau/flutter_file_picker/issues/2197)
 - **BREAKING CHANGE**: Removed the parameters deprecated since the 12.0.0 federated rewrite: `allowMultiple` and `withData`/`withReadStream`/`readSequential` on `pickFiles()`, `lockParentWindow` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`/`saveFile()`, `cancelUploadOnWindowBlur` on `pickFiles()`/`pickFile()`, and `androidSafOptions` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`. Use `pickFile()` for single-file selection, `PlatformFile.readAsBytes()`/`readAsByteStream()` to read file data, `WindowsOptions.lockParentWindow`/`LinuxOptions.lockParentWindow`, `WebOptions.cancelUploadOnWindowBlur`, and `androidOptions` respectively. [#2202](https://github.com/vicajilau/flutter_file_picker/issues/2202)
 
+## 12.3.0
+
+### Desktop (Windows)
+- Added `WindowsOptions.acceptLabel`, letting callers set the confirm ("OK") button text on `pickFile()`, `pickFiles()`, `getDirectoryPath()`, and `saveFile()` dialogs. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+
+### macOS
+- Added `DarwinOptions.acceptLabel`, letting callers set the confirm button text for `pickFile()`/`pickFiles()` (`NSOpenPanel.prompt`). Has no effect on iOS. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+
 ## 12.2.0
 
 ### General

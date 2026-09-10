@@ -1,3 +1,5 @@
+![File Picker for Linux](https://raw.githubusercontent.com/vicajilau/flutter_file_picker/main/.github/assets/readme_banner_linux.svg)
+
 # file_picker_linux
 
 The Linux implementation of `file_picker`.

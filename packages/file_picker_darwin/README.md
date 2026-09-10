@@ -1,3 +1,5 @@
+![File Picker for iOS and macOS](https://raw.githubusercontent.com/vicajilau/flutter_file_picker/main/.github/assets/readme_banner_darwin.svg)
+
 # file_picker_darwin
 
 The iOS and macOS implementation of `file_picker`.

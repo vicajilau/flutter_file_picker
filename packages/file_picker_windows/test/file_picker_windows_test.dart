@@ -41,9 +41,16 @@ void main() {
       const options = FilePickerWindowsOptions(
         parentWindowHandle: 12345,
         lockParentWindow: true,
+        acceptLabel: 'Choose',
       );
       expect(options.parentWindowHandle, equals(12345));
       expect(options.lockParentWindow, isTrue);
+      expect(options.acceptLabel, equals('Choose'));
+    });
+
+    test('WindowsOptions.acceptLabel defaults to null', () {
+      const options = WindowsOptions();
+      expect(options.acceptLabel, isNull);
     });
   });
 

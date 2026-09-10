@@ -15,6 +15,7 @@ enum DarwinAssetRepresentationMode {
 class DarwinOptions {
   const DarwinOptions({
     this.assetRepresentationMode = DarwinAssetRepresentationMode.automatic,
+    this.acceptLabel,
   });
 
   /// The preferred representation for media selected from the iOS photo
@@ -23,6 +24,14 @@ class DarwinOptions {
   /// This option only applies when `compressionQuality` is `0`. It has no
   /// effect on macOS or when selecting files with the iOS document picker.
   final DarwinAssetRepresentationMode assetRepresentationMode;
+
+  /// The label for the confirm button of the file dialog.
+  ///
+  /// Maps to `NSOpenPanel.prompt` on macOS. Only honored by `pickFile()` and
+  /// `pickFiles()`, the only entry points that accept [DarwinOptions] on
+  /// macOS. Has no effect on iOS, `UIDocumentPickerViewController` has no
+  /// equivalent there.
+  final String? acceptLabel;
 
   /// Throws an [ArgumentError] if this configuration conflicts with
   /// [compressionQuality].
