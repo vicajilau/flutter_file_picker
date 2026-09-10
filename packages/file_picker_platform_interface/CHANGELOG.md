@@ -1,6 +1,6 @@
 ## 3.4.0
 
-- Added `acceptLabel` to `WindowsOptions` and `DarwinOptions`, letting callers set the confirm button text of the file dialog. On Windows it applies to `pickFile()`, `pickFiles()`, `getDirectoryPath()`, and `saveFile()`; on macOS only to `pickFile()`/`pickFiles()` (`getDirectoryPath()`/`saveFile()` do not accept `DarwinOptions`). Has no effect on iOS, Android or Web. `LinuxOptions.acceptLabel` already existed. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+- Added `acceptLabel` to `WindowsOptions` and `DarwinOptions`, letting callers set the confirm button text of the file dialog. On Windows it applies to `pickFile()`, `pickFiles()`, `getDirectoryPath()`, and `saveFile()`; on macOS only to `pickFile()`/`pickFiles()` (`getDirectoryPath()`/`saveFile()` do not accept `DarwinOptions`). Has no effect on iOS, Android or Web. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 
 ## 3.3.0
 

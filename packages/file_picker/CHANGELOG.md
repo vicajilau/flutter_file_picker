@@ -3,8 +3,8 @@
 ### Desktop (Windows)
 - Added `WindowsOptions.acceptLabel`, letting callers set the confirm ("OK") button text on `pickFile()`, `pickFiles()`, `getDirectoryPath()`, and `saveFile()` dialogs. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 
-### iOS / macOS
-- Added `DarwinOptions.acceptLabel`, letting callers set the confirm button text on macOS for `pickFile()`/`pickFiles()` (`NSOpenPanel.prompt`). Has no effect on iOS. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+### macOS
+- Added `DarwinOptions.acceptLabel`, letting callers set the confirm button text for `pickFile()`/`pickFiles()` (`NSOpenPanel.prompt`). Has no effect on iOS. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 
 ## 12.2.0
 

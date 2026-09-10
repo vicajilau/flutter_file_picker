@@ -82,8 +82,7 @@ class FilePickerWindows extends FilePickerPlatform {
     int compressionQuality = 0,
     WindowsOptions windowsOptions = const FilePickerWindowsOptions(),
   }) async {
-    final (lockParentWindow, parentWindowHandle, acceptLabel) =
-        _resolveWindowsOptions(windowsOptions);
+    final resolved = _resolveWindowsOptions(windowsOptions);
 
     final port = ReceivePort();
     await Isolate.spawn(
@@ -95,9 +94,9 @@ class FilePickerWindows extends FilePickerPlatform {
         type: type,
         allowedExtensions: allowedExtensions,
         allowMultiple: allowMultiple,
-        lockParentWindow: lockParentWindow,
-        parentWindowHandle: parentWindowHandle,
-        acceptLabel: acceptLabel,
+        lockParentWindow: resolved.lockParentWindow,
+        parentWindowHandle: resolved.parentWindowHandle,
+        acceptLabel: resolved.acceptLabel,
       ),
     );
 
@@ -134,15 +133,14 @@ class FilePickerWindows extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    final (lockParentWindow, parentWindowHandle, acceptLabel) =
-        _resolveWindowsOptions(windowsOptions);
+    final resolved = _resolveWindowsOptions(windowsOptions);
 
     return compute(_getDirectoryPathIsolate, {
       'dialogTitle': dialogTitle,
       'initialDirectory': initialDirectory,
-      'lockParentWindow': lockParentWindow,
-      'parentWindowHandle': parentWindowHandle,
-      'acceptLabel': acceptLabel,
+      'lockParentWindow': resolved.lockParentWindow,
+      'parentWindowHandle': resolved.parentWindowHandle,
+      'acceptLabel': resolved.acceptLabel,
     });
   }
 
@@ -233,8 +231,7 @@ class FilePickerWindows extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    final (lockParentWindow, parentWindowHandle, acceptLabel) =
-        _resolveWindowsOptions(windowsOptions);
+    final resolved = _resolveWindowsOptions(windowsOptions);
 
     final port = ReceivePort();
     await Isolate.spawn(
@@ -244,10 +241,10 @@ class FilePickerWindows extends FilePickerPlatform {
         defaultFileName: fileName,
         dialogTitle: dialogTitle,
         initialDirectory: initialDirectory,
-        lockParentWindow: lockParentWindow,
+        lockParentWindow: resolved.lockParentWindow,
         confirmOverwrite: true,
-        parentWindowHandle: parentWindowHandle,
-        acceptLabel: acceptLabel,
+        parentWindowHandle: resolved.parentWindowHandle,
+        acceptLabel: resolved.acceptLabel,
       ),
     );
 
@@ -436,22 +433,22 @@ class FilePickerWindows extends FilePickerPlatform {
     };
   }
 
-  /// Reads `lockParentWindow` and `acceptLabel` from [windowsOptions]
-  /// regardless of its runtime type, since callers construct the base
-  /// [WindowsOptions] (the only publicly exported type) rather than the
-  /// internal [FilePickerWindowsOptions]. `parentWindowHandle` is
-  /// Windows-specific and is only available when [windowsOptions] happens to
-  /// be a [FilePickerWindowsOptions].
-  static (bool lockParentWindow, int? parentWindowHandle, String? acceptLabel)
-  _resolveWindowsOptions(WindowsOptions windowsOptions) {
-    return (
-      windowsOptions.lockParentWindow,
-      switch (windowsOptions) {
-        FilePickerWindowsOptions opts => opts.parentWindowHandle,
-        _ => null,
-      },
-      windowsOptions.acceptLabel,
-    );
+  /// Normalizes [windowsOptions] to a [FilePickerWindowsOptions], since
+  /// callers construct the base [WindowsOptions] (the only publicly exported
+  /// type) rather than the internal [FilePickerWindowsOptions] that also
+  /// carries `parentWindowHandle`. Returned as-is when already a
+  /// [FilePickerWindowsOptions]; otherwise its fields are copied over, with
+  /// `parentWindowHandle` left `null`.
+  static FilePickerWindowsOptions _resolveWindowsOptions(
+    WindowsOptions windowsOptions,
+  ) {
+    return switch (windowsOptions) {
+      FilePickerWindowsOptions opts => opts,
+      _ => FilePickerWindowsOptions(
+        lockParentWindow: windowsOptions.lockParentWindow,
+        acceptLabel: windowsOptions.acceptLabel,
+      ),
+    };
   }
 
   /// Resolves the owner [HWND] for a dialog based on

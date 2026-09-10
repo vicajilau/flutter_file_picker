@@ -69,15 +69,13 @@ void main() {
       },
     );
 
-    test('pickFile and pickFiles send acceptLabel', () async {
+    test('pickFile sends acceptLabel', () async {
       final picker = FilePickerDarwin();
-      final receivedLabels = <String?>[];
+      String? receivedLabel;
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(picker.methodChannel, (call) async {
-            receivedLabels.add(
-              (call.arguments as Map)['acceptLabel'] as String?,
-            );
+            receivedLabel = (call.arguments as Map)['acceptLabel'] as String?;
             return <Map<Object?, Object?>>[];
           });
       addTearDown(() {
@@ -88,9 +86,33 @@ void main() {
       await picker.pickFile(
         darwinOptions: const DarwinOptions(acceptLabel: 'Choose'),
       );
-      await picker.pickFiles();
+      expect(receivedLabel, 'Choose');
 
-      expect(receivedLabels, ['Choose', null]);
+      await picker.pickFile();
+      expect(receivedLabel, isNull);
+    });
+
+    test('pickFiles sends acceptLabel', () async {
+      final picker = FilePickerDarwin();
+      String? receivedLabel;
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(picker.methodChannel, (call) async {
+            receivedLabel = (call.arguments as Map)['acceptLabel'] as String?;
+            return <Map<Object?, Object?>>[];
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null);
+      });
+
+      await picker.pickFiles(
+        darwinOptions: const DarwinOptions(acceptLabel: 'Choose'),
+      );
+      expect(receivedLabel, 'Choose');
+
+      await picker.pickFiles();
+      expect(receivedLabel, isNull);
     });
 
     test('rejects non-automatic representation with compression', () {
