@@ -8,18 +8,18 @@ Future<List<T>> runIndexedTasks<T>(
   Future<T> Function(int index) task, {
   required bool sequential,
 }) async {
-  final results = List<T?>.filled(length, null);
+  if (length == 0) return [];
 
   if (sequential) {
+    final results = <T>[];
     for (var i = 0; i < length; i++) {
-      results[i] = await task(i);
+      results.add(await task(i));
     }
-  } else {
-    await Future.wait([
-      for (var i = 0; i < length; i++)
-        task(i).then((value) => results[i] = value),
-    ]);
+    return results;
   }
 
-  return results.cast<T>();
+  // Future.wait() already returns results in the order the futures were
+  // passed in, not completion order, so no manual index bookkeeping is
+  // needed here.
+  return Future.wait([for (var i = 0; i < length; i++) task(i)]);
 }
