@@ -47,14 +47,12 @@ base class AndroidPlatformFile extends PlatformFile {
       safHandle = AndroidSAFHandle.fromMap(safMap);
     }
 
-    final Uint8List? bytes = data['bytes'] as Uint8List?;
-
     return AndroidPlatformFile(
       name: name,
       uri: uri,
       safHandle: safHandle,
-      xFile: path.isNotEmpty ? XFile(path, name: name, bytes: bytes) : null,
-      bytesLength: bytes?.lengthInBytes ?? (data['size'] as int?),
+      xFile: path.isNotEmpty ? XFile(path, name: name) : null,
+      bytesLength: data['size'] as int?,
     );
   }
 

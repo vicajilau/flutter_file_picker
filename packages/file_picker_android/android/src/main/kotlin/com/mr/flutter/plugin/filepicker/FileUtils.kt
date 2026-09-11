@@ -22,12 +22,9 @@ import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -63,7 +60,6 @@ object FileUtils {
         activity: Activity,
         data: Intent?,
         compressionQuality: Int,
-        loadDataToMemory: Boolean,
         type: String,
         androidSafOptions: java.util.HashMap<*, *>?
     ) {
@@ -106,7 +102,7 @@ object FileUtils {
                             var uri = data.clipData!!.getItemAt(i).uri
                             maybeTakePersistableUriPermission(uri)
                             uri = processUri(activity, uri, compressionQuality)
-                            addFile(activity, uri, loadDataToMemory, files, hasSafOptions, isReadWrite)
+                            addFile(activity, uri, files, hasSafOptions, isReadWrite)
                         }
                         finishWithSuccess(files)
                     }
@@ -132,7 +128,7 @@ object FileUtils {
                             }
                         } else {
                             maybeTakePersistableUriPermission(data.data!!)
-                            addFile(activity, uri, loadDataToMemory, files, hasSafOptions, isReadWrite)
+                            addFile(activity, uri, files, hasSafOptions, isReadWrite)
                             handleFileResult(files)
                         }
                     }
@@ -141,7 +137,7 @@ object FileUtils {
                         val fileUris = getSelectedItems(data.extras!!)
                         fileUris?.filterIsInstance<Uri>()?.forEach { uri ->
                             maybeTakePersistableUriPermission(uri)
-                            addFile(activity, uri, loadDataToMemory, files, hasSafOptions, isReadWrite)
+                            addFile(activity, uri, files, hasSafOptions, isReadWrite)
                         }
                         finishWithSuccess(files)
                     }
@@ -155,7 +151,7 @@ object FileUtils {
                 Log.e(TAG, "Out of memory while processing selected files.", oom)
                 finishWithError(
                     "out_of_memory",
-                    "Selected files are too large to load into memory. Disable withData or use withReadStream."
+                    "Selected files are too large to process."
                 )
             } catch (e: Exception) {
                 finishWithError("file_picker_error", e.message ?: "Unknown error")
@@ -259,7 +255,6 @@ object FileUtils {
      *
      * @param type The file types that will be selectable.
      * @param isMultipleSelection Whether multiple files can be selected.
-     * @param withData Whether the file data should be loaded into memory.
      * @param allowedExtensions The allowed file extensions for custom file types.
      * @param compressionQuality The compression quality for images.
      * @param result The MethodChannel result to send the file picking result to.
@@ -267,7 +262,6 @@ object FileUtils {
     fun FilePickerDelegate?.startFileExplorer(
         type: String?,
         isMultipleSelection: Boolean?,
-        withData: Boolean?,
         allowedExtensions: ArrayList<String>,
         compressionQuality: Int? = 0,
         androidSafOptions: java.util.HashMap<*, *>?,
@@ -280,9 +274,6 @@ object FileUtils {
         this?.type = type
         if (isMultipleSelection != null) {
             this?.isMultipleSelection = isMultipleSelection
-        }
-        if (withData != null) {
-            this?.loadDataToMemory = withData
         }
         this?.allowedExtensions = allowedExtensions
         if (compressionQuality != null) {
@@ -534,12 +525,11 @@ object FileUtils {
     private fun addFile(
         activity: Activity,
         uri: Uri,
-        loadDataToMemory: Boolean,
         files: MutableList<FileInfo>,
         hasSafOptions: Boolean = false,
         isReadWrite: Boolean = false
     ) {
-        openFileStream(activity, uri, loadDataToMemory, hasSafOptions, isReadWrite)?.let { file ->
+        openFileStream(activity, uri, hasSafOptions, isReadWrite)?.let { file ->
             files.add(file)
         }
     }
@@ -747,34 +737,10 @@ object FileUtils {
         return true
     }
 
-    private fun loadData(file: File, fileInfo: FileInfo.Builder) {
-        try {
-            val size = file.length().toInt()
-            val bytes = ByteArray(size)
-
-            try {
-                val buf = BufferedInputStream(FileInputStream(file))
-                buf.read(bytes, 0, bytes.size)
-                buf.close()
-            } catch (e: FileNotFoundException) {
-                Log.e(TAG, "File not found: " + e.message, null)
-            } catch (e: IOException) {
-                Log.e(TAG, "Failed to close file streams: " + e.message, null)
-            }
-            fileInfo.withData(bytes)
-        } catch (e: Exception) {
-            Log.e(
-                TAG,
-                "Failed to load bytes into memory with error $e. Probably the file is too big to fit device memory. Bytes won't be added to the file this time."
-            )
-        }
-    }
-
     @JvmStatic
     fun openFileStream(
-        context: Context, 
-        uri: Uri, 
-        withData: Boolean,
+        context: Context,
+        uri: Uri,
         hasSafOptions: Boolean = false,
         isReadWrite: Boolean = false
     ): FileInfo? {
@@ -820,10 +786,6 @@ object FileUtils {
                     Log.e(TAG, "Failed to close file streams: " + ex.message, ex)
                 }
             }
-        }
-
-        if (withData) {
-            loadData(file, fileInfo)
         }
 
         fileInfo
