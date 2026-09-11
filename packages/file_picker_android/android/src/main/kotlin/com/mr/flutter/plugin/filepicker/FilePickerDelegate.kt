@@ -32,6 +32,7 @@ class FilePickerDelegate(
     }
 
     var isMultipleSelection = false
+    var loadDataToMemory = false
     var type: String? = null
     var compressionQuality = 0
     var allowedExtensions: ArrayList<String>? = null
@@ -99,7 +100,7 @@ class FilePickerDelegate(
         return when (resultCode) {
             Activity.RESULT_OK -> {
                 dispatchEventStatus(true)
-                processFiles(activity, data, compressionQuality, type.orEmpty(), androidSafOptions)
+                processFiles(activity, data, compressionQuality, loadDataToMemory, type.orEmpty(), androidSafOptions)
                 true
             }
 

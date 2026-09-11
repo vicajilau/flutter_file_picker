@@ -7,6 +7,7 @@ class FileInfo(
     val name: String?,
     val uri: Uri?,
     val size: Long,
+    val bytes: ByteArray?,
     val safHandle: java.util.HashMap<String, Any>? = null
 ) {
     class Builder {
@@ -14,6 +15,7 @@ class FileInfo(
         private var name: String? = null
         private var uri: Uri? = null
         private var size: Long = 0
+        private var bytes: ByteArray? = null
         private var safHandle: java.util.HashMap<String, Any>? = null
 
         fun withPath(path: String?): Builder {
@@ -28,6 +30,11 @@ class FileInfo(
 
         fun withSize(size: Long): Builder {
             this.size = size
+            return this
+        }
+
+        fun withData(bytes: ByteArray): Builder {
+            this.bytes = bytes
             return this
         }
 
@@ -47,6 +54,7 @@ class FileInfo(
                 this.name,
                 this.uri,
                 this.size,
+                this.bytes,
                 this.safHandle
             )
         }
@@ -57,6 +65,7 @@ class FileInfo(
             Pair("path", path),
             Pair("name", name),
             Pair("size", size),
+            Pair("bytes", bytes),
             Pair("identifier", uri.toString()),
             Pair("safHandle", safHandle)
         )

@@ -36,12 +36,13 @@ base class DarwinPlatformFile extends PlatformFile {
     final Uri uri = path.contains('://')
         ? (Uri.tryParse(path) ?? Uri.file(path))
         : Uri.file(path);
+    final Uint8List? bytes = data['bytes'] as Uint8List?;
 
     return DarwinPlatformFile(
       name: name,
       uri: uri,
-      xFile: path.isNotEmpty ? XFile(path, name: name) : null,
-      bytesLength: data['size'] as int?,
+      xFile: path.isNotEmpty ? XFile(path, name: name, bytes: bytes) : null,
+      bytesLength: bytes?.lengthInBytes ?? (data['size'] as int?),
     );
   }
 

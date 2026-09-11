@@ -15,6 +15,7 @@ final class IOSFilePickerHandler: NSObject,
     private var result: FlutterResult?
     private var eventSink: FlutterEventSink?
     private var allowMultipleSelection = false
+    private var loadDataToMemory = false
     private var assetRepresentationMode = PHPickerConfiguration.AssetRepresentationMode.automatic
     private var isDirectoryPicker = false
     private var isFileAndDirectoryPicker = false
@@ -60,6 +61,7 @@ final class IOSFilePickerHandler: NSObject,
 
         allowMultipleSelection =
             (arguments["allowMultipleSelection"] as? Bool) ?? false
+        loadDataToMemory = (arguments["withData"] as? Bool) ?? false
         assetRepresentationMode = resolveAssetRepresentationMode(
             arguments["assetRepresentationMode"] as? String)
 
@@ -411,13 +413,20 @@ final class IOSFilePickerHandler: NSObject,
         do {
             let values = try fileURL.resourceValues(forKeys: [.fileSizeKey])
             let size = values.fileSize ?? 0
+            let data = loadDataToMemory ? try Data(contentsOf: fileURL) : nil
 
-            return [
+            var fileInfo: [String: Any] = [
                 "path": fileURL.path,
                 "identifier": fileURL.absoluteString,
                 "name": fileURL.lastPathComponent,
                 "size": size,
             ]
+
+            if let data {
+                fileInfo["bytes"] = FlutterStandardTypedData(bytes: data)
+            }
+
+            return fileInfo
         } catch {
             return nil
         }
