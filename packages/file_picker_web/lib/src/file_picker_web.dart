@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:web/web.dart';
 
 import 'file_picker_web_options.dart';
+import 'indexed_task_runner.dart';
 import 'web_file_input_session.dart';
 import 'web_platform_file.dart';
 
@@ -141,36 +142,39 @@ class FilePickerWeb extends FilePickerPlatform {
 
   /// Processes the selected [FileList] according to [webOptions] and returns
   /// a list of [PlatformFile] instances.
+  ///
+  /// Reads files one at a time when [FilePickerWebOptions.readSequential] is
+  /// `true`, or concurrently otherwise; either way the result preserves the
+  /// original selection order.
   Future<List<PlatformFile>> _processSelectedFiles(
     FileList files,
     FilePickerWebOptions webOptions,
   ) async {
-    final List<PlatformFile> pickedFiles = [];
-
-    for (int i = 0; i < files.length; i++) {
-      final file = files.item(i);
-      if (file == null) continue;
+    Future<PlatformFile?> processFileAt(int index) async {
+      final file = files.item(index);
+      if (file == null) return null;
 
       if (webOptions.withReadStream) {
-        pickedFiles.add(
-          _createWebPlatformFile(
-            file: file,
-            readStream: _openFileReadStream(file),
-          ),
+        return _createWebPlatformFile(
+          file: file,
+          readStream: _openFileReadStream(file),
         );
-        continue;
       }
 
       if (!webOptions.withData) {
-        pickedFiles.add(_createWebPlatformFile(file: file));
-        continue;
+        return _createWebPlatformFile(file: file);
       }
 
       final bytes = await _readSingleFileBytes(file);
-      pickedFiles.add(_createWebPlatformFile(file: file, bytes: bytes));
+      return _createWebPlatformFile(file: file, bytes: bytes);
     }
 
-    return pickedFiles;
+    final results = await runIndexedTasks(
+      files.length,
+      processFileAt,
+      sequential: webOptions.readSequential,
+    );
+    return results.whereType<PlatformFile>().toList();
   }
 
   /// Reads an HTML [File] content into a [Uint8List] using [FileReader].

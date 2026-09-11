@@ -8,7 +8,10 @@ final class FilePickerWebOptions extends WebOptions {
   /// Whether to create a read stream for each picked file.
   final bool withReadStream;
 
-  /// Whether to read multiple files sequentially instead of in parallel.
+  /// Whether to read multiple files one at a time instead of concurrently.
+  ///
+  /// The result always preserves the original selection order, regardless
+  /// of this setting.
   final bool readSequential;
 
   /// Whether to cancel upload when window loses focus.
