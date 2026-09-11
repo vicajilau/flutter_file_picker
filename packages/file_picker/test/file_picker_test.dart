@@ -22,7 +22,7 @@ base class TestPlatformFile extends PlatformFile {
   int? lengthSync() => 100;
 
   @override
-  Future<int> length() async => 100;
+  Future<int?> length() async => 100;
 
   @override
   Future<Uint8List> readAsBytes() async => Uint8List(0);

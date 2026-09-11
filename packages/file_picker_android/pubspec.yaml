@@ -1,6 +1,6 @@
 name: android_file_picker
 description: Android implementation of the file_picker plugin, supporting file picking, saving, and Storage Access Framework (SAF) URI grants.
-version: 1.1.1
+version: 2.0.0
 homepage: https://github.com/vicajilau/flutter_file_picker/tree/main/packages/file_picker_android
 repository: https://github.com/vicajilau/flutter_file_picker/tree/main/packages/file_picker_android
 topics:
@@ -25,7 +25,7 @@ flutter:
 dependencies:
   flutter:
     sdk: flutter
-  file_picker_platform_interface: ^3.3.0
+  file_picker_platform_interface: ^4.0.0
   cross_file: ^0.3.5+4
   path: ^1.9.0
 

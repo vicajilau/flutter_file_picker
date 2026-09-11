@@ -1,3 +1,9 @@
+## 2.0.0
+
+#### Desktop (Windows)
+
+- **BREAKING CHANGE**: `PlatformFile.length()` now returns `Future<int?>` instead of `Future<int>`. Returns `null` when the length could not be determined (e.g. a failed disk read), instead of `0`, matching `lengthSync()`. [#2197](https://github.com/vicajilau/flutter_file_picker/issues/2197)
+
 ## 1.3.0
 
 #### Desktop (Windows)

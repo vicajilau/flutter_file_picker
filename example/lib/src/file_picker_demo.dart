@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
-
 import 'package:file/local.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:android_file_picker/android_file_picker.dart';
@@ -37,7 +35,6 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
   bool _lockParentWindow = false;
   bool _userAborted = false;
   bool _multiPick = false;
-  bool _withData = false;
   bool _safPersist = false;
   bool _safReadWrite = false;
   bool _supportsSafOptions = false;
@@ -102,7 +99,6 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
       if (_multiPick) {
         pickedFiles = await FilePicker.pickFiles(
           type: _pickingType,
-          allowMultiple: true,
           onFileLoading: _onFileLoading,
           allowedExtensions: _allowedExtensionsFromInput(),
           dialogTitle: _dialogTitleController.text,
@@ -116,8 +112,8 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
             acceptLabel: _acceptLabelFromInput(),
           ),
           darwinOptions: DarwinOptions(acceptLabel: _acceptLabelFromInput()),
-          withData: _withData,
-          androidSafOptions: _androidSafOptionsFromFlags(),
+          androidOptions:
+              _androidSafOptionsFromFlags() ?? const AndroidOptions(),
         );
         printInDebug("pickedFiles: $pickedFiles");
       } else {
@@ -136,7 +132,8 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
             acceptLabel: _acceptLabelFromInput(),
           ),
           darwinOptions: DarwinOptions(acceptLabel: _acceptLabelFromInput()),
-          androidSafOptions: _androidSafOptionsFromFlags(),
+          androidOptions:
+              _androidSafOptionsFromFlags() ?? const AndroidOptions(),
         );
         printInDebug("pickedFile: $file");
         pickedFiles = file != null ? [file] : [];
@@ -251,7 +248,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
         initialDirectory: _initialDirectoryController.text,
         windowsOptions: WindowsOptions(lockParentWindow: _lockParentWindow),
         linuxOptions: LinuxOptions(lockParentWindow: _lockParentWindow),
-        androidSafOptions: _androidSafOptionsFromFlags(),
+        androidOptions: _androidSafOptionsFromFlags() ?? const AndroidOptions(),
       );
       hasUserAborted = pickedDirectoryPath == null;
     } on PlatformException catch (e) {
@@ -585,7 +582,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
       SizedBox(
         width: 400,
         child: DropdownButtonFormField<FileType>(
-          value: _pickingType,
+          initialValue: _pickingType,
           icon: const Icon(Icons.expand_more),
           alignment: Alignment.centerLeft,
           decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -641,29 +638,6 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
           value: _multiPick,
         ),
       ),
-      ConstrainedBox(
-        constraints: const BoxConstraints.tightFor(width: 400.0),
-        child: SwitchListTile.adaptive(
-          title: const Text('Load file data to memory (withData)'),
-          subtitle: const Text(
-            'Disable this for large or multiple files. Prefer withReadStream.',
-          ),
-          onChanged: (value) => setState(() => _withData = value),
-          value: _withData,
-        ),
-      ),
-      if (_multiPick && _withData)
-        const SizedBox(
-          width: 400.0,
-          child: ListTile(
-            dense: true,
-            leading: Icon(Icons.warning_amber_rounded, color: Colors.amber),
-            title: Text('Large multi-picks may run out of memory'),
-            subtitle: Text(
-              'Use withData = false and withReadStream for safety.',
-            ),
-          ),
-        ),
       ConstrainedBox(
         constraints: const BoxConstraints.tightFor(width: 400.0),
         child: SwitchListTile.adaptive(

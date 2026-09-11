@@ -1,6 +1,6 @@
 name: file_picker_platform_interface
 description: A common platform interface for the file_picker plugin, defining the shared API surface and data contracts across platforms.
-version: 3.4.0
+version: 4.0.0
 homepage: https://github.com/vicajilau/flutter_file_picker/tree/main/packages/file_picker_platform_interface
 repository: https://github.com/vicajilau/flutter_file_picker/tree/main/packages/file_picker_platform_interface
 topics:

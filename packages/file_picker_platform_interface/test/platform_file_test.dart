@@ -20,7 +20,7 @@ base class _TestPlatformFile extends PlatformFile {
   int? lengthSync() => null;
 
   @override
-  Future<int> length() async => 0;
+  Future<int?> length() async => 0;
 
   @override
   Future<Uint8List> readAsBytes() async => Uint8List(0);

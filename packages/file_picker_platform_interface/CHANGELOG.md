@@ -1,3 +1,7 @@
+## 4.0.0
+
+- **BREAKING CHANGE**: `PlatformFile.length()` now returns `Future<int?>` instead of `Future<int>`, matching `lengthSync()`. `null` means the length could not be determined (e.g. a failed disk read), distinct from a genuinely empty file, which still returns `0`. Previously both cases returned `0`, with no way to tell them apart. [#2197](https://github.com/vicajilau/flutter_file_picker/issues/2197)
+
 ## 3.4.0
 
 - Added `acceptLabel` to `WindowsOptions` and `DarwinOptions`, letting callers set the confirm button text of the file dialog. On Windows it applies to `pickFile()`, `pickFiles()`, `getDirectoryPath()`, and `saveFile()`; on macOS only to `pickFile()`/`pickFiles()` (`getDirectoryPath()`/`saveFile()` do not accept `DarwinOptions`). Has no effect on iOS, Android or Web. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)

@@ -1,3 +1,7 @@
+## 4.0.0
+
+- **BREAKING CHANGE**: `PlatformFile.length()` now returns `Future<int?>` instead of `Future<int>`. Returns `null` when the length could not be determined (e.g. a failed disk read), instead of `0`, matching `lengthSync()`. [#2197](https://github.com/vicajilau/flutter_file_picker/issues/2197)
+
 ## 3.1.0
 
 - Implemented `PlatformFile.lengthSync()`, returning the browser's `File.size` (or the loaded bytes' length) synchronously, without doing any I/O.

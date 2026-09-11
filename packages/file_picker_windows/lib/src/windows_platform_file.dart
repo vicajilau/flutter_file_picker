@@ -61,13 +61,13 @@ base class WindowsPlatformFile extends PlatformFile {
   }
 
   @override
-  Future<int> length() async {
+  Future<int?> length() async {
     final len = _bytesLength;
     if (len != null && len > 0) return len;
     try {
       return await xFile.length();
     } catch (_) {
-      return 0;
+      return null;
     }
   }
 

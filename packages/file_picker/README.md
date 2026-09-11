@@ -53,6 +53,19 @@ See the [official API reference on pub.dev](https://pub.dev/documentation/file_p
 
 The iOS and macOS native implementations live under the shared Darwin source tree (`file_picker_darwin`). The iOS implementation requires iOS 14.0 or newer because it uses `PHPickerViewController` and `PHPickerResult`.
 
+## Migrating to v13
+
+1. **`PlatformFile.length()` Returns `Future<int?>`**:
+   - `null` means the length could not be determined (e.g. a failed disk read), distinct from a genuinely empty file, which still returns `0`.
+   - **v12**: `int bytes = await file.length();`
+   - **v13**: `int? bytes = await file.length();`
+
+2. **Removed Parameters Deprecated Since v12**:
+   - `allowMultiple`, `withData`, `withReadStream`, and `readSequential` on `pickFiles()`/`pickFile()`: use `pickFile()` for single-file selection, and `PlatformFile.readAsBytes()`/`readAsByteStream()` to read file data.
+   - `lockParentWindow` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`/`saveFile()`: use `WindowsOptions.lockParentWindow` or `LinuxOptions.lockParentWindow`.
+   - `cancelUploadOnWindowBlur` on `pickFiles()`/`pickFile()`: use `WebOptions.cancelUploadOnWindowBlur`.
+   - `androidSafOptions` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`: use `androidOptions`.
+
 ## Migrating to v12
 
 Version 12.0 transitions `file_picker` to a **federated plugin architecture**.
