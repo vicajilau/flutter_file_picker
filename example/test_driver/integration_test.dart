@@ -58,11 +58,21 @@ Future<void> _armFileChooserInterception(
   // Flutter's own tester.tap() is a framework-internal simulated gesture, not
   // a trusted browser event, so it does not carry activation by itself. A
   // real, CDP-dispatched click anywhere on the page establishes transient
-  // activation for the whole frame for a few seconds, which is enough for
-  // the widget test's tap (landing moments later) to inherit it.
-  await page.mouse.click(puppeteer.Point(1, 1));
+  // activation for the whole frame, but that expires after a few seconds, and
+  // how long the app takes to become interactive varies a lot with the
+  // machine (a single upfront click was enough locally but had already
+  // expired by the time the widget test's tap landed in CI), so this keeps
+  // renewing it for the lifetime of the run instead of clicking only once.
+  unawaited(_keepUserActivationAlive(page));
 
   await _autoAcceptFileChoosers(page, fixturePath);
+}
+
+Future<void> _keepUserActivationAlive(puppeteer.Page page) async {
+  while (true) {
+    await page.mouse.click(puppeteer.Point(1, 1));
+    await Future<void>.delayed(const Duration(seconds: 2));
+  }
 }
 
 /// Polls chromedriver's session list for the session `flutter drive` created,
