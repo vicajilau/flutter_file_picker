@@ -87,13 +87,16 @@ Future<String> _waitForChromeDriverSession(String chromedriverPort) async {
   final deadline = DateTime.now().add(const Duration(seconds: 30));
   while (DateTime.now().isBefore(deadline)) {
     final response = await http.get(sessionsUrl);
-    final sessions = (jsonDecode(response.body) as Map)['value'] as List;
-    for (final session in sessions) {
-      final capabilities = (session as Map)['capabilities'] as Map;
-      final chromeOptions =
-          capabilities['goog:chromeOptions'] as Map<String, dynamic>?;
-      final debuggerAddress = chromeOptions?['debuggerAddress'] as String?;
-      if (debuggerAddress != null) return debuggerAddress;
+    if (jsonDecode(response.body) case {'value': List<dynamic> sessions}) {
+      for (final session in sessions) {
+        if (session case {
+          'capabilities': {
+            'goog:chromeOptions': {'debuggerAddress': String address},
+          },
+        }) {
+          return address;
+        }
+      }
     }
     await Future<void>.delayed(const Duration(milliseconds: 200));
   }
