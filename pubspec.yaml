@@ -26,6 +26,21 @@ melos:
       concurrency: 1
       description: Run flutter test in all packages.
 
+    # Requires a chromedriver matching your local Chrome running first, e.g.
+    # `chromedriver --port=4444`. See example/test_driver/integration_test.dart
+    # for why `flutter drive` alone is not enough on web.
+    test:integration_web:
+      exec: >
+        flutter drive
+        -d web-server --web-port=7357
+        --browser-name=chrome
+        --headless
+        --driver=test_driver/integration_test.dart
+        --target=integration_test/pick_file_web_test.dart
+      packageFilters:
+        dirExists: test_driver
+      description: Run the web integration_test suite against the example app.
+
 environment:
   sdk: ">=3.10.0 <4.0.0"
   flutter: ">=3.38.0"
