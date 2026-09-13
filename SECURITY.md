@@ -27,13 +27,13 @@ versions are not patched, so if you are on one, the fix will be an upgrade.
 
 | Package | Supported |
 | --- | --- |
-| `file_picker` | Latest 12.x |
-| `file_picker_platform_interface` | Latest 3.x |
-| `android_file_picker` | Latest 1.x |
-| `file_picker_darwin` | Latest 1.x |
-| `file_picker_linux` | Latest 1.x |
-| `file_picker_web` | Latest 3.x |
-| `windows_file_picker` | Latest 1.x |
+| `file_picker` | Latest 13.x |
+| `file_picker_platform_interface` | Latest 4.x |
+| `android_file_picker` | Latest 2.x |
+| `file_picker_darwin` | Latest 2.x |
+| `file_picker_linux` | Latest 2.x |
+| `file_picker_web` | Latest 4.x |
+| `windows_file_picker` | Latest 2.x |
 
 ## What is in scope
 

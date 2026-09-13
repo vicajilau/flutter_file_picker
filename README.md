@@ -42,7 +42,7 @@ Almost all apps should only ever depend on `file_picker` directly. The platform 
 
 ```yaml
 dependencies:
-  file_picker: ^12.0.0
+  file_picker: ^13.0.0
 ```
 
 ```dart
@@ -52,15 +52,21 @@ final file = await FilePicker.pickFile();
 
 if (file != null) {
   print(file.name);
-  print(await file.length());
+  print(await file.length()); // Returns Future<int?> (or use file.lengthSync())
 }
 ```
 
 See [`packages/file_picker/README.md`](packages/file_picker/README.md) for the full feature list, platform compatibility chart, and more usage examples (multiple files, extension filters, directory picking, save-file dialogs).
 
+## Migration
+
+- **Upgrading to v13?** See the [Migrating to v13 Guide](packages/file_picker/README.md#migrating-to-v13) for details on `PlatformFile.length()` returning `Future<int?>` and the removal of legacy v12-deprecated parameters.
+- **Upgrading from pre-v12?** See the [Migrating to v12 Guide](packages/file_picker/README.md#migrating-to-v12) for the federated architecture changes (`FilePicker.pickFiles()` returning `List<PlatformFile>`, platform options, and streaming).
+
 ## Documentation
 
-- [`packages/file_picker/README.md`](packages/file_picker/README.md) for usage and the platform compatibility chart, and each platform package's own README for platform-specific setup (e.g. [`file_picker_darwin`](packages/file_picker_darwin/README.md) for macOS entitlements).
+- [`packages/file_picker/README.md`](packages/file_picker/README.md) for usage, platform compatibility chart, and [migration guides](packages/file_picker/README.md#migrating-to-v13).
+- Platform-specific setup in each package's README (e.g. [`file_picker_darwin`](packages/file_picker_darwin/README.md) for macOS entitlements, [`android_file_picker`](packages/file_picker_android/README.md) for Android notes).
 - [API reference on pub.dev](https://pub.dev/documentation/file_picker/latest/file_picker/FilePicker-class.html).
 - [`packages/file_picker/CHANGELOG.md`](packages/file_picker/CHANGELOG.md) and each platform package's own `CHANGELOG.md` for release notes.
 

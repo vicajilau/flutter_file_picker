@@ -3,6 +3,13 @@
 ### General
 - **BREAKING CHANGE**: `PlatformFile.length()` now returns `Future<int?>` instead of `Future<int>`, matching `lengthSync()`. `null` means the length could not be determined (e.g. a failed disk read), distinct from a genuinely empty file, which still returns `0`. Previously both cases returned `0`, with no way to tell them apart. [#2197](https://github.com/vicajilau/flutter_file_picker/issues/2197)
 - **BREAKING CHANGE**: Removed the parameters deprecated since the 12.0.0 federated rewrite: `allowMultiple` and `withData`/`withReadStream`/`readSequential` on `pickFiles()`, `lockParentWindow` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`/`saveFile()`, `cancelUploadOnWindowBlur` on `pickFiles()`/`pickFile()`, and `androidSafOptions` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`. Use `pickFile()` for single-file selection, `PlatformFile.readAsBytes()`/`readAsByteStream()` to read file data, `WindowsOptions.lockParentWindow`/`LinuxOptions.lockParentWindow`, `WebOptions.cancelUploadOnWindowBlur`, and `androidOptions` respectively. [#2202](https://github.com/vicajilau/flutter_file_picker/issues/2202)
+- Raised lower bounds of all platform implementation packages: `file_picker_platform_interface ^4.0.0`, `android_file_picker ^2.0.0`, `file_picker_darwin ^2.0.0`, `file_picker_linux ^2.0.0`, `windows_file_picker ^2.0.0`, and `file_picker_web ^4.0.0`.
+
+### Web
+- Fixed `FilePickerWebOptions.readSequential` having no effect (`file_picker_web 4.0.0`). [#2206](https://github.com/vicajilau/flutter_file_picker/issues/2206)
+
+### Android & iOS
+- Removed the dead native code paths behind `withData` (`android_file_picker 2.0.0`, `file_picker_darwin 2.0.0`). [#2202](https://github.com/vicajilau/flutter_file_picker/issues/2202)
 
 ## 12.3.0
 
