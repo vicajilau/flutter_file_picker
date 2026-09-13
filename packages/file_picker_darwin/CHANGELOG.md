@@ -1,6 +1,7 @@
 ## 2.0.0
 
 - **BREAKING CHANGE**: `PlatformFile.length()` now returns `Future<int?>` instead of `Future<int>`. Returns `null` when the length could not be determined (e.g. a failed disk read), instead of `0`, matching `lengthSync()`. [#2197](https://github.com/vicajilau/flutter_file_picker/issues/2197)
+- Removed the native code path behind `withData` on iOS, dead since the Dart facade stopped forwarding it (`file_picker` 12.0.0). Picked files are no longer eagerly read into memory on the platform side; `PlatformFile.readAsBytes()` already reads lazily on demand. [#2202](https://github.com/vicajilau/flutter_file_picker/issues/2202)
 
 ## 1.2.0
 
