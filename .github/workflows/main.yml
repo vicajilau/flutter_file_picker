@@ -342,6 +342,54 @@ jobs:
         working-directory: example
         run: flutter build web
 
+  web_integration_test:
+    needs: [check_changes, test_flutter_versions]
+    if: ${{ needs.check_changes.outputs.web == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    name: Web integration test (example app)
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter --version
+      - name: Enable Web
+        run: flutter config --enable-web
+
+      # `flutter drive` always drives web through a WebDriver (chromedriver)
+      # session, even with `-d web-server`, so one has to be running for it to
+      # attach to. Installed alongside a matching Chrome rather than relying
+      # on whatever ships on the runner, to keep the two in lockstep.
+      - uses: browser-actions/setup-chrome@v2
+        id: setup-chrome
+        with:
+          install-chromedriver: true
+
+      - name: Start chromedriver
+        run: ${{ steps.setup-chrome.outputs.chromedriver-path }} --port=4444 &
+
+      # test_driver/integration_test.dart reads the chromedriver session
+      # `flutter drive` creates back out of chromedriver (CHROMEDRIVER_PORT)
+      # to attach its own Chrome DevTools Protocol connection to the same
+      # browser (WEB_PORT identifies its page), which it needs to intercept
+      # the native file-chooser dialog. See that file for why.
+      - name: Run web integration test
+        working-directory: example
+        env:
+          CHROMEDRIVER_PORT: 4444
+          WEB_PORT: 7357
+        run: |
+          flutter pub get
+          flutter drive \
+            -d web-server --web-port=$WEB_PORT \
+            --browser-name=chrome \
+            --chrome-binary="${{ steps.setup-chrome.outputs.chrome-path }}" \
+            --headless \
+            --driver=test_driver/integration_test.dart \
+            --target=integration_test/pick_file_web_test.dart
+
   # Single stable check for branch protection to require.
   #
   # The platform build jobs cannot be required directly. When one is skipped by
@@ -365,6 +413,7 @@ jobs:
       - build_windows
       - build_darwin
       - build_web
+      - web_integration_test
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5

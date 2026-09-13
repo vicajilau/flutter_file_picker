@@ -1,0 +1,1 @@
+This fixture file is used by the file_picker web integration test.
