@@ -87,7 +87,7 @@ Future<String> _waitForChromeDriverSession(String chromedriverPort) async {
   final deadline = DateTime.now().add(const Duration(seconds: 30));
   while (DateTime.now().isBefore(deadline)) {
     final response = await http.get(sessionsUrl);
-    if (jsonDecode(response.body) case {'value': List<dynamic> sessions}) {
+    if (jsonDecode(response.body) case {'value': List<Object?> sessions}) {
       for (final session in sessions) {
         if (session case {
           'capabilities': {
