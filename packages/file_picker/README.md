@@ -1,6 +1,6 @@
 ![File Picker](https://raw.githubusercontent.com/vicajilau/flutter_file_picker/main/.github/assets/readme_banner.svg)
 <p align="center">
-  <a href="https://pub.dartlang.org/packages/file_picker">
+  <a href="https://pub.dev/packages/file_picker">
     <img alt="File Picker" src="https://img.shields.io/pub/v/file_picker.svg">
   </a>
   <a href="https://github.com/Solido/awesome-flutter">
@@ -59,9 +59,10 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    - `null` means the length could not be determined (e.g. a failed disk read), distinct from a genuinely empty file, which still returns `0`.
    - **v12**: `int bytes = await file.length();`
    - **v13**: `int? bytes = await file.length();`
+   - **Tip**: You can also use `int? syncBytes = file.lengthSync();` to get the length immediately without disk I/O when already reported by the native picker, or combine them: `file.lengthSync() ?? await file.length()`.
 
 2. **Removed Parameters Deprecated Since v12**:
-   - `allowMultiple`, `withData`, `withReadStream`, and `readSequential` on `pickFiles()`/`pickFile()`: use `pickFile()` for single-file selection, and `PlatformFile.readAsBytes()`/`readAsByteStream()` to read file data.
+   - `allowMultiple`, `withData`, `withReadStream`, and `readSequential` on `pickFiles()`: use `pickFile()` for single-file selection, and `PlatformFile.readAsBytes()`/`readAsByteStream()` to read file data.
    - `lockParentWindow` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`/`saveFile()`: use `WindowsOptions.lockParentWindow` or `LinuxOptions.lockParentWindow`.
    - `cancelUploadOnWindowBlur` on `pickFiles()`/`pickFile()`: use `WebOptions.cancelUploadOnWindowBlur`.
    - `androidSafOptions` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`: use `androidOptions`.

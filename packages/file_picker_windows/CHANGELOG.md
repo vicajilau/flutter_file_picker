@@ -1,18 +1,12 @@
 ## 2.0.0
 
-#### Desktop (Windows)
-
 - **BREAKING CHANGE**: `PlatformFile.length()` now returns `Future<int?>` instead of `Future<int>`. Returns `null` when the length could not be determined (e.g. a failed disk read), instead of `0`, matching `lengthSync()`. [#2197](https://github.com/vicajilau/flutter_file_picker/issues/2197)
 
 ## 1.3.0
 
-#### Desktop (Windows)
-
 - Added `WindowsOptions.acceptLabel`, letting callers set the confirm ("OK") button text on `pickFile()`, `pickFiles()`, `getDirectoryPath()`, and `saveFile()` dialogs, via `IFileDialog.SetOkButtonLabel`. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 
 ## 1.2.0
-
-#### Desktop (Windows)
 
 - Implemented `PlatformFile.lengthSync()`. The picker only returns a file path, not its size, so this returns `null` on Windows, use `length()` to actually read it from disk.
 
