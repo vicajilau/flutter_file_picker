@@ -12,6 +12,8 @@ final class IOSFilePickerHandler: NSObject,
     UIDocumentPickerDelegate,
     UIAdaptivePresentationControllerDelegate {
 
+    private weak var registrar: FlutterPluginRegistrar?
+
     private var result: FlutterResult?
     private var eventSink: FlutterEventSink?
     private var allowMultipleSelection = false
@@ -19,6 +21,10 @@ final class IOSFilePickerHandler: NSObject,
     private var isDirectoryPicker = false
     private var isFileAndDirectoryPicker = false
     private var isSaveFile = false
+
+    init(registrar: FlutterPluginRegistrar) {
+        self.registrar = registrar
+    }
 
     func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if call.method == "clear" {
@@ -354,10 +360,18 @@ final class IOSFilePickerHandler: NSObject,
             return false
         }
     }
+    
+    private func getKeyWindow() -> UIWindow? {
+        if #available(iOS 15.0, *) {
+            return self.registrar?.viewController?.view.window?.windowScene?.keyWindow
+        } else {
+            return self.registrar?.viewController?.view.window?.windowScene?.windows
+                .filter({ $0.isKeyWindow }).first
+        }
+    }
 
     private func topViewController() -> UIViewController? {
-        let window = UIApplication.shared.windows.first { $0.isKeyWindow }
-        var topController = window?.rootViewController
+        var topController = getKeyWindow()?.rootViewController
 
         while topController?.presentedViewController != nil {
             topController = topController?.presentedViewController
