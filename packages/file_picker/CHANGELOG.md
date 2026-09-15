@@ -1,3 +1,7 @@
+## 13.1.0
+
+- Added support for UIScene on iOS.
+
 ## 13.0.0
 
 ### General
