@@ -119,7 +119,7 @@ void main() {
       'pickFile and pickFiles send dialogTitle and initialDirectory',
       () async {
         final picker = FilePickerDarwin();
-        Map? receivedArguments;
+        Map<Object?, Object?>? receivedArguments;
 
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(picker.methodChannel, (call) async {
