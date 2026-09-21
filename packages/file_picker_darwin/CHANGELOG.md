@@ -1,3 +1,7 @@
+## 2.1.1
+
+- Fixed picking multiple items on iOS silently returning nothing. `copyToTemporaryDirectory` derived its destination from the source's file name alone, which is not unique — photos edited in the Photos app are exported under a fixed name, and Live Photos arrive as `.pvt` packages. Those copies run concurrently, so colliding names raced: one item would remove the file another was still copying, both `copyItem` calls then threw and both items were dropped by the `compactMap` over the resolved results. When every item lost the race the picker called back with `nil`, reaching Dart as an empty list — indistinguishable from the user cancelling. Each item is now copied into its own freshly created subdirectory.
+
 ## 2.1.0
 
 - Added support for UIScene on iOS.

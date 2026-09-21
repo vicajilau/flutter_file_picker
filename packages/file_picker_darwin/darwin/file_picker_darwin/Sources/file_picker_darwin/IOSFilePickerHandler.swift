@@ -380,14 +380,41 @@ final class IOSFilePickerHandler: NSObject,
         return topController
     }
 
+    /// Copies a picked item into its own freshly created subdirectory of
+    /// `NSTemporaryDirectory()`.
+    ///
+    /// The destination used to be `NSTemporaryDirectory()` plus the source's
+    /// `lastPathComponent`, which is not unique: two picked assets can share a
+    /// file name. Photos edited in the Photos app are exported under a fixed
+    /// name, and Live Photos arrive as `.pvt` packages. These copies also run
+    /// concurrently, because `loadFileRepresentation` calls its completion
+    /// handler on an arbitrary queue, once per selected item. Colliding names
+    /// therefore raced:
+    ///
+    ///     A: fileExists? no  -> starts copying to /tmp/NAME
+    ///     B: fileExists? yes -> removes /tmp/NAME, deleting A's in-flight copy
+    ///     A: copyItem throws -> returns nil
+    ///     B: copyItem throws -> returns nil
+    ///
+    /// Both items are then dropped by the `compactMap` over `resolved`, and
+    /// when every item loses the race the picker calls back with `nil`, which
+    /// reaches Dart as an empty list. That is indistinguishable from the user
+    /// cancelling, so the failure is silent.
+    ///
+    /// Giving each item its own directory removes the shared destination, so
+    /// the copies can no longer observe or delete each other. The existence
+    /// check is gone with it, the directory is new every time.
     private func copyToTemporaryDirectory(_ sourceURL: URL) -> URL? {
-        let destinationURL = URL(fileURLWithPath: NSTemporaryDirectory())
+        let directoryURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let destinationURL = directoryURL
             .appendingPathComponent(sourceURL.lastPathComponent)
 
         do {
-            if FileManager.default.fileExists(atPath: destinationURL.path) {
-                try FileManager.default.removeItem(at: destinationURL)
-            }
+            try FileManager.default.createDirectory(
+                at: directoryURL,
+                withIntermediateDirectories: true
+            )
             try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
             return resolveActualFile(at: destinationURL)
         } catch {
