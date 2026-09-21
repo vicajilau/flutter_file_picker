@@ -28,6 +28,12 @@ Read and write access (required for `saveFile()`):
 
 You can also add these from Xcode, under your target's *Signing & Capabilities* tab, in the *App Sandbox* section.
 
+### `initialDirectory` in a sandboxed app
+
+In a sandboxed macOS app, the open/save dialog is presented by Powerbox, a system service that brokers file access for sandboxed apps. Powerbox will only navigate to a directory your app has already been granted access to (for example, one the user previously picked, or one covered by a security-scoped bookmark). If `initialDirectory` points somewhere outside that scope, Powerbox silently ignores it and falls back to a default location such as `~/Documents`, without any error.
+
+This is not officially documented by Apple, but it is a widely reported limitation of App Sandbox, not something this plugin can work around: the app itself has no way to make Powerbox trust an arbitrary path it hasn't already granted. `initialDirectory` will only reliably take effect on macOS for locations your app already has access to.
+
 #### Pick iOS media using its current representation
 ```dart
 List<PlatformFile> files = await FilePicker.pickFiles(
