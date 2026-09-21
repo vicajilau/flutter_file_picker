@@ -24,7 +24,8 @@ A clear and concise description of what the bug is. If the issue happens to be o
 What version did it happen?
 
 **How are you picking?**
-```
+
+```dart
 Please, post the snippet here
 ```
 

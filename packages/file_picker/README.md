@@ -18,9 +18,11 @@
 </p>
 
 # File Picker
+
 A plugin that allows you to use the native file explorer to pick single or multiple files, with extensions filtering support.
 
 ## Currently supported features
+
 * Uses OS default native pickers
 * Supports multiple platforms (Mobile, Web, Desktop)
 * Supports **WebAssembly (Wasm)** compilation
@@ -56,16 +58,16 @@ The iOS and macOS native implementations live under the shared Darwin source tre
 ## Migrating to v13
 
 1. **`PlatformFile.length()` Returns `Future<int?>`**:
-   - `null` means the length could not be determined (e.g. a failed disk read), distinct from a genuinely empty file, which still returns `0`.
-   - **v12**: `int bytes = await file.length();`
-   - **v13**: `int? bytes = await file.length();`
-   - **Tip**: You can also use `int? syncBytes = file.lengthSync();` to get the length immediately without disk I/O when already reported by the native picker, or combine them: `file.lengthSync() ?? await file.length()`.
+   * `null` means the length could not be determined (e.g. a failed disk read), distinct from a genuinely empty file, which still returns `0`.
+   * **v12**: `int bytes = await file.length();`
+   * **v13**: `int? bytes = await file.length();`
+   * **Tip**: You can also use `int? syncBytes = file.lengthSync();` to get the length immediately without disk I/O when already reported by the native picker, or combine them: `file.lengthSync() ?? await file.length()`.
 
 2. **Removed Parameters Deprecated Since v12**:
-   - `allowMultiple`, `withData`, `withReadStream`, and `readSequential` on `pickFiles()`: use `pickFile()` for single-file selection, and `PlatformFile.readAsBytes()`/`readAsByteStream()` to read file data.
-   - `lockParentWindow` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`/`saveFile()`: use `WindowsOptions.lockParentWindow` or `LinuxOptions.lockParentWindow`.
-   - `cancelUploadOnWindowBlur` on `pickFiles()`/`pickFile()`: use `WebOptions.cancelUploadOnWindowBlur`.
-   - `androidSafOptions` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`: use `androidOptions`.
+   * `allowMultiple`, `withData`, `withReadStream`, and `readSequential` on `pickFiles()`: use `pickFile()` for single-file selection, and `PlatformFile.readAsBytes()`/`readAsByteStream()` to read file data.
+   * `lockParentWindow` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`/`saveFile()`: use `WindowsOptions.lockParentWindow` or `LinuxOptions.lockParentWindow`.
+   * `cancelUploadOnWindowBlur` on `pickFiles()`/`pickFile()`: use `WebOptions.cancelUploadOnWindowBlur`.
+   * `androidSafOptions` on `pickFiles()`/`pickFile()`/`getDirectoryPath()`: use `androidOptions`.
 
 ## Migrating to v12
 
@@ -74,40 +76,41 @@ Version 12.0 transitions `file_picker` to a **federated plugin architecture**.
 ### Key Breaking Changes & Migration Steps
 
 1. **`FilePicker.pickFiles()` Returns `List<PlatformFile>`**:
-   - `FilePickerResult` has been removed in favor of direct lists of `PlatformFile`.
-   - Returns an empty list (`[]`) if the user canceled the operation.
-   - **v11**: `FilePickerResult? result = await FilePicker.pickFiles();`
-   - **v12**: `List<PlatformFile> files = await FilePicker.pickFiles();`
+   * `FilePickerResult` has been removed in favor of direct lists of `PlatformFile`.
+   * Returns an empty list (`[]`) if the user canceled the operation.
+   * **v11**: `FilePickerResult? result = await FilePicker.pickFiles();`
+   * **v12**: `List<PlatformFile> files = await FilePicker.pickFiles();`
 
 2. **Single File Picking**:
-   - Use `FilePicker.pickFile()` to pick a single file returning `PlatformFile?`.
+   * Use `FilePicker.pickFile()` to pick a single file returning `PlatformFile?`.
 
 3. **Reading Bytes and Streaming**:
-   - Instead of using `withData: true` or `withReadStream: true` flags, use `PlatformFile` methods directly:
-     - `Uint8List bytes = await file.readAsBytes();`
-     - `Stream<Uint8List> stream = file.readAsByteStream();`
+   * Instead of using `withData: true` or `withReadStream: true` flags, use `PlatformFile` methods directly:
+     * `Uint8List bytes = await file.readAsBytes();`
+     * `Stream<Uint8List> stream = file.readAsByteStream();`
 
 4. **Platform Options**:
-   - Platform-specific parameters are grouped into configuration options, with implementations per platform:
-     - `AndroidOptions` / `FilePickerAndroidOptions`
-     - `DarwinOptions`
-     - `WindowsOptions` / `FilePickerWindowsOptions`
-     - `LinuxOptions` / `FilePickerLinuxOptions`
-     - `WebOptions` / `FilePickerWebOptions`
+   * Platform-specific parameters are grouped into configuration options, with implementations per platform:
+     * `AndroidOptions` / `FilePickerAndroidOptions`
+     * `DarwinOptions`
+     * `WindowsOptions` / `FilePickerWindowsOptions`
+     * `LinuxOptions` / `FilePickerLinuxOptions`
+     * `WebOptions` / `FilePickerWebOptions`
 
 5. **`PlatformFile.size` Removed**:
-   - The `size` property is gone. Reading a file's length is now a method, because on some platforms it means touching the disk.
-   - **v11**: `int bytes = file.size;`
-   - **v12**: `int bytes = await file.length();`
-   - Since 12.2.0 there is also `int? lengthSync()`, which returns the length the native picker already reported without doing any I/O, or `null` when it did not report one. Use `file.lengthSync() ?? await file.length()` when you want a value either way.
-
+   * The `size` property is gone. Reading a file's length is now a method, because on some platforms it means touching the disk.
+   * **v11**: `int bytes = file.size;`
+   * **v12**: `int bytes = await file.length();`
+   * Since 12.2.0 there is also `int? lengthSync()`, which returns the length the native picker already reported without doing any I/O, or `null` when it did not report one. Use `file.lengthSync() ?? await file.length()` when you want a value either way.
 
 ## Documentation
+
 For platform-specific setup, see the README of the platform package you're targeting (e.g. [`file_picker_darwin`](https://pub.dev/packages/file_picker_darwin) for macOS entitlements, [`android_file_picker`](https://pub.dev/packages/android_file_picker) for Android notes). For the full API, see the [official API reference on pub.dev](https://pub.dev/documentation/file_picker/latest/file_picker/FilePicker-class.html).
 
 ## Usage
 
 #### Single file
+
 ```dart
 PlatformFile? file = await FilePicker.pickFile();
 
@@ -120,6 +123,7 @@ if (file != null) {
 ```
 
 #### Multiple files
+
 ```dart
 List<PlatformFile> files = await FilePicker.pickFiles();
 
@@ -133,6 +137,7 @@ if (files.isNotEmpty) {
 ```
 
 #### Multiple files with extension filter
+
 ```dart
 List<PlatformFile> files = await FilePicker.pickFiles(
   type: FileType.custom,
@@ -141,6 +146,7 @@ List<PlatformFile> files = await FilePicker.pickFiles(
 ```
 
 #### iOS photo-library asset representation
+
 ```dart
 List<PlatformFile> files = await FilePicker.pickFiles(
   type: FileType.video,
@@ -158,6 +164,7 @@ compatible representation. Non-automatic modes require
 library.
 
 #### Confirm button text
+
 ```dart
 List<PlatformFile> files = await FilePicker.pickFiles(
   windowsOptions: const WindowsOptions(acceptLabel: 'Choose'),
@@ -172,6 +179,7 @@ four), and macOS (`pickFile()`/`pickFiles()` only). Has no effect on iOS,
 Android, or Web.
 
 #### Pick a directory
+
 ```dart
 String? selectedDirectory = await FilePicker.getDirectoryPath();
 
@@ -181,6 +189,7 @@ if (selectedDirectory == null) {
 ```
 
 #### Save-file / save-as dialog
+
 ```dart
 Uri? outputFile = await FilePicker.saveFile(
   dialogTitle: 'Please select an output file:',

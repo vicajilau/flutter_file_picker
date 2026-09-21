@@ -27,7 +27,7 @@ This repository is a [Melos](https://melos.invertase.dev/) workspace hosting `fi
 ## Packages
 
 | Package | Pub | Description |
-|---|---|---|
+| --- | --- | --- |
 | [`file_picker`](packages/file_picker) | [![pub](https://img.shields.io/pub/v/file_picker.svg)](https://pub.dev/packages/file_picker) | The main package. Add this to your app, it pulls in the right platform implementation automatically. |
 | [`file_picker_platform_interface`](packages/file_picker_platform_interface) | [![pub](https://img.shields.io/pub/v/file_picker_platform_interface.svg)](https://pub.dev/packages/file_picker_platform_interface) | The shared interface and data contracts (`PlatformFile`, `FileType`, platform option classes) every implementation builds on. |
 | [`file_picker_darwin`](packages/file_picker_darwin) | [![pub](https://img.shields.io/pub/v/file_picker_darwin.svg)](https://pub.dev/packages/file_picker_darwin) | iOS and macOS implementation. |

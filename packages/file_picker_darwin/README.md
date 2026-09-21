@@ -35,6 +35,7 @@ In a sandboxed macOS app, the open/save dialog is presented by Powerbox, a syste
 This is not officially documented by Apple, but it is a widely reported limitation of App Sandbox, not something this plugin can work around: the app itself has no way to make Powerbox trust an arbitrary path it hasn't already granted. `initialDirectory` will only reliably take effect on macOS for locations your app already has access to.
 
 #### Pick iOS media using its current representation
+
 ```dart
 List<PlatformFile> files = await FilePicker.pickFiles(
   type: FileType.video,
