@@ -1,6 +1,6 @@
 ## 2.1.2
 
-- Fixed `initialDirectory` having no effect on macOS and iOS for `pickFile()`, `pickFiles()`, and `getDirectoryPath()`. The Dart implementation never forwarded `initialDirectory` (and `dialogTitle` for `getDirectoryPath()`) to the native method channel call, so the native side, which already read those arguments correctly, never received them. [#2216](https://github.com/vicajilau/flutter_file_picker/issues/2216)
+- Fixed `initialDirectory` having no effect on macOS and iOS for `pickFile()`, `pickFiles()`, and `getDirectoryPath()`. [#2216](https://github.com/vicajilau/flutter_file_picker/issues/2216)
 
 ## 2.1.1
 
