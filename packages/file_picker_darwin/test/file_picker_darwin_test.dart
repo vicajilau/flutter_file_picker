@@ -115,6 +115,60 @@ void main() {
       expect(receivedLabel, isNull);
     });
 
+    test(
+      'pickFile and pickFiles send dialogTitle and initialDirectory',
+      () async {
+        final picker = FilePickerDarwin();
+        Map? receivedArguments;
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, (call) async {
+              receivedArguments = call.arguments as Map;
+              return <Map<Object?, Object?>>[];
+            });
+        addTearDown(() {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(picker.methodChannel, null);
+        });
+
+        await picker.pickFile(
+          dialogTitle: 'Pick a file',
+          initialDirectory: '/Users/test/Documents',
+        );
+        expect(receivedArguments?['dialogTitle'], 'Pick a file');
+        expect(receivedArguments?['initialDirectory'], '/Users/test/Documents');
+
+        await picker.pickFiles(
+          dialogTitle: 'Pick files',
+          initialDirectory: '/Users/test/Downloads',
+        );
+        expect(receivedArguments?['dialogTitle'], 'Pick files');
+        expect(receivedArguments?['initialDirectory'], '/Users/test/Downloads');
+      },
+    );
+
+    test('getDirectoryPath sends dialogTitle and initialDirectory', () async {
+      final picker = FilePickerDarwin();
+      Map? receivedArguments;
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(picker.methodChannel, (call) async {
+            receivedArguments = call.arguments as Map;
+            return null;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null);
+      });
+
+      await picker.getDirectoryPath(
+        dialogTitle: 'Pick a folder',
+        initialDirectory: '/Users/test/Projects',
+      );
+      expect(receivedArguments?['dialogTitle'], 'Pick a folder');
+      expect(receivedArguments?['initialDirectory'], '/Users/test/Projects');
+    });
+
     test('rejects non-automatic representation with compression', () {
       final picker = FilePickerDarwin();
       const darwinOptions = DarwinOptions(
