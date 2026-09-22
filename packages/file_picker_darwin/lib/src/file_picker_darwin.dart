@@ -118,6 +118,8 @@ class FilePickerDarwin extends FilePickerPlatform {
             'assetRepresentationMode':
                 darwinOptions.assetRepresentationMode.name,
             'acceptLabel': darwinOptions.acceptLabel,
+            'dialogTitle': dialogTitle,
+            'initialDirectory': initialDirectory,
           });
 
       if (result == null) {
@@ -171,7 +173,10 @@ class FilePickerDarwin extends FilePickerPlatform {
     WebOptions webOptions = const WebOptions(),
   }) async {
     try {
-      return await methodChannel.invokeMethod<String>('dir');
+      return await methodChannel.invokeMethod<String>('dir', {
+        'dialogTitle': dialogTitle,
+        'initialDirectory': initialDirectory,
+      });
     } on PlatformException catch (ex) {
       print('[$_tag] Could not resolve directory path: ${ex.message}');
     }
