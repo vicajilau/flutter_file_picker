@@ -33,7 +33,9 @@ class PickedFilesResults extends StatelessWidget {
                 onPressed: () =>
                     onRemoveAndroidFile(index, androidPlatformFile),
               );
-        final path = '${pickedFile.path}';
+        // On web, PlatformFile.path is always null (web files have no
+        // filesystem path), so fall back to the blob/data URI instead.
+        final path = pickedFile.path ?? pickedFile.uri.toString();
 
         return ListTile(
           leading: Text(
