@@ -32,7 +32,7 @@ dependencies:
   flutter:
     sdk: flutter
   file_picker_platform_interface: ^4.0.0
-  cross_file: ^0.3.5+4
+  cross_file: ^0.4.0
   path: ^1.9.0
 
 dev_dependencies:
