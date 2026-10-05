@@ -1,3 +1,9 @@
+## 5.0.0
+
+- **BREAKING CHANGE**: Removed `withData`, `withReadStream` and `readSequential` from `FilePickerWebOptions`. Picked files are no longer read at pick time, use `readAsBytes()`/`readAsByteStream()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: Removed the `bytes` and `readStream` parameters of `WebPlatformFile`.
+- **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41 and Dart 3.11.
+
 ## 4.0.1
 
 - Fixed picking files on Safari (macOS and iOS) never returning the selection. [#2222](https://github.com/vicajilau/flutter_file_picker/issues/2222)

@@ -1,3 +1,7 @@
+## 3.0.0
+
+- **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41, Dart 3.11 and macOS 10.15. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+
 ## 2.1.2
 
 - Fixed `initialDirectory` having no effect on macOS and iOS for `pickFile()`, `pickFiles()`, and `getDirectoryPath()`. [#2216](https://github.com/vicajilau/flutter_file_picker/issues/2216)
