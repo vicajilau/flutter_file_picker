@@ -15,7 +15,7 @@ base class WindowsPlatformFile extends PlatformFile {
   }) : _xFile = xFile,
        _bytesLength = bytesLength;
 
-  factory WindowsPlatformFile.fromPath(String path, {Uint8List? bytes}) {
+  factory WindowsPlatformFile.fromPath(String path) {
     if (path.isEmpty) {
       throw ArgumentError(
         'path cannot be empty when creating WindowsPlatformFile',
@@ -23,12 +23,7 @@ base class WindowsPlatformFile extends PlatformFile {
     }
     final uri = Uri.file(path, windows: true);
     final name = p.windows.basename(path);
-    return WindowsPlatformFile(
-      name: name,
-      uri: uri,
-      xFile: XFile(path, name: name, bytes: bytes),
-      bytesLength: bytes?.lengthInBytes,
-    );
+    return WindowsPlatformFile(name: name, uri: uri);
   }
 
   @override
@@ -41,14 +36,11 @@ base class WindowsPlatformFile extends PlatformFile {
   final int? _bytesLength;
 
   @override
-  XFile get xFile {
-    final file = _xFile;
-    if (file != null) return file;
-    if (uri.scheme == 'file') {
-      return XFile(uri.toFilePath(), name: name);
-    }
-    return XFile(uri.toString(), name: name);
-  }
+  XFile get xFile =>
+      _xFile ??
+      (uri.scheme == 'file'
+          ? XFile.fileSystem(path: uri.toFilePath())
+          : XFile.scopedStorage(uri: uri.toString()));
 
   /// Only known when this file was created with its bytes already in hand.
   ///

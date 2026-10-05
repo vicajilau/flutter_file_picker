@@ -64,7 +64,7 @@ configure<LibraryExtension> {
     namespace = "com.mr.flutter.plugin.filepicker"
 
     defaultConfig {
-        minSdk = 21
+        minSdk = 24
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("proguard-rules.pro")
     }

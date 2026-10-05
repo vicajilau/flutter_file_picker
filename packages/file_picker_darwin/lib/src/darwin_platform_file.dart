@@ -40,7 +40,6 @@ base class DarwinPlatformFile extends PlatformFile {
     return DarwinPlatformFile(
       name: name,
       uri: uri,
-      xFile: path.isNotEmpty ? XFile(path, name: name) : null,
       bytesLength: data['size'] as int?,
     );
   }
@@ -55,14 +54,11 @@ base class DarwinPlatformFile extends PlatformFile {
   final int? _bytesLength;
 
   @override
-  XFile get xFile {
-    final file = _xFile;
-    if (file != null) return file;
-    if (uri.scheme == 'file') {
-      return XFile(uri.toFilePath(), name: name);
-    }
-    return XFile(uri.toString(), name: name);
-  }
+  XFile get xFile =>
+      _xFile ??
+      (uri.scheme == 'file'
+          ? XFile.fileSystem(path: uri.toFilePath())
+          : XFile.scopedStorage(uri: uri.toString()));
 
   /// The size iOS/macOS already reported for this file when it was picked.
   @override
