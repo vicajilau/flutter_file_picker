@@ -2,14 +2,14 @@ import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
 
+import 'package:cross_file/cross_file.dart';
+import 'package:cross_file_web/cross_file_web.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:path/path.dart' as p;
 import 'package:web/web.dart';
 
 import 'file_picker_web_options.dart';
-import 'indexed_task_runner.dart';
-import 'preload_policy.dart';
 import 'web_file_input_session.dart';
 import 'web_platform_file.dart';
 
@@ -20,7 +20,6 @@ import 'web_platform_file.dart';
 /// in browser environments.
 class FilePickerWeb extends FilePickerPlatform {
   static const String _kFilePickerInputsDomId = '__file_picker_web-file-input';
-  static const int _readStreamChunkSize = 1000 * 1000; // 1 MB
 
   late Element _target;
 
@@ -141,85 +140,36 @@ class FilePickerWeb extends FilePickerPlatform {
     return files ?? <PlatformFile>[];
   }
 
-  /// Processes the selected [FileList] according to [webOptions] and returns
-  /// a list of [PlatformFile] instances.
+  /// Wraps each selected [File] in a [WebPlatformFile] without reading it.
   ///
-  /// Reads files one at a time when [FilePickerWebOptions.readSequential] is
-  /// `true`, or concurrently otherwise; either way the result preserves the
-  /// original selection order.
+  /// The content is read on demand through [PlatformFile.readAsBytes] and
+  /// [PlatformFile.readAsByteStream].
   Future<List<PlatformFile>> _processSelectedFiles(
     FileList files,
     FilePickerWebOptions webOptions,
   ) async {
-    Future<PlatformFile?> processFileAt(int index) async {
-      final file = files.item(index);
-      if (file == null) return null;
-
-      if (webOptions.withReadStream) {
-        return _createWebPlatformFile(
-          file: file,
-          readStream: _openFileReadStream(file),
-        );
-      }
-
-      if (!shouldPreloadBytes(file.size, withData: webOptions.withData)) {
-        return _createWebPlatformFile(file: file);
-      }
-
-      final bytes = await _readSingleFileBytes(file);
-      return _createWebPlatformFile(file: file, bytes: bytes);
-    }
-
-    final results = await runIndexedTasks(
-      files.length,
-      processFileAt,
-      sequential: webOptions.readSequential,
-    );
-    return results.whereType<PlatformFile>().toList();
+    return [
+      for (var i = 0; i < files.length; i++)
+        if (files.item(i) case final file?) _createWebPlatformFile(file),
+    ];
   }
 
-  /// Reads an HTML [File] content into a [Uint8List] using [FileReader].
-  Future<Uint8List?> _readSingleFileBytes(File file) async {
-    final completer = Completer<Uint8List?>();
-    final reader = FileReader();
-
-    reader.addEventListener(
-      'loadend',
-      ((Event _) {
-        if (!completer.isCompleted) {
-          final byteBuffer = (reader.result as JSArrayBuffer?)?.toDart;
-          completer.complete(byteBuffer?.asUint8List());
-        }
-      }).toJS,
-    );
-
-    reader.addEventListener(
-      'error',
-      ((Event _) {
-        if (!completer.isCompleted) {
-          completer.complete(null);
-        }
-      }).toJS,
-    );
-
-    reader.readAsArrayBuffer(file);
-    return completer.future;
-  }
-
-  /// Creates a [WebPlatformFile] from an HTML [File], resolving its `blob:` URI.
+  /// Creates a [WebPlatformFile] backed by the picked [file] itself.
   ///
-  /// The URI always points at the picked [file] itself, which avoids creating a copy.
-  WebPlatformFile _createWebPlatformFile({
-    required File file,
-    Uint8List? bytes,
-    Stream<Uint8List>? readStream,
-  }) {
+  /// Its `blob:` URI is not revoked automatically, so it stays valid for as
+  /// long as the page is open.
+  WebPlatformFile _createWebPlatformFile(File file) {
+    final xFile = ScopedStorageXFile.fromCreationParams(
+      WebScopedStorageXFileCreationParams.fromBlob(
+        file,
+        autoRevokeObjectUrl: false,
+      ),
+    );
     return WebPlatformFile(
       name: file.name,
-      uri: Uri.parse(URL.createObjectURL(file)),
-      bytesLength: bytes != null ? bytes.length : file.size,
-      bytes: bytes,
-      readStream: readStream,
+      uri: Uri.parse(xFile.uri),
+      xFile: xFile,
+      bytesLength: file.size,
     );
   }
 
@@ -284,35 +234,5 @@ class FilePickerWeb extends FilePickerPlatform {
         (prev, next) => '${prev.isEmpty ? '' : '$prev,'} .$next',
       ),
     };
-  }
-
-  /// Opens a chunked byte stream reader for a web [File].
-  Stream<Uint8List> _openFileReadStream(File file) async* {
-    final reader = FileReader();
-
-    int start = 0;
-    while (start < file.size) {
-      final end = start + _readStreamChunkSize > file.size
-          ? file.size
-          : start + _readStreamChunkSize;
-      final blob = file.slice(start, end);
-      reader.readAsArrayBuffer(blob);
-      await EventStreamProviders.loadEvent.forTarget(reader).first;
-      final JSAny? readerResult = reader.result;
-      if (readerResult == null) {
-        continue;
-      }
-
-      if (readerResult.isA<JSArrayBuffer>()) {
-        yield (readerResult as JSArrayBuffer).toDart.asUint8List();
-        start += _readStreamChunkSize;
-        continue;
-      }
-
-      if (readerResult.isA<JSArray>()) {
-        yield Uint8List.fromList((readerResult as JSArray).toDart.cast<int>());
-        start += _readStreamChunkSize;
-      }
-    }
   }
 }

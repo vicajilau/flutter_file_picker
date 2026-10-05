@@ -5,13 +5,17 @@ import 'dart:convert';
 import 'dart:js_interop';
 
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
+import 'package:cross_file_web/cross_file_web.dart';
 import 'package:file_picker_web/file_picker_web.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:web/web.dart';
 
 void main() {
-  setUpAll(() => FilePickerWeb.registerWith(webPluginRegistrar));
+  setUpAll(() {
+    FilePickerWeb.registerWith(webPluginRegistrar);
+    CrossFileWeb.registerWith(webPluginRegistrar);
+  });
 
   Future<List<PlatformFile>> pick(List<File> files) {
     final result = FilePickerPlatform.instance.pickFiles();

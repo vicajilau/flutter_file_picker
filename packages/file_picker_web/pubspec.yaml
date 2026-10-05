@@ -28,6 +28,7 @@ dependencies:
     sdk: flutter
   file_picker_platform_interface: ^4.0.0
   cross_file: ^0.4.0
+  cross_file_web: ^1.0.0
   meta: ^1.17.0
   path: ^1.9.1
   web: ^1.1.1

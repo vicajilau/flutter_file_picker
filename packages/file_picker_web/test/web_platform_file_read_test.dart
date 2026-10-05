@@ -5,11 +5,15 @@ import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:typed_data';
 
+import 'package:cross_file_web/cross_file_web.dart';
 import 'package:file_picker_web/file_picker_web.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:web/web.dart';
 
 void main() {
+  setUpAll(() => CrossFileWeb.registerWith(webPluginRegistrar));
+
   final content = Uint8List.fromList(utf8.encode('hello file_picker'));
 
   String createBlobUrl() => URL.createObjectURL(Blob([content.toJS].toJS));
