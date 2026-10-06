@@ -103,6 +103,14 @@ jobs:
       - name: Run tests
         run: melos run test
 
+      # flutter test runs on the Dart VM, which silently skips every test
+      # marked @TestOn('browser'), and most file_picker_web tests need a real
+      # DOM. Runners already ship Chrome, which web_integration_test uses too.
+      - name: Run web tests in Chrome
+        if: matrix.flutter == 'stable'
+        working-directory: packages/file_picker_web
+        run: flutter test --platform chrome
+
       # tool/ is not a melos package, so `melos run test` never reaches it.
       - name: Run CI tooling tests
         if: matrix.flutter == 'stable'
