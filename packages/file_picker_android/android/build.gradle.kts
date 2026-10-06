@@ -23,7 +23,7 @@ buildscript {
 
     dependencies {
         classpath("com.android.tools.build:gradle:8.5.2")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20")
     }
 }
 
@@ -88,9 +88,9 @@ configure<LibraryExtension> {
 }
 
 dependencies {
-    add("implementation", "androidx.core:core:1.18.0")
-    add("implementation", "androidx.core:core-ktx:1.18.0")
-    add("implementation", "androidx.annotation:annotation:1.10.0")
+    add("implementation", "androidx.core:core:1.19.1")
+    add("implementation", "androidx.core:core-ktx:1.19.1")
+    add("implementation", "androidx.annotation:annotation:1.11.0")
     add("implementation", "androidx.lifecycle:lifecycle-runtime:2.10.0")
 }
 
