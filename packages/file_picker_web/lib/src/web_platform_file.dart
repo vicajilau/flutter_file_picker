@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:js_interop';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cross_file/cross_file.dart';
+import 'package:cross_file_web/cross_file_web.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 
 /// A Web-specific implementation of [PlatformFile].
@@ -69,11 +72,29 @@ base class WebPlatformFile extends PlatformFile {
   @override
   Future<Uint8List> readAsBytes() => xFile.readAsBytes();
 
+  /// The size of the chunks emitted by [readAsByteStream].
+  static const int streamChunkSize = 1024 * 1024;
+
   /// Opens a stream to read the file content in chunks.
   ///
-  /// Read failures are emitted as errors on the stream.
+  /// Every chunk is [streamChunkSize] bytes long except the last one, which
+  /// may be shorter, so consumers can rely on evenly sized buffers. Read
+  /// failures are emitted as errors on the stream.
   @override
-  Stream<Uint8List> readAsByteStream() => xFile.openRead();
+  Stream<Uint8List> readAsByteStream() async* {
+    final extension = xFile.getExtension<WebScopedStorageXFileExtension>();
+    if (extension == null) {
+      yield* xFile.openRead();
+      return;
+    }
+
+    final blob = await extension.getBlob();
+    for (var start = 0; start < blob.size; start += streamChunkSize) {
+      final end = min(start + streamChunkSize, blob.size);
+      final buffer = await blob.slice(start, end).arrayBuffer().toDart;
+      yield buffer.toDart.asUint8List();
+    }
+  }
 
   @override
   bool operator ==(Object other) {

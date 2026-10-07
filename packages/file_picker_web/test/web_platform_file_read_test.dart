@@ -63,4 +63,29 @@ void main() {
     final chunks = await fileAt(url).readAsByteStream().toList();
     expect(chunks.expand((chunk) => chunk).toList(), content);
   });
+
+  test('readAsByteStream() emits evenly sized chunks', () async {
+    const size =
+        WebPlatformFile.streamChunkSize * 2 +
+        WebPlatformFile.streamChunkSize ~/ 2;
+    final large = Uint8List.fromList(List.generate(size, (i) => i % 251));
+    final url = URL.createObjectURL(Blob([large.toJS].toJS));
+    addTearDown(() => URL.revokeObjectURL(url));
+
+    final chunks = await fileAt(url).readAsByteStream().toList();
+
+    expect(chunks.map((chunk) => chunk.length), [
+      WebPlatformFile.streamChunkSize,
+      WebPlatformFile.streamChunkSize,
+      WebPlatformFile.streamChunkSize ~/ 2,
+    ]);
+    expect(chunks.expand((chunk) => chunk).toList(), large);
+  });
+
+  test('readAsByteStream() emits nothing for an empty file', () async {
+    final url = URL.createObjectURL(Blob(<JSAny>[].toJS));
+    addTearDown(() => URL.revokeObjectURL(url));
+
+    expect(await fileAt(url).readAsByteStream().toList(), isEmpty);
+  });
 }

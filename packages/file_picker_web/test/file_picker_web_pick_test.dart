@@ -49,4 +49,15 @@ void main() {
     expect(files.single.uri.scheme, 'blob');
     expect(await files.single.readAsBytes(), isEmpty);
   });
+
+  test('picked files stream evenly sized chunks', () async {
+    final content = 'a' * (WebPlatformFile.streamChunkSize + 10);
+    final files = await pick([fileWith(name: 'big.txt', content: content)]);
+
+    final chunks = await files.single.readAsByteStream().toList();
+    expect(chunks.map((chunk) => chunk.length), [
+      WebPlatformFile.streamChunkSize,
+      10,
+    ]);
+  });
 }
