@@ -67,6 +67,8 @@ base class AndroidPlatformFile extends PlatformFile {
   final XFile? _xFile;
   final int? _bytesLength;
 
+  /// A [FileSystemXFile] for a picked file cached on disk, or a
+  /// [ScopedStorageXFile] for a Storage Access Framework `content://` URI.
   @override
   XFile get xFile =>
       _xFile ??

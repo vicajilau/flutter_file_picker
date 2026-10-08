@@ -61,7 +61,16 @@ The iOS and macOS native implementations live under the shared Darwin source tre
 
 2. **`PlatformFile.xFile` Uses `cross_file` 0.4.0**:
    * `XFile.path`, `XFile.mimeType`, `XFile.saveTo()` and `XFile.fromData` no longer exist, and `XFile.name` is now `Future<String?> name()`.
-   * Use `PlatformFile.path`, `PlatformFile.name`, `readAsBytes()` and `readAsByteStream()` when you do not need an `XFile`. For a file system path, check for a `FileSystemXFile`: `final path = switch (file.xFile) { FileSystemXFile(:final path) => path, _ => null };` (`FileSystemXFile` comes from `package:cross_file/cross_file.dart`).
+   * Use `PlatformFile.path`, `PlatformFile.name`, `readAsBytes()` and `readAsByteStream()` when you do not need an `XFile`. For a file system path, check for a `FileSystemXFile`:
+
+     ```dart
+     import 'package:cross_file/cross_file.dart';
+
+     final path = switch (file.xFile) {
+       FileSystemXFile(:final path) => path,
+       _ => null,
+     };
+     ```
    * See the [`cross_file` changelog](https://pub.dev/packages/cross_file/changelog) for the full list.
 
 3. **Web Reading Options Removed**:

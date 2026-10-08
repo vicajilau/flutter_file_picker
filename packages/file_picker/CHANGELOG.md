@@ -3,7 +3,6 @@
 - **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. See the [migration guide](https://github.com/vicajilau/flutter_file_picker/tree/main/packages/file_picker#migrating-to-v14). [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: Requires Flutter 3.41, Dart 3.11, Android SDK 24 and macOS 10.15.
 - **BREAKING CHANGE**: Removed `withData`, `withReadStream` and `readSequential` from `FilePickerWebOptions`.
-- Raised lower bounds of all platform implementation packages: `file_picker_platform_interface ^5.0.0`, `android_file_picker ^3.0.0`, `file_picker_darwin ^3.0.0`, `file_picker_linux ^3.0.0`, `windows_file_picker ^3.0.0`, and `file_picker_web ^5.0.0`.
 
 ## 13.1.0
 

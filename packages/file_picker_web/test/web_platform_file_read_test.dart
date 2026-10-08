@@ -68,6 +68,8 @@ void main() {
     const size =
         WebPlatformFile.streamChunkSize * 2 +
         WebPlatformFile.streamChunkSize ~/ 2;
+    // 251 is prime, so the byte pattern does not line up with the chunk
+    // boundaries (a multiple of 256) and swapped or repeated chunks still fail.
     final large = Uint8List.fromList(List.generate(size, (i) => i % 251));
     final url = URL.createObjectURL(Blob([large.toJS].toJS));
     addTearDown(() => URL.revokeObjectURL(url));
