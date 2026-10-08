@@ -408,12 +408,17 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
     /// won't append or require any extension. Fall back to the extension of
     /// the suggested file name, so a name like "Report.txt" still enforces
     /// ".txt" even though no explicit extension list reached this call.
+    ///
+    /// Extensions the system does not know produce a dynamic `UTType` that
+    /// stores its extension lowercased, so `NSSavePanel` would not recognize
+    /// "j.nme2mbAllpreset" as matching it and would append ".nme2mballpreset".
+    /// Those are left unenforced, so the suggested name is kept as is.
     private func applyDefaultExtension(_ dialog: NSSavePanel, fileName: String) {
         let ext = (fileName as NSString).pathExtension
         guard !ext.isEmpty else { return }
 
         if #available(macOS 11.0, *) {
-            if let type = UTType(filenameExtension: ext) {
+            if let type = UTType(filenameExtension: ext), !type.isDynamic {
                 dialog.allowedContentTypes = [type]
             }
         } else {
