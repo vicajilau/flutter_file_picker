@@ -1,6 +1,6 @@
 name: file_picker_web
 description: Web platform implementation of the file_picker plugin, providing browser file selection, file streaming, and file loading.
-version: 4.0.1
+version: 4.1.0
 homepage: https://github.com/vicajilau/flutter_file_picker/tree/main/packages/file_picker_web
 repository: https://github.com/vicajilau/flutter_file_picker/tree/main/packages/file_picker_web
 topics:

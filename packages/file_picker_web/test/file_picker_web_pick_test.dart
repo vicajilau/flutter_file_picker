@@ -13,8 +13,13 @@ import 'package:web/web.dart';
 void main() {
   setUpAll(() => FilePickerWeb.registerWith(webPluginRegistrar));
 
-  Future<List<PlatformFile>> pick(List<File> files) {
-    final result = FilePickerPlatform.instance.pickFiles();
+  Future<List<PlatformFile>> pick(
+    List<File> files, {
+    WebOptions webOptions = const WebOptions(),
+  }) {
+    final result = FilePickerPlatform.instance.pickFiles(
+      webOptions: webOptions,
+    );
 
     final input =
         document.querySelector('flt-file-picker-inputs input')!
@@ -45,4 +50,23 @@ void main() {
     expect(files.single.uri.scheme, 'blob');
     expect(await files.single.readAsBytes(), isEmpty);
   });
+
+  for (final (label, options) in [
+    ('default options', const FilePickerWebOptions()),
+    // ignore: deprecated_member_use_from_same_package
+    ('withReadStream', const FilePickerWebOptions(withReadStream: true)),
+  ]) {
+    test('picked files stream evenly sized chunks with $label', () async {
+      final content = 'a' * (WebPlatformFile.streamChunkSize + 10);
+      final files = await pick([
+        fileWith(name: 'big.txt', content: content),
+      ], webOptions: options);
+
+      final chunks = await files.single.readAsByteStream().toList();
+      expect(chunks.map((chunk) => chunk.length), [
+        WebPlatformFile.streamChunkSize,
+        10,
+      ]);
+    });
+  }
 }

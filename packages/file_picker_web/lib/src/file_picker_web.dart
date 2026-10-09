@@ -9,6 +9,7 @@ import 'package:web/web.dart';
 
 import 'file_picker_web_options.dart';
 import 'indexed_task_runner.dart';
+import 'platform_file_web_fetch.dart';
 import 'preload_policy.dart';
 import 'web_file_input_session.dart';
 import 'web_platform_file.dart';
@@ -20,7 +21,6 @@ import 'web_platform_file.dart';
 /// in browser environments.
 class FilePickerWeb extends FilePickerPlatform {
   static const String _kFilePickerInputsDomId = '__file_picker_web-file-input';
-  static const int _readStreamChunkSize = 1000 * 1000; // 1 MB
 
   late Element _target;
 
@@ -158,7 +158,7 @@ class FilePickerWeb extends FilePickerPlatform {
       if (webOptions.withReadStream) {
         return _createWebPlatformFile(
           file: file,
-          readStream: _openFileReadStream(file),
+          readStream: streamBlobInChunks(file),
         );
       }
 
@@ -284,35 +284,5 @@ class FilePickerWeb extends FilePickerPlatform {
         (prev, next) => '${prev.isEmpty ? '' : '$prev,'} .$next',
       ),
     };
-  }
-
-  /// Opens a chunked byte stream reader for a web [File].
-  Stream<Uint8List> _openFileReadStream(File file) async* {
-    final reader = FileReader();
-
-    int start = 0;
-    while (start < file.size) {
-      final end = start + _readStreamChunkSize > file.size
-          ? file.size
-          : start + _readStreamChunkSize;
-      final blob = file.slice(start, end);
-      reader.readAsArrayBuffer(blob);
-      await EventStreamProviders.loadEvent.forTarget(reader).first;
-      final JSAny? readerResult = reader.result;
-      if (readerResult == null) {
-        continue;
-      }
-
-      if (readerResult.isA<JSArrayBuffer>()) {
-        yield (readerResult as JSArrayBuffer).toDart.asUint8List();
-        start += _readStreamChunkSize;
-        continue;
-      }
-
-      if (readerResult.isA<JSArray>()) {
-        yield Uint8List.fromList((readerResult as JSArray).toDart.cast<int>());
-        start += _readStreamChunkSize;
-      }
-    }
   }
 }
