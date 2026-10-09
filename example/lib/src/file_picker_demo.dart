@@ -35,6 +35,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
   bool _lockParentWindow = false;
   bool _userAborted = false;
   bool _multiPick = false;
+  bool _orderedSelection = true;
   bool _safPersist = false;
   bool _safReadWrite = false;
   bool _supportsSafOptions = false;
@@ -111,7 +112,10 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
             lockParentWindow: _lockParentWindow,
             acceptLabel: _acceptLabelFromInput(),
           ),
-          darwinOptions: DarwinOptions(acceptLabel: _acceptLabelFromInput()),
+          darwinOptions: DarwinOptions(
+            acceptLabel: _acceptLabelFromInput(),
+            orderedSelection: _orderedSelection,
+          ),
           androidOptions:
               _androidSafOptionsFromFlags() ?? const AndroidOptions(),
         );
@@ -131,7 +135,10 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
             lockParentWindow: _lockParentWindow,
             acceptLabel: _acceptLabelFromInput(),
           ),
-          darwinOptions: DarwinOptions(acceptLabel: _acceptLabelFromInput()),
+          darwinOptions: DarwinOptions(
+            acceptLabel: _acceptLabelFromInput(),
+            orderedSelection: _orderedSelection,
+          ),
           androidOptions:
               _androidSafOptionsFromFlags() ?? const AndroidOptions(),
         );
@@ -636,6 +643,17 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
             }
           },
           value: _multiPick,
+        ),
+      ),
+      ConstrainedBox(
+        constraints: const BoxConstraints.tightFor(width: 400.0),
+        child: SwitchListTile.adaptive(
+          title: const Text(
+            'Ordered selection (iOS photo library)',
+            textAlign: TextAlign.left,
+          ),
+          onChanged: (value) => setState(() => _orderedSelection = value),
+          value: _orderedSelection,
         ),
       ),
       ConstrainedBox(

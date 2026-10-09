@@ -1,3 +1,7 @@
+## 4.1.0
+
+- Added `DarwinOptions.orderedSelection`, `true` by default. Set it to `false` to restore swipe to select in the iOS photo library picker. [#2241](https://github.com/vicajilau/flutter_file_picker/issues/2241)
+
 ## 4.0.0
 
 - **BREAKING CHANGE**: `PlatformFile.length()` now returns `Future<int?>` instead of `Future<int>`, matching `lengthSync()`. `null` means the length could not be determined (e.g. a failed disk read), distinct from a genuinely empty file, which still returns `0`. Previously both cases returned `0`, with no way to tell them apart. [#2197](https://github.com/vicajilau/flutter_file_picker/issues/2197)

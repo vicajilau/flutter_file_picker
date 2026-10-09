@@ -38,4 +38,17 @@ void main() {
       expect(options.acceptLabel, equals('Choose'));
     });
   });
+
+  group('DarwinOptions.orderedSelection', () {
+    test('defaults to true', () {
+      expect(const DarwinOptions().orderedSelection, isTrue);
+    });
+
+    test('can be disabled', () {
+      expect(
+        const DarwinOptions(orderedSelection: false).orderedSelection,
+        isFalse,
+      );
+    });
+  });
 }

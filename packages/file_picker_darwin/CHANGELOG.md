@@ -1,3 +1,8 @@
+## 2.2.0
+
+- Added support for `DarwinOptions.orderedSelection`. Setting it to `false` restores swipe to select in the iOS photo library picker, which ordered selection disables. [#2241](https://github.com/vicajilau/flutter_file_picker/issues/2241)
+- Raised the `file_picker_platform_interface` lower bound to `^4.1.0`.
+
 ## 2.1.3
 
 - Fixed `saveFile()` on macOS appending a second, lowercased extension to file names with a custom extension, such as `j.nme2mbAllpreset`. [#2238](https://github.com/vicajilau/flutter_file_picker/issues/2238)

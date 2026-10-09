@@ -118,6 +118,7 @@ class FilePickerDarwin extends FilePickerPlatform {
             'assetRepresentationMode':
                 darwinOptions.assetRepresentationMode.name,
             'acceptLabel': darwinOptions.acceptLabel,
+            'orderedSelection': darwinOptions.orderedSelection,
             'dialogTitle': dialogTitle,
             'initialDirectory': initialDirectory,
           });
