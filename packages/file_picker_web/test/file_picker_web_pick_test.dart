@@ -17,7 +17,7 @@ void main() {
     CrossFileWeb.registerWith(webPluginRegistrar);
   });
 
-  Future<List<PlatformFile>> pick(List<File> files) {
+  Future<List<PlatformFile>> pickFiles(List<File> files) {
     final result = FilePickerPlatform.instance.pickFiles();
 
     final input =
@@ -37,14 +37,14 @@ void main() {
       File([utf8.encode(content).toJS].toJS, name);
 
   test('picked files point at a readable blob: URL', () async {
-    final files = await pick([fileWith(name: 'a.txt', content: 'hello')]);
+    final files = await pickFiles([fileWith(name: 'a.txt', content: 'hello')]);
 
     expect(files.single.uri.scheme, 'blob');
     expect(utf8.decode(await files.single.readAsBytes()), 'hello');
   });
 
   test('an empty picked file still gets a blob: URL', () async {
-    final files = await pick([fileWith(name: 'empty.txt', content: '')]);
+    final files = await pickFiles([fileWith(name: 'empty.txt', content: '')]);
 
     expect(files.single.uri.scheme, 'blob');
     expect(await files.single.readAsBytes(), isEmpty);
@@ -52,7 +52,9 @@ void main() {
 
   test('picked files stream evenly sized chunks', () async {
     final content = 'a' * (WebPlatformFile.streamChunkSize + 10);
-    final files = await pick([fileWith(name: 'big.txt', content: content)]);
+    final files = await pickFiles([
+      fileWith(name: 'big.txt', content: content),
+    ]);
 
     final chunks = await files.single.readAsByteStream().toList();
     expect(chunks.map((chunk) => chunk.length), [
