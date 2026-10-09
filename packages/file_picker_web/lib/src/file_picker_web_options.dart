@@ -9,14 +9,14 @@ final class FilePickerWebOptions extends WebOptions {
   /// `PlatformFile.readAsBytes()` and `readAsByteStream()` instead.
   @Deprecated(
     'Picked files are read on demand by PlatformFile.readAsBytes() and '
-    'readAsByteStream(). This option will be removed in 14.0.0.',
+    'readAsByteStream(). This option will be removed in file_picker v14.0.0.',
   )
   final bool withData;
 
   /// Whether to create a read stream for each picked file.
   @Deprecated(
     'PlatformFile.readAsByteStream() already reads on demand in evenly sized '
-    'chunks. This option will be removed in 14.0.0.',
+    'chunks. This option will be removed in file_picker v14.0.0.',
   )
   final bool withReadStream;
 
@@ -26,7 +26,7 @@ final class FilePickerWebOptions extends WebOptions {
   /// of this setting.
   @Deprecated(
     'Only affects the deprecated withData preload. This option will be '
-    'removed in 14.0.0.',
+    'removed in file_picker v14.0.0.',
   )
   final bool readSequential;
 
@@ -37,17 +37,17 @@ final class FilePickerWebOptions extends WebOptions {
   const FilePickerWebOptions({
     @Deprecated(
       'Picked files are read on demand by PlatformFile.readAsBytes() and '
-      'readAsByteStream(). This option will be removed in 14.0.0.',
+      'readAsByteStream(). This option will be removed in file_picker v14.0.0.',
     )
     this.withData = true,
     @Deprecated(
       'PlatformFile.readAsByteStream() already reads on demand in evenly '
-      'sized chunks. This option will be removed in 14.0.0.',
+      'sized chunks. This option will be removed in file_picker v14.0.0.',
     )
     this.withReadStream = false,
     @Deprecated(
       'Only affects the deprecated withData preload. This option will be '
-      'removed in 14.0.0.',
+      'removed in file_picker v14.0.0.',
     )
     this.readSequential = false,
     this.cancelUploadOnWindowBlur = true,
