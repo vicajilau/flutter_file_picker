@@ -16,6 +16,7 @@ class DarwinOptions {
   const DarwinOptions({
     this.assetRepresentationMode = DarwinAssetRepresentationMode.automatic,
     this.acceptLabel,
+    this.orderedSelection = true,
   });
 
   /// The preferred representation for media selected from the iOS photo
@@ -32,6 +33,20 @@ class DarwinOptions {
   /// macOS. Has no effect on iOS, `UIDocumentPickerViewController` has no
   /// equivalent there.
   final String? acceptLabel;
+
+  /// Whether the iOS photo library picker numbers selected media and returns
+  /// it in the order the user selected it.
+  ///
+  /// Ordered selection disables selecting several items by swiping across
+  /// the grid, so users have to tap each one. Set it to `false` to restore
+  /// swipe to select when the selection order does not matter, in which case
+  /// the order of the results is not guaranteed to follow the selection.
+  ///
+  /// Only applies to `FileType.image`, `FileType.video` and `FileType.media`,
+  /// which use the photo library picker. Other types use the Files picker,
+  /// which has no ordered selection. Requires iOS 15 or newer and has no
+  /// effect on macOS.
+  final bool orderedSelection;
 
   /// Throws an [ArgumentError] if this configuration conflicts with
   /// [compressionQuality].

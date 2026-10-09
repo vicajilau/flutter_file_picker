@@ -115,6 +115,36 @@ void main() {
       expect(receivedLabel, isNull);
     });
 
+    test('pickFile and pickFiles send orderedSelection', () async {
+      final picker = FilePickerDarwin();
+      bool? received;
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(picker.methodChannel, (call) async {
+            received = (call.arguments as Map)['orderedSelection'] as bool?;
+            return <Map<Object?, Object?>>[];
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null);
+      });
+
+      await picker.pickFiles(type: FileType.media);
+      expect(received, isTrue);
+
+      await picker.pickFiles(
+        type: FileType.media,
+        darwinOptions: const DarwinOptions(orderedSelection: false),
+      );
+      expect(received, isFalse);
+
+      await picker.pickFile(
+        type: FileType.media,
+        darwinOptions: const DarwinOptions(orderedSelection: false),
+      );
+      expect(received, isFalse);
+    });
+
     test(
       'pickFile and pickFiles send dialogTitle and initialDirectory',
       () async {

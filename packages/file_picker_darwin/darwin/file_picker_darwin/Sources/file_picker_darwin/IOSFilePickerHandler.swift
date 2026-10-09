@@ -18,6 +18,7 @@ final class IOSFilePickerHandler: NSObject,
     private var eventSink: FlutterEventSink?
     private var allowMultipleSelection = false
     private var assetRepresentationMode = PHPickerConfiguration.AssetRepresentationMode.automatic
+    private var orderedSelection = true
     private var isDirectoryPicker = false
     private var isFileAndDirectoryPicker = false
     private var isSaveFile = false
@@ -68,6 +69,7 @@ final class IOSFilePickerHandler: NSObject,
             (arguments["allowMultipleSelection"] as? Bool) ?? false
         assetRepresentationMode = resolveAssetRepresentationMode(
             arguments["assetRepresentationMode"] as? String)
+        orderedSelection = (arguments["orderedSelection"] as? Bool) ?? true
 
         switch call.method {
         case "any":
@@ -248,7 +250,9 @@ final class IOSFilePickerHandler: NSObject,
         var configuration = PHPickerConfiguration(photoLibrary: .shared())
         configuration.preferredAssetRepresentationMode = assetRepresentationMode
         configuration.selectionLimit = allowsMultipleSelection ? 0 : 1
-        if #available(iOS 15.0, *) {
+        // Ordered selection keeps the results in the order the user picked
+        // them, but disables swipe to select, so apps can opt out.
+        if orderedSelection, #available(iOS 15.0, *) {
             configuration.selection = .ordered
         }
 
