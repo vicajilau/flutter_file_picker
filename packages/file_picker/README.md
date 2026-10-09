@@ -175,7 +175,9 @@ List<PlatformFile> files = await FilePicker.pickFiles(
 By default the iOS photo library picker numbers the selected media and returns
 it in the order the user selected it, which disables selecting several items
 by swiping across the grid. Set `orderedSelection: false` to restore swipe to
-select when the selection order does not matter.
+select when the selection order does not matter. It only applies to
+`FileType.image`, `FileType.video` and `FileType.media`, the types that use the
+photo library picker.
 
 #### Confirm button text
 

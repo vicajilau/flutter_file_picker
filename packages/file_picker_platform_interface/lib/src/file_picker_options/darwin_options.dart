@@ -42,8 +42,10 @@ class DarwinOptions {
   /// swipe to select when the selection order does not matter, in which case
   /// the order of the results is not guaranteed to follow the selection.
   ///
-  /// Requires iOS 15 or newer. It has no effect on macOS, on older iOS
-  /// versions, or when selecting files with the iOS document picker.
+  /// Only applies to `FileType.image`, `FileType.video` and `FileType.media`,
+  /// which use the photo library picker. Other types use the Files picker,
+  /// which has no ordered selection. Requires iOS 15 or newer and has no
+  /// effect on macOS.
   final bool orderedSelection;
 
   /// Throws an [ArgumentError] if this configuration conflicts with
