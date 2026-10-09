@@ -1,5 +1,8 @@
 import 'dart:js_interop';
+import 'dart:math';
 import 'dart:typed_data';
+
+import 'package:web/web.dart';
 
 @JS('fetch')
 external JSPromise<JSObject> _fetchJs(JSString url);
@@ -7,23 +10,7 @@ external JSPromise<JSObject> _fetchJs(JSString url);
 /// Interop extension type representing a Web `Response` JS object.
 extension type _Response(JSObject _) implements JSObject {
   external JSPromise<JSArrayBuffer> arrayBuffer();
-  external JSObject? get body;
-}
-
-/// Interop extension type representing a Web `ReadableStream` JS object.
-extension type _ReadableStream(JSObject _) implements JSObject {
-  external JSObject getReader();
-}
-
-/// Interop extension type representing a Web `ReadableStreamDefaultReader` JS object.
-extension type _Reader(JSObject _) implements JSObject {
-  external JSPromise<JSObject> read();
-}
-
-/// Interop extension type representing a Web `ReadableStreamReadResult` JS object.
-extension type _ReadResult(JSObject _) implements JSObject {
-  external bool get done;
-  external JSUint8Array? get value;
+  external JSPromise<Blob> blob();
 }
 
 /// Fetches the bytes of a web-only path (`blob:` or `data:` URL).
@@ -64,42 +51,21 @@ Stream<Uint8List>? fetchStreamFromWebPath(String path) {
   return _streamFromWebPath(path);
 }
 
-/// Reads a `blob:` or `data:` URL and emits its bytes as a stream.
-///
-/// Uses `Response.body` (`ReadableStream`) when available; otherwise falls
-/// back to a single in-memory `arrayBuffer()` chunk.
+/// The size of the chunks emitted by [streamBlobInChunks].
+const int webStreamChunkSize = 1024 * 1024;
+
+/// Reads a `blob:` or `data:` URL and emits its bytes in evenly sized chunks.
 Stream<Uint8List> _streamFromWebPath(String path) async* {
-  if (path.startsWith('data:')) {
-    final uriData = Uri.parse(path).data;
-
-    if (uriData == null) {
-      throw FormatException('Invalid data: URL', path);
-    }
-
-    yield uriData.contentAsBytes();
-    return;
-  }
-
   final response = _Response(await _fetchJs(path.toJS).toDart);
-  final body = response.body;
+  yield* streamBlobInChunks(await response.blob().toDart);
+}
 
-  // If there's no streaming body, fallback to arrayBuffer()
-  if (body == null) {
-    final buffer = await response.arrayBuffer().toDart;
+/// Emits the content of [blob] in chunks of [webStreamChunkSize] bytes,
+/// except the last one, which may be shorter.
+Stream<Uint8List> streamBlobInChunks(Blob blob) async* {
+  for (var start = 0; start < blob.size; start += webStreamChunkSize) {
+    final end = min(start + webStreamChunkSize, blob.size);
+    final buffer = await blob.slice(start, end).arrayBuffer().toDart;
     yield buffer.toDart.asUint8List();
-    return;
-  }
-
-  final readable = _ReadableStream(body);
-  final reader = _Reader(readable.getReader());
-
-  while (true) {
-    final result = _ReadResult(await reader.read().toDart);
-    if (result.done) break;
-
-    final arr = result.value;
-    if (arr == null) break;
-
-    yield arr.toDart;
   }
 }

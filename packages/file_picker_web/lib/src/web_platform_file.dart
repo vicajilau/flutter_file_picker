@@ -94,7 +94,13 @@ base class WebPlatformFile extends PlatformFile {
     return xFile.readAsBytes();
   }
 
+  /// The size of the chunks emitted by [readAsByteStream].
+  static const int streamChunkSize = webStreamChunkSize;
+
   /// Asynchronously opens a stream to read the file content in chunks.
+  ///
+  /// Every chunk is [streamChunkSize] bytes long except the last one, which
+  /// may be shorter, so consumers can rely on evenly sized buffers.
   @override
   Stream<Uint8List> readAsByteStream() async* {
     final readStream = _readStream;
