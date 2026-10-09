@@ -1,7 +1,7 @@
 ## 4.1.0
 
 - `readAsByteStream()` now always emits evenly sized chunks of `WebPlatformFile.streamChunkSize` (1 MiB), except the last one, with or without `withReadStream`. With `withReadStream` the chunks used to be 1,000,000 bytes. [#2223](https://github.com/vicajilau/flutter_file_picker/issues/2223)
-- Deprecated `withData`, `withReadStream` and `readSequential` in `FilePickerWebOptions`. Picked files are read on demand by `readAsBytes()` and `readAsByteStream()`. They will be removed in 14.0.0.
+- Deprecated `withData`, `withReadStream` and `readSequential` in `FilePickerWebOptions`. Picked files are read on demand by `readAsBytes()` and `readAsByteStream()`. They will be removed in the next major version.
 
 ## 4.0.1
 
