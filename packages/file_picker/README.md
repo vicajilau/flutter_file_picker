@@ -53,7 +53,30 @@ See the [official API reference on pub.dev](https://pub.dev/documentation/file_p
 
 ### Darwin implementation notes
 
-The iOS and macOS native implementations live under the shared Darwin source tree (`file_picker_darwin`). The iOS implementation requires iOS 14.0 or newer because it uses `PHPickerViewController` and `PHPickerResult`.
+The iOS and macOS native implementations live under the shared Darwin source tree (`file_picker_darwin`). The iOS implementation requires iOS 14.0 or newer because it uses `PHPickerViewController` and `PHPickerResult`. The macOS implementation requires macOS 10.15 or newer.
+
+## Migrating to v14
+
+1. **Minimum Versions Raised**: Flutter 3.41, Dart 3.11, Android SDK 24 and macOS 10.15, required by `cross_file` 0.4.0.
+
+2. **`PlatformFile.xFile` Uses `cross_file` 0.4.0**:
+   * `XFile.path`, `XFile.mimeType`, `XFile.saveTo()` and `XFile.fromData` no longer exist, and `XFile.name` is now `Future<String?> name()`.
+   * Use `PlatformFile.path`, `PlatformFile.name`, `readAsBytes()` and `readAsByteStream()` when you do not need an `XFile`. For a file system path, check for a `FileSystemXFile`:
+
+     ```dart
+     import 'package:cross_file/cross_file.dart';
+
+     final path = switch (file.xFile) {
+       FileSystemXFile(:final path) => path,
+       _ => null,
+     };
+     ```
+   * See the [`cross_file` changelog](https://pub.dev/packages/cross_file/changelog) for the full list.
+
+3. **Web Reading Options Removed**:
+   * `withData`, `withReadStream` and `readSequential` are removed from `FilePickerWebOptions`. Picked files are no longer read at pick time, and `readAsBytes()`/`readAsByteStream()` read them on demand.
+   * **v13**: `FilePickerWebOptions(withData: false, withReadStream: true, cancelUploadOnWindowBlur: false)`
+   * **v14**: `FilePickerWebOptions(cancelUploadOnWindowBlur: false)`
 
 ## Migrating to v13
 

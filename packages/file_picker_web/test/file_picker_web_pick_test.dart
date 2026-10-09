@@ -5,21 +5,20 @@ import 'dart:convert';
 import 'dart:js_interop';
 
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
+import 'package:cross_file_web/cross_file_web.dart';
 import 'package:file_picker_web/file_picker_web.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:web/web.dart';
 
 void main() {
-  setUpAll(() => FilePickerWeb.registerWith(webPluginRegistrar));
+  setUpAll(() {
+    FilePickerWeb.registerWith(webPluginRegistrar);
+    CrossFileWeb.registerWith(webPluginRegistrar);
+  });
 
-  Future<List<PlatformFile>> pickFiles(
-    List<File> files, {
-    WebOptions webOptions = const WebOptions(),
-  }) {
-    final result = FilePickerPlatform.instance.pickFiles(
-      webOptions: webOptions,
-    );
+  Future<List<PlatformFile>> pickFiles(List<File> files) {
+    final result = FilePickerPlatform.instance.pickFiles();
 
     final input =
         document.querySelector('flt-file-picker-inputs input')!
@@ -51,29 +50,16 @@ void main() {
     expect(await files.single.readAsBytes(), isEmpty);
   });
 
-  Future<void> expectEvenChunks(List<PlatformFile> files) async {
+  test('picked files stream evenly sized chunks', () async {
+    final content = 'a' * (WebPlatformFile.streamChunkSize + 10);
+    final files = await pickFiles([
+      fileWith(name: 'big.txt', content: content),
+    ]);
+
     final chunks = await files.single.readAsByteStream().toList();
     expect(chunks.map((chunk) => chunk.length), [
       WebPlatformFile.streamChunkSize,
       10,
     ]);
-  }
-
-  String bigContent() => 'a' * (WebPlatformFile.streamChunkSize + 10);
-
-  test('picked files stream evenly sized chunks', () async {
-    await expectEvenChunks(
-      await pickFiles([fileWith(name: 'big.txt', content: bigContent())]),
-    );
-  });
-
-  test('picked files stream evenly sized chunks with withReadStream', () async {
-    await expectEvenChunks(
-      await pickFiles(
-        [fileWith(name: 'big.txt', content: bigContent())],
-        // ignore: deprecated_member_use_from_same_package
-        webOptions: const FilePickerWebOptions(withReadStream: true),
-      ),
-    );
   });
 }

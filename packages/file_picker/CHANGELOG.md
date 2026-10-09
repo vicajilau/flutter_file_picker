@@ -1,3 +1,9 @@
+## 14.0.0
+
+- **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. See the [migration guide](https://github.com/vicajilau/flutter_file_picker/tree/main/packages/file_picker#migrating-to-v14). [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: Requires Flutter 3.41, Dart 3.11, Android SDK 24 and macOS 10.15.
+- **BREAKING CHANGE**: Removed `withData`, `withReadStream` and `readSequential` from `FilePickerWebOptions`.
+
 ## 13.1.0
 
 - Added support for UIScene on iOS.

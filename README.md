@@ -60,6 +60,7 @@ See [`packages/file_picker/README.md`](packages/file_picker/README.md) for the f
 
 ## Migration
 
+- **Upgrading to v14?** See the [Migrating to v14 Guide](packages/file_picker/README.md#migrating-to-v14) for the `cross_file` 0.4.0 migration, the raised minimum versions and the removed web reading options.
 - **Upgrading to v13?** See the [Migrating to v13 Guide](packages/file_picker/README.md#migrating-to-v13) for details on `PlatformFile.length()` returning `Future<int?>` and the removal of legacy v12-deprecated parameters.
 - **Upgrading from pre-v12?** See the [Migrating to v12 Guide](packages/file_picker/README.md#migrating-to-v12) for the federated architecture changes (`FilePicker.pickFiles()` returning `List<PlatformFile>`, platform options, and streaming).
 

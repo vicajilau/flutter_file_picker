@@ -16,7 +16,7 @@ base class TestPlatformFile extends PlatformFile {
   final Uri uri;
 
   @override
-  XFile get xFile => XFile(path ?? '');
+  XFile get xFile => XFile.fileSystem(path: path ?? '');
 
   @override
   int? lengthSync() => 100;
