@@ -189,8 +189,27 @@ final class IOSFilePickerHandler: NSObject,
         finishCurrentRequest(nil)
     }
 
-    func presentationControllerWillDismiss(_: UIPresentationController) {
-        finishCurrentRequest(nil)
+    func presentationControllerWillDismiss(
+        _ presentationController: UIPresentationController
+    ) {
+        // UIKit calls this as soon as the user starts pulling the sheet down,
+        // even if they let it spring back, so finishing right away would
+        // report a cancellation while the picker is still open and drop the
+        // later selection. Wait for the dismissal to end instead. A fast swipe
+        // may never reach presentationControllerDidDismiss, so this still
+        // finishes the request when the dismissal completes.
+        guard
+            let coordinator = presentationController.presentedViewController
+                .transitionCoordinator
+        else {
+            finishCurrentRequest(nil)
+            return
+        }
+        coordinator.animate(alongsideTransition: nil) { [weak self] context in
+            if !context.isCancelled {
+                self?.finishCurrentRequest(nil)
+            }
+        }
     }
 
     func presentationControllerDidDismiss(
