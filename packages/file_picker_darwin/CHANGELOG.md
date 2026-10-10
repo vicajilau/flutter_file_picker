@@ -1,3 +1,7 @@
+## 2.1.4
+
+- Fixed a partial swipe down on the iOS picker sheet completing the pick as cancelled while the picker stayed open, which dropped the files selected afterwards. [#2243](https://github.com/vicajilau/flutter_file_picker/issues/2243)
+
 ## 2.1.3
 
 - Fixed `saveFile()` on macOS appending a second, lowercased extension to file names with a custom extension, such as `j.nme2mbAllpreset`. [#2238](https://github.com/vicajilau/flutter_file_picker/issues/2238)
