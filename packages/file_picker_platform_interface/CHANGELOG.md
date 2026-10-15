@@ -1,3 +1,9 @@
+## 5.0.0
+
+- **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41 and Dart 3.11. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` now take a `darwinOptions` parameter. Implementations must add it to their overrides. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+- **BREAKING CHANGE**: Removed `FilePickerPlatform.skipEntitlementsChecks()`. It is now only on `FilePickerDarwin`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+
 ## 4.2.0
 
 - Added `DarwinOptions.copyMedia`, `true` by default. [#2245](https://github.com/vicajilau/flutter_file_picker/issues/2245)

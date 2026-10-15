@@ -1,3 +1,10 @@
+## 5.0.0
+
+- **BREAKING CHANGE**: Removed `withData`, `withReadStream` and `readSequential` from `FilePickerWebOptions`. Picked files are no longer read at pick time, use `readAsBytes()`/`readAsByteStream()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: Removed the `bytes` and `readStream` parameters of `WebPlatformFile`.
+- `readAsByteStream()` emits chunks of `WebPlatformFile.streamChunkSize` (1 MiB), except the last one, which may be shorter.
+- **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41 and Dart 3.11.
+
 ## 4.2.0
 
 - Added `FilePickerWebOptions.saveMode`. `WebSaveFileMode.dialog` saves through the browser's save dialog, and `supportsShowSaveFileDialog` tells whether the browser supports it. [#1732](https://github.com/vicajilau/flutter_file_picker/issues/1732)

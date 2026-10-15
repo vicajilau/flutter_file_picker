@@ -170,6 +170,7 @@ class FilePickerDarwin extends FilePickerPlatform {
     String? dialogTitle,
     String? initialDirectory,
     AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
@@ -178,6 +179,7 @@ class FilePickerDarwin extends FilePickerPlatform {
       return await methodChannel.invokeMethod<String>('dir', {
         'dialogTitle': dialogTitle,
         'initialDirectory': initialDirectory,
+        'acceptLabel': darwinOptions.acceptLabel,
       });
     } on PlatformException catch (ex) {
       print('[$_tag] Could not resolve directory path: ${ex.message}');
@@ -207,10 +209,9 @@ class FilePickerDarwin extends FilePickerPlatform {
   ///   await instance.skipEntitlementsChecks();
   /// }
   /// ```
-  @override
   Future<void> skipEntitlementsChecks() async {
     // Only macOS performs App Sandbox entitlement checks, this is a no-op on iOS.
-    if (!Platform.isMacOS) return;
+    if (defaultTargetPlatform != TargetPlatform.macOS) return;
     await methodChannel.invokeMethod<void>('skipEntitlementsChecks');
   }
 
@@ -222,6 +223,7 @@ class FilePickerDarwin extends FilePickerPlatform {
     String? dialogTitle,
     String? initialDirectory,
     Function(FilePickerStatus)? onFileSaving,
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
@@ -249,6 +251,7 @@ class FilePickerDarwin extends FilePickerPlatform {
             "fileName": fileName,
             "fileType": mimeType,
             "initialDirectory": initialDirectory,
+            "acceptLabel": darwinOptions.acceptLabel,
             if (!isMacOS) "bytes": bytes,
           });
 

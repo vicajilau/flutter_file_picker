@@ -1,5 +1,4 @@
 import 'dart:isolate';
-import 'dart:typed_data';
 
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:windows_file_picker/src/open_save_file_args.dart';
@@ -35,9 +34,10 @@ void main() {
         );
         expect(withoutBytes.lengthSync(), isNull);
 
-        final withBytes = WindowsPlatformFile.fromPath(
-          r'C:\Users\Test\file.txt',
-          bytes: Uint8List.fromList([1, 2, 3]),
+        final withBytes = WindowsPlatformFile(
+          name: 'file.txt',
+          uri: Uri.file(r'C:\Users\Test\file.txt', windows: true),
+          bytesLength: 3,
         );
         expect(withBytes.lengthSync(), equals(3));
       },

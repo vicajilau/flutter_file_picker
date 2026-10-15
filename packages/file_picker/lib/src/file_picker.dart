@@ -129,7 +129,7 @@ abstract final class FilePicker {
   /// The [dialogTitle], if provided, will be used as the title for the directory picker dialog.
   /// The [initialDirectory], if provided, will be used as the initial directory path for the directory picker.
   ///
-  /// The [androidOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
+  /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
   /// allow for platform-specific configurations when configuring the directory picker.
   ///
   /// Returns a [String] containing the selected directory path, or `null` if canceled.
@@ -137,6 +137,7 @@ abstract final class FilePicker {
     String? dialogTitle,
     String? initialDirectory,
     AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
@@ -145,6 +146,7 @@ abstract final class FilePicker {
       dialogTitle: dialogTitle,
       initialDirectory: initialDirectory,
       androidOptions: androidOptions,
+      darwinOptions: darwinOptions,
       windowsOptions: windowsOptions,
       linuxOptions: linuxOptions,
       webOptions: webOptions,
@@ -161,7 +163,7 @@ abstract final class FilePicker {
   /// The [initialDirectory], if provided, will be used as the initial directory path for the save file dialog.
   /// The [onFileSaving] callback, if provided, is triggered when the save dialog changes status.
   ///
-  /// The [windowsOptions], [linuxOptions], and [webOptions] parameters
+  /// The [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
   /// allow for platform-specific configurations when configuring the save file dialog.
   ///
   /// Returns the [Uri] of the saved file, or `null` if the user canceled the operation.
@@ -175,6 +177,7 @@ abstract final class FilePicker {
     FileType type = FileType.any,
     List<String>? allowedExtensions,
     Function(FilePickerStatus)? onFileSaving,
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
@@ -186,27 +189,10 @@ abstract final class FilePicker {
       dialogTitle: dialogTitle,
       initialDirectory: initialDirectory,
       onFileSaving: onFileSaving,
+      darwinOptions: darwinOptions,
       windowsOptions: windowsOptions,
       linuxOptions: linuxOptions,
       webOptions: webOptions,
     );
-  }
-
-  /// Skips the macOS App Sandbox entitlement checks performed before showing a dialog.
-  ///
-  /// Only relevant for non-sandboxed macOS apps, which do not declare the
-  /// `com.apple.security.files.user-selected.read-only`/`read-write` entitlements
-  /// and would otherwise be incorrectly blocked by those checks. Call this before
-  /// any other file picking method.
-  ///
-  /// Delegates to `FilePickerPlatform.instance.skipEntitlementsChecks()`,
-  /// whose default implementation is a no-op. Only `FilePickerDarwin`
-  /// overrides it, and only macOS performs the check in the first place, so
-  /// this method does nothing on platforms other than macOS.
-  ///
-  /// Note: skipping entitlement checks may lead to unexpected behavior if the
-  /// app is actually sandboxed. Use with caution.
-  static Future<void> skipEntitlementsChecks() async {
-    await FilePickerPlatform.instance.skipEntitlementsChecks();
   }
 }
