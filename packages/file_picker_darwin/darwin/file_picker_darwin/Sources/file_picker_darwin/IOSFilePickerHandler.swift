@@ -23,6 +23,7 @@ final class IOSFilePickerHandler: NSObject,
     private var isDirectoryPicker = false
     private var isFileAndDirectoryPicker = false
     private var isSaveFile = false
+    private let loader = PickLoader()
 
     init(registrar: FlutterPluginRegistrar) {
         self.registrar = registrar
@@ -154,57 +155,26 @@ final class IOSFilePickerHandler: NSObject,
             return
         }
 
+        let preferringCompatible = assetRepresentationMode == .compatible
         // Without a copy, only the photo library identifier is returned, so
         // apps can open the original asset later without duplicating storage.
         if !copyMedia {
-            let assets = results.compactMap { makeAssetInfo(from: $0) }
+            let assets = results.compactMap {
+                loader.assetInfo(for: $0, preferringCompatible: preferringCompatible)
+            }
             complete(currentResult, pickedCount: results.count, loaded: assets)
             result = nil
             return
         }
 
         eventSink?(true)
-        let group = DispatchGroup()
-        var resolved = Array<[String: Any]?>(repeating: nil, count: results.count)
-        let resolvedLock = NSLock()
-
-        for (index, item) in results.enumerated() {
-            group.enter()
-            // Loading the image or video itself, instead of any
-            // representation, keeps a Live Photo from bringing its whole
-            // bundle, paired video included (#2260).
-            let typeIdentifier = MediaRepresentation.typeIdentifier(
-                for: item.itemProvider.registeredTypeIdentifiers,
-                preferringCompatible: assetRepresentationMode == .compatible)
-            item.itemProvider.loadFileRepresentation(
-                forTypeIdentifier: typeIdentifier
-            ) { [weak self] url, _ in
-                defer { group.leave() }
-                // iOS deletes this file when the handler returns, so it has to
-                // be copied.
-                guard let self, let sourceURL = url,
-                      let copiedURL = self.storeInTemporaryDirectory(sourceURL, copying: true)
-                else {
-                    return
-                }
-                if var fileInfo = self.makeFileInfo(from: copiedURL) {
-                    if let assetIdentifier = item.assetIdentifier {
-                        fileInfo["assetIdentifier"] = assetIdentifier
-                    }
-                    resolvedLock.lock()
-                    resolved[index] = fileInfo
-                    resolvedLock.unlock()
-                }
-            }
-        }
-
-        group.notify(queue: .main) { [weak self] in
+        loader.loadMedia(results, preferringCompatible: preferringCompatible) {
+            [weak self] loaded in
             guard let self else {
                 return
             }
             eventSink?(false)
-            let orderedResolved = resolved.compactMap { $0 }
-            complete(currentResult, pickedCount: results.count, loaded: orderedResolved)
+            complete(currentResult, pickedCount: results.count, loaded: loaded)
             result = nil
         }
     }
@@ -272,20 +242,8 @@ final class IOSFilePickerHandler: NSObject,
             return
         }
 
-        var resolved: [[String: Any]] = []
-
-        for sourceURL in urls {
-            // The picker opens with `asCopy`, so each file is already a copy
-            // the app owns, and moving it avoids storing it twice (#2261).
-            guard let movedURL = storeInTemporaryDirectory(sourceURL, copying: false),
-                  let fileInfo = makeFileInfo(from: movedURL)
-            else {
-                continue
-            }
-            resolved.append(fileInfo)
-        }
-
-        complete(currentResult, pickedCount: urls.count, loaded: resolved)
+        let loaded = loader.loadDocuments(urls)
+        complete(currentResult, pickedCount: urls.count, loaded: loaded)
         result = nil
     }
 
@@ -455,105 +413,6 @@ final class IOSFilePickerHandler: NSObject,
         return topController
     }
 
-    /// Moves a picked item into its own freshly created subdirectory of
-    /// `NSTemporaryDirectory()`, or copies it when `copying` is set, for
-    /// sources the app does not own.
-    ///
-    /// The destination used to be `NSTemporaryDirectory()` plus the source's
-    /// `lastPathComponent`, which is not unique: two picked assets can share a
-    /// file name. Photos edited in the Photos app are exported under a fixed
-    /// name, and Live Photos arrive as `.pvt` packages. These copies also run
-    /// concurrently, because `loadFileRepresentation` calls its completion
-    /// handler on an arbitrary queue, once per selected item. Colliding names
-    /// therefore raced:
-    ///
-    ///     A: fileExists? no  -> starts copying to /tmp/NAME
-    ///     B: fileExists? yes -> removes /tmp/NAME, deleting A's in-flight copy
-    ///     A: copyItem throws -> returns nil
-    ///     B: copyItem throws -> returns nil
-    ///
-    /// Both items are then dropped by the `compactMap` over `resolved`, and
-    /// when every item loses the race the picker calls back with `nil`, which
-    /// reaches Dart as an empty list. That is indistinguishable from the user
-    /// cancelling, so the failure is silent.
-    ///
-    /// Giving each item its own directory removes the shared destination, so
-    /// the copies can no longer observe or delete each other. The existence
-    /// check is gone with it, the directory is new every time.
-    private func storeInTemporaryDirectory(_ sourceURL: URL, copying: Bool) -> URL? {
-        let directoryURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent(UUID().uuidString, isDirectory: true)
-        let destinationURL = directoryURL
-            .appendingPathComponent(sourceURL.lastPathComponent)
-
-        do {
-            try FileManager.default.createDirectory(
-                at: directoryURL,
-                withIntermediateDirectories: true
-            )
-            if copying {
-                try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
-            } else {
-                try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
-            }
-            return destinationURL
-        } catch {
-            return nil
-        }
-    }
-
-    /// Describes a picked photo library asset without copying it, by its
-    /// `assetIdentifier` and a `ph:///` URI. Returns `nil` for results that do
-    /// not come from the photo library and so have no identifier.
-    private func makeAssetInfo(from item: PHPickerResult) -> [String: Any]? {
-        guard let assetIdentifier = item.assetIdentifier else {
-            return nil
-        }
-
-        let provider = item.itemProvider
-        var name = provider.suggestedName ?? assetIdentifier
-        // Use the extension of the first image or video representation. A Live
-        // Photo registers its bundle type first, and its suggested name may
-        // already end in that bundle's ".pvt" extension, so replace any
-        // extension that is not an image or video one.
-        let mediaType = MediaRepresentation.mediaType(
-            in: provider.registeredTypeIdentifiers,
-            preferringCompatible: assetRepresentationMode == .compatible)
-        let currentExtension = (name as NSString).pathExtension
-        let hasMediaExtension = UTType(filenameExtension: currentExtension)
-            .map(MediaRepresentation.isMedia) ?? false
-        if !hasMediaExtension, let ext = mediaType?.preferredFilenameExtension {
-            if !currentExtension.isEmpty {
-                name = (name as NSString).deletingPathExtension
-            }
-            name += ".\(ext)"
-        }
-
-        return [
-            // Three slashes keep the identifier out of the URI host, which
-            // would be lowercased and stop matching the identifier.
-            "uri": "ph:///\(assetIdentifier)",
-            "name": name,
-            "assetIdentifier": assetIdentifier,
-        ]
-    }
-
-    private func makeFileInfo(from fileURL: URL) -> [String: Any]? {
-        do {
-            let values = try fileURL.resourceValues(forKeys: [.fileSizeKey])
-            let size = values.fileSize ?? 0
-
-            return [
-                "path": fileURL.path,
-                "identifier": fileURL.absoluteString,
-                "name": fileURL.lastPathComponent,
-                "size": size,
-            ]
-        } catch {
-            return nil
-        }
-    }
-
     private func finishCurrentRequest(_ value: Any?) {
         guard let currentResult = result else {
             return
@@ -568,6 +427,25 @@ final class IOSFilePickerHandler: NSObject,
         isFileAndDirectoryPicker = false
         result = nil
         currentResult(value)
+    }
+}
+
+extension PHPickerResult: PickedMediaItem {
+    var suggestedName: String? {
+        itemProvider.suggestedName
+    }
+
+    var registeredTypeIdentifiers: [String] {
+        itemProvider.registeredTypeIdentifiers
+    }
+
+    func loadFile(
+        forTypeIdentifier typeIdentifier: String,
+        completion: @escaping (URL?) -> Void
+    ) {
+        itemProvider.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, _ in
+            completion(url)
+        }
     }
 }
 #endif
