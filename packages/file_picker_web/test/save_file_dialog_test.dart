@@ -3,61 +3,107 @@ library;
 
 import 'dart:convert';
 import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:file_picker_web/file_picker_web.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:web/web.dart';
+
+extension on Window {
+  @JS('showSaveFilePicker')
+  external JSFunction? get showSaveFilePicker;
+
+  @JS('showSaveFilePicker')
+  external set showSaveFilePicker(JSFunction? value);
+}
+
+extension type _AnchorPrototype._(JSObject _) implements JSObject {
+  external JSFunction get click;
+  external set click(JSFunction value);
+}
+
+@JS('HTMLAnchorElement.prototype')
+external _AnchorPrototype get _anchorPrototype;
+
+@JS('Promise.reject')
+external JSPromise<JSObject> _rejectedPromise(JSAny reason);
+
+/// The writable stream of [_FakeFileHandle], recording what is written.
+@JSExport()
+class _FakeWritable {
+  final List<Uint8List> written = [];
+  bool closed = false;
+
+  JSPromise<JSAny?> write(JSUint8Array data) {
+    written.add(data.toDart);
+    return Future<JSAny?>.value().toJS;
+  }
+
+  JSPromise<JSAny?> close() {
+    closed = true;
+    return Future<JSAny?>.value().toJS;
+  }
+}
+
+/// The file handle `showSaveFilePicker()` resolves with when the user saves.
+@JSExport()
+class _FakeFileHandle {
+  _FakeFileHandle(this.name);
+
+  final String name;
+  final writable = _FakeWritable();
+
+  JSPromise<JSObject> createWritable() =>
+      Future.value(createJSInteropWrapper(writable)).toJS;
+}
 
 void main() {
   final bytes = Uint8List.fromList(utf8.encode('hello'));
 
-  void runJs(String code) => globalContext.callMethod('eval'.toJS, code.toJS);
-
-  JSAny? readJs(String expression) =>
-      globalContext.callMethod('eval'.toJS, expression.toJS);
-
   late final FilePickerWeb picker;
+  late final JSFunction? originalSaveFilePicker;
+  late final JSFunction originalAnchorClick;
+
+  final downloads = <String>[];
+  final pickerCalls = <Map<Object?, Object?>>[];
 
   setUpAll(() {
     FilePickerWeb.registerWith(webPluginRegistrar);
     picker = FilePickerPlatform.instance as FilePickerWeb;
-    runJs('''
-      window.__originalSaveFilePicker = window.showSaveFilePicker;
-      window.__originalAnchorClick = HTMLAnchorElement.prototype.click;
-    ''');
+    originalSaveFilePicker = window.showSaveFilePicker;
+    originalAnchorClick = _anchorPrototype.click;
   });
 
   setUp(() {
+    downloads.clear();
+    pickerCalls.clear();
     // Record downloads instead of triggering them.
-    runJs('''
-      window.__downloads = [];
-      window.__pickerCalls = [];
-      window.__written = [];
-      HTMLAnchorElement.prototype.click = function () {
-        window.__downloads.push(this.download);
-      };
-    ''');
+    _anchorPrototype.click = ((HTMLAnchorElement anchor) {
+      downloads.add(anchor.download);
+    }).toJSCaptureThis;
   });
 
-  tearDownAll(() {
-    runJs('''
-      window.showSaveFilePicker = window.__originalSaveFilePicker;
-      HTMLAnchorElement.prototype.click = window.__originalAnchorClick;
-    ''');
+  // Leave the browser as each test found it, so no test depends on what an
+  // earlier one replaced or removed.
+  tearDown(() {
+    window.showSaveFilePicker = originalSaveFilePicker;
+    _anchorPrototype.click = originalAnchorClick;
   });
 
-  /// Replaces `showSaveFilePicker` with [body], an async JS function body
-  /// that receives `options`.
-  void stubPicker(String body) {
-    runJs('''
-      window.showSaveFilePicker = async (options) => {
-        window.__pickerCalls.push(options);
-        $body
-      };
-    ''');
+  /// Replaces `showSaveFilePicker` with one that records its options and
+  /// completes with [respond].
+  void stubPicker(JSPromise<JSObject> Function() respond) {
+    window.showSaveFilePicker = ((JSObject options) {
+      pickerCalls.add(options.dartify()! as Map<Object?, Object?>);
+      return respond();
+    }).toJS;
+  }
+
+  /// Makes `showSaveFilePicker` reject with a `DOMException` named [name].
+  void stubPickerError(String name) {
+    stubPicker(() => _rejectedPromise(DOMException('', name)));
   }
 
   Future<Uri?> save({WebSaveFileMode? saveMode}) {
@@ -71,25 +117,9 @@ void main() {
     );
   }
 
-  List<String> downloads() => [
-    for (final name
-        in (readJs('window.__downloads') as JSArray<JSString>).toDart)
-      name.toDart,
-  ];
-
-  int pickerCalls() =>
-      (readJs('window.__pickerCalls.length') as JSNumber).toDartInt;
-
   test('saves through the dialog and returns the chosen name', () async {
-    stubPicker('''
-      return {
-        name: 'chosen.txt',
-        createWritable: async () => ({
-          write: async (data) => { window.__written.push(data); },
-          close: async () => {},
-        }),
-      };
-    ''');
+    final handle = _FakeFileHandle('chosen.txt');
+    stubPicker(() => Future.value(createJSInteropWrapper(handle)).toJS);
 
     final uri = await save(saveMode: WebSaveFileMode.dialog);
 
@@ -98,63 +128,63 @@ void main() {
     expect(uri.hasAuthority, isFalse);
     expect(uri.hasQuery, isFalse);
     expect(uri.hasFragment, isFalse);
-    expect(downloads(), isEmpty);
-    final written = readJs('window.__written[0]') as JSUint8Array;
-    expect(utf8.decode(written.toDart), 'hello');
-    expect(
-      (readJs('window.__pickerCalls[0].suggestedName') as JSString).toDart,
-      'report.txt',
-    );
-    expect(
-      (readJs('window.__pickerCalls[0].types[0].accept["text/plain"][0]')
-              as JSString)
-          .toDart,
-      '.txt',
-    );
+    expect(downloads, isEmpty);
+    expect(handle.writable.written.map(utf8.decode), ['hello']);
+    expect(handle.writable.closed, isTrue);
+    expect(pickerCalls.single['suggestedName'], 'report.txt');
+    expect(pickerCalls.single['types'], [
+      {
+        'accept': {
+          'text/plain': ['.txt'],
+        },
+      },
+    ]);
   });
 
   test('returns null without downloading when the user cancels', () async {
-    stubPicker("throw new DOMException('cancelled', 'AbortError');");
+    stubPickerError('AbortError');
 
     expect(await save(saveMode: WebSaveFileMode.dialog), isNull);
-    expect(pickerCalls(), 1);
-    expect(downloads(), isEmpty);
+    expect(pickerCalls, hasLength(1));
+    expect(downloads, isEmpty);
   });
 
   test(
     'falls back to a download when the browser refuses the dialog',
     () async {
-      stubPicker("throw new DOMException('no gesture', 'SecurityError');");
+      stubPickerError('SecurityError');
 
       expect(await save(saveMode: WebSaveFileMode.dialog), isNull);
-      expect(pickerCalls(), 1);
-      expect(downloads(), ['report.txt']);
+      expect(pickerCalls, hasLength(1));
+      expect(downloads, ['report.txt']);
     },
   );
 
   test('throws without downloading when the dialog is not supported', () async {
-    runJs('delete window.showSaveFilePicker;');
+    window.showSaveFilePicker = null;
 
     expect(supportsShowSaveFileDialog, isFalse);
     await expectLater(
       save(saveMode: WebSaveFileMode.dialog),
       throwsUnsupportedError,
     );
-    expect(downloads(), isEmpty);
+    expect(downloads, isEmpty);
   });
 
+  // Stubbed so the test does not depend on the browser running it, since
+  // only Chromium based browsers ship the API.
   test('reports support when the dialog is available', () {
-    stubPicker('return null;');
+    stubPickerError('AbortError');
 
     expect(supportsShowSaveFileDialog, isTrue);
   });
 
   test('downloads without opening the dialog by default', () async {
-    stubPicker('throw new Error("should not be called");');
+    stubPickerError('NotAllowedError');
 
     expect(await save(), isNull);
     expect(await save(saveMode: WebSaveFileMode.download), isNull);
-    expect(pickerCalls(), 0);
-    expect(downloads(), ['report.txt', 'report.txt']);
+    expect(pickerCalls, isEmpty);
+    expect(downloads, ['report.txt', 'report.txt']);
   });
 }
