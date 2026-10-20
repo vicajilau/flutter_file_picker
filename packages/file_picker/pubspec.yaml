@@ -27,7 +27,7 @@ dependencies:
   file_picker_linux: ^2.0.0
   windows_file_picker: ^2.0.0
   file_picker_web: ^4.0.0
-  cross_file: ^0.3.5+4
+  cross_file: ^0.4.0
 
 dev_dependencies:
   flutter_test:
