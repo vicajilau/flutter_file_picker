@@ -88,9 +88,9 @@ configure<LibraryExtension> {
 }
 
 dependencies {
-    add("implementation", "androidx.core:core:1.18.0")
-    add("implementation", "androidx.core:core-ktx:1.18.0")
-    add("implementation", "androidx.annotation:annotation:1.10.0")
+    add("implementation", "androidx.core:core:1.19.1")
+    add("implementation", "androidx.core:core-ktx:1.19.1")
+    add("implementation", "androidx.annotation:annotation:1.11.0")
     add("implementation", "androidx.lifecycle:lifecycle-runtime:2.10.0")
 }
 
