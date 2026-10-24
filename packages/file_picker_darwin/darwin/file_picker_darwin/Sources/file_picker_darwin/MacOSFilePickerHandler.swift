@@ -218,6 +218,9 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
                 }
                 dialog.message = title
             }
+            if let acceptLabel = args["acceptLabel"] as? String, !acceptLabel.isEmpty {
+                dialog.prompt = acceptLabel
+            }
             dialog.showsHiddenFiles = false
             dialog.allowsMultipleSelection = false
             dialog.canChooseDirectories = true
@@ -255,6 +258,9 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
             dialog.canCreateDirectories = true
             dialog.isExtensionHidden = true
             dialog.nameFieldStringValue = args["fileName"] as? String ?? ""
+            if let acceptLabel = args["acceptLabel"] as? String, !acceptLabel.isEmpty {
+                dialog.prompt = acceptLabel
+            }
 
             if let initialDirectory = args["initialDirectory"] as? String,
                !initialDirectory.isEmpty {

@@ -1,3 +1,12 @@
+## 14.0.0
+
+- **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. See the [migration guide](https://github.com/vicajilau/flutter_file_picker/tree/main/packages/file_picker#migrating-to-v14). [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: Requires Flutter 3.41, Dart 3.11, Android SDK 24 and macOS 10.15.
+- **BREAKING CHANGE**: Removed `withData`, `withReadStream` and `readSequential` from `FilePickerWebOptions`.
+- `getDirectoryPath()` and `saveFile()` now take `darwinOptions`, so `DarwinOptions.acceptLabel` also sets their confirm button text on macOS. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+- **BREAKING CHANGE**: Removed `FilePicker.skipEntitlementsChecks()`. Use `FilePickerDarwin.skipEntitlementsChecks()` instead. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: Removed the `type` and `allowedExtensions` parameters of `FilePicker.saveFile()`, deprecated since 13.2.0. They never had any effect. [#2278](https://github.com/vicajilau/flutter_file_picker/pull/2278)
+
 ## 13.2.0
 
 - Deprecated the `type` and `allowedExtensions` parameters of `FilePicker.saveFile()`, which never had any effect. They will be removed in 14.0.0. [#2278](https://github.com/vicajilau/flutter_file_picker/pull/2278)

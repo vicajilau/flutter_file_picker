@@ -21,7 +21,7 @@ iOS and macOS implementation of file_picker plugin
   s.ios.dependency 'Flutter'
   s.osx.dependency 'FlutterMacOS'
   s.ios.deployment_target = '14.0'
-  s.osx.deployment_target = '10.13'
+  s.osx.deployment_target = '10.15'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.0'
 end

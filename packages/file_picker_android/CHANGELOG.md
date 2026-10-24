@@ -1,3 +1,7 @@
+## 3.0.0
+
+- **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41, Dart 3.11 and Android SDK 24. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+
 ## 2.1.1
 
 - Fixed `AndroidSAFOptions` being ignored, so the grant, access mode and persistence they request now apply. [#2257](https://github.com/vicajilau/flutter_file_picker/issues/2257)

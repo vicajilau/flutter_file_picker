@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:file_picker_linux/file_picker_linux.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,9 +27,10 @@ void main() {
       final withoutBytes = LinuxPlatformFile.fromPath('/tmp/test.png');
       expect(withoutBytes.lengthSync(), isNull);
 
-      final withBytes = LinuxPlatformFile.fromPath(
-        '/tmp/test.png',
-        bytes: Uint8List.fromList([1, 2, 3]),
+      final withBytes = LinuxPlatformFile(
+        name: 'test.png',
+        uri: Uri.file('/tmp/test.png'),
+        bytesLength: 3,
       );
       expect(withBytes.lengthSync(), equals(3));
     });

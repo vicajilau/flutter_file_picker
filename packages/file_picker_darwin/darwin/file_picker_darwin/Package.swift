@@ -7,7 +7,7 @@ let package = Package(
     name: "file_picker_darwin",
     platforms: [
         .iOS("14.0"),
-        .macOS("10.13")
+        .macOS("10.15")
     ],
     products: [
         .library(name: "file-picker-darwin", targets: ["file_picker_darwin"])

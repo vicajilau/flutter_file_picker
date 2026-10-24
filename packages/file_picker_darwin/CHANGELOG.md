@@ -1,3 +1,8 @@
+## 3.0.0
+
+- **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41, Dart 3.11 and macOS 10.15. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- `DarwinOptions.acceptLabel` now also sets the confirm button text of `getDirectoryPath()` and `saveFile()` on macOS. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+
 ## 2.3.4
 
 - On macOS, the pickers now open in the window the user is in, and still open when no window is visible instead of completing with `null`. [#2277](https://github.com/vicajilau/flutter_file_picker/pull/2277)
