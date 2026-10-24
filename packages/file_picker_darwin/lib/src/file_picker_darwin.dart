@@ -14,6 +14,14 @@ class FilePickerDarwin extends FilePickerPlatform {
     FilePickerPlatform.instance = FilePickerDarwin();
   }
 
+  static final Object _viewIdKey = Object();
+
+  /// Runs pickers with an explicit Flutter view owner, independently per request.
+  static Future<T> withWindow<T>(int? viewId, Future<T> Function() action) =>
+      runZoned(action, zoneValues: {_viewIdKey: viewId});
+
+  static int? get _ownerViewId => Zone.current[_viewIdKey] as int?;
+
   static const String _tag = 'FilePickerDarwin';
 
   /// The method channel used to interact with the native platform.
@@ -112,6 +120,7 @@ class FilePickerDarwin extends FilePickerPlatform {
 
       final List<Map<Object?, Object?>>? result = await methodChannel
           .invokeListMethod<Map<Object?, Object?>>(typeName, {
+            'viewId': ?_ownerViewId,
             'allowMultipleSelection': allowMultiple,
             'allowedExtensions': allowedExtensions,
             'compressionQuality': compressionQuality,
@@ -176,6 +185,7 @@ class FilePickerDarwin extends FilePickerPlatform {
   }) async {
     try {
       return await methodChannel.invokeMethod<String>('dir', {
+        'viewId': ?_ownerViewId,
         'dialogTitle': dialogTitle,
         'initialDirectory': initialDirectory,
       });
@@ -246,6 +256,7 @@ class FilePickerDarwin extends FilePickerPlatform {
 
       final String? savedPath = await methodChannel
           .invokeMethod<String>("save", {
+            'viewId': ?_ownerViewId,
             "fileName": fileName,
             "fileType": mimeType,
             "initialDirectory": initialDirectory,

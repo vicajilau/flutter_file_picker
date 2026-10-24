@@ -120,7 +120,7 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
             let extensions = args["allowedExtensions"] as? [String] ?? []
             self.applyExtensions(dialog, extensions, method: call.method)
 
-            self.present(dialog) { response in
+            self.present(dialog, viewId: (args["viewId"] as? NSNumber)?.int64Value) { response in
                 if response != .OK {
                     result(nil)
                     return
@@ -176,7 +176,7 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
             let extensions = args["allowedExtensions"] as? [String] ?? []
             self.applyExtensions(dialog, extensions, method: call.method)
 
-            self.present(dialog) { response in
+            self.present(dialog, viewId: (args["viewId"] as? NSNumber)?.int64Value) { response in
                 if response != .OK {
                     result(nil)
                     return
@@ -223,7 +223,7 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
             dialog.canChooseDirectories = true
             dialog.canChooseFiles = false
 
-            self.present(dialog) { response in
+            self.present(dialog, viewId: (args["viewId"] as? NSNumber)?.int64Value) { response in
                 if response != .OK {
                     result(nil)
                     return
@@ -269,7 +269,7 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
                 self.applyDefaultExtension(dialog, fileName: args["fileName"] as? String ?? "")
             }
 
-            self.present(dialog) { response in
+            self.present(dialog, viewId: (args["viewId"] as? NSNumber)?.int64Value) { response in
                 if response != .OK {
                     result(nil)
                     return
@@ -411,7 +411,16 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
     /// The window the panel attaches to as a sheet. In a multi-window app this is the
     /// key window, which may not host `registrar.view`. A hidden window is never used,
     /// because a sheet on it would be invisible.
-    private func getFlutterWindow() -> NSWindow? {
+    private func getFlutterWindow(viewId: Int64? = nil) -> NSWindow? {
+        if let viewId = viewId {
+            let engine = (registrar.view?.window?.contentViewController as? FlutterViewController)?.engine
+            return NSApp.windows.first { window in
+                guard window.isVisible,
+                    let controller = window.contentViewController as? FlutterViewController,
+                    let engine = engine else { return false }
+                return controller.engine === engine && controller.viewIdentifier == viewId
+            }
+        }
         if let keyWindow = NSApp.keyWindow, keyWindow.isVisible {
             return keyWindow
         }
@@ -425,10 +434,13 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
     /// visible window to attach it to.
     private func present(
         _ panel: NSSavePanel,
+        viewId: Int64? = nil,
         completionHandler: @escaping (NSApplication.ModalResponse) -> Void
     ) {
-        if let window = getFlutterWindow() {
+        if let window = getFlutterWindow(viewId: viewId) {
             panel.beginSheetModal(for: window, completionHandler: completionHandler)
+        } else if viewId != nil {
+            completionHandler(.cancel)
         } else {
             completionHandler(panel.runModal())
         }
