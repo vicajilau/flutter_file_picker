@@ -1,3 +1,7 @@
+## 2.4.0
+
+- On macOS, `FilePickerDarwin(viewId:)` attaches the pickers to that Flutter view's window, and fails with `window_not_found` when that window is closed or hidden.
+
 ## 2.3.4
 
 - On macOS, the pickers now open in the window the user is in, and still open when no window is visible instead of completing with `null`. [#2277](https://github.com/vicajilau/flutter_file_picker/pull/2277)
