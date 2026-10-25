@@ -245,6 +245,12 @@ jobs:
           flutter pub get
           flutter build apk --debug
 
+      # JVM unit tests of the Kotlin code that needs no Android runtime. The
+      # build above already set up Gradle and the plugin's project.
+      - name: Run Android unit tests
+        working-directory: example/android
+        run: ./gradlew :android_file_picker:testDebugUnitTest
+
       # R8 only runs on release builds, so this is the only job that exercises
       # packages/file_picker_android/android/proguard-rules.pro. The example
       # signs release with the debug keys, so no secrets are involved.

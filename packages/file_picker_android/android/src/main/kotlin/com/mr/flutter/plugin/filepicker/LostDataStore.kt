@@ -40,11 +40,7 @@ object LostDataStore {
         @Synchronized get() = restoring
 
     fun saveRequest(context: Context, request: PendingRequest) {
-        val json = JSONObject()
-            .put("type", request.type)
-            .put("compressionQuality", request.compressionQuality)
-            .put("androidSafOptions", request.androidSafOptions?.let { JSONObject(it) })
-        prefs(context).edit().putString(KEY_REQUEST, json.toString()).apply()
+        prefs(context).edit().putString(KEY_REQUEST, encodeRequest(request)).apply()
     }
 
     fun clearRequest(context: Context) {
@@ -102,31 +98,17 @@ object LostDataStore {
 
     private fun loadRequest(context: Context): PendingRequest? {
         val raw = prefs(context).getString(KEY_REQUEST, null) ?: return null
-        return try {
-            val json = JSONObject(raw)
-            PendingRequest(
-                type = json.getString("type"),
-                compressionQuality = json.optInt("compressionQuality", 0),
-                androidSafOptions = json.optJSONObject("androidSafOptions")?.let { toMap(it) }
-            )
-        } catch (e: Exception) {
-            null
-        }
+        return decodeRequest(raw)
     }
 
     /** Stores the files of an orphaned pick, replacing any previous one. */
     private fun saveFiles(context: Context, files: List<FileInfo>) {
-        val array = JSONArray()
-        files.forEach { array.put(JSONObject(it.toMap())) }
-        storeResult(context, JSONObject().put("files", array))
+        storeResult(context, encodeFiles(files.map { it.toMap() }))
     }
 
     /** Stores the error of an orphaned pick, replacing any previous one. */
     private fun saveError(context: Context, code: String, message: String?) {
-        storeResult(
-            context,
-            JSONObject().put("errorCode", code).put("errorMessage", message)
-        )
+        storeResult(context, encodeError(code, message))
     }
 
     /**
@@ -137,22 +119,54 @@ object LostDataStore {
         val prefs = prefs(context)
         val raw = prefs.getString(KEY_RESULT, null) ?: return null
         prefs.edit().remove(KEY_RESULT).apply()
-        return try {
-            toMap(JSONObject(raw))
-        } catch (e: Exception) {
-            null
-        }
+        return decodeResult(raw)
     }
 
-    private fun storeResult(context: Context, json: JSONObject) {
+    private fun storeResult(context: Context, raw: String) {
         prefs(context).edit()
-            .putString(KEY_RESULT, json.toString())
+            .putString(KEY_RESULT, raw)
             .remove(KEY_REQUEST)
             .apply()
     }
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    // The encoding below only needs org.json, so it is unit tested on the JVM.
+
+    internal fun encodeRequest(request: PendingRequest): String = JSONObject()
+        .put("type", request.type)
+        .put("compressionQuality", request.compressionQuality)
+        .put("androidSafOptions", request.androidSafOptions?.let { JSONObject(it) })
+        .toString()
+
+    /** Reads a stored request back, or `null` if it is unreadable. */
+    internal fun decodeRequest(raw: String): PendingRequest? = try {
+        val json = JSONObject(raw)
+        PendingRequest(
+            type = json.getString("type"),
+            compressionQuality = json.optInt("compressionQuality", 0),
+            androidSafOptions = json.optJSONObject("androidSafOptions")?.let { toMap(it) }
+        )
+    } catch (e: Exception) {
+        null
+    }
+
+    internal fun encodeFiles(files: List<Map<String, Any?>>): String {
+        val array = JSONArray()
+        files.forEach { array.put(JSONObject(it)) }
+        return JSONObject().put("files", array).toString()
+    }
+
+    internal fun encodeError(code: String, message: String?): String =
+        JSONObject().put("errorCode", code).put("errorMessage", message).toString()
+
+    /** Reads a stored result back as a method channel map, or `null`. */
+    internal fun decodeResult(raw: String): HashMap<String, Any?>? = try {
+        toMap(JSONObject(raw))
+    } catch (e: Exception) {
+        null
+    }
 
     private fun toMap(json: JSONObject): HashMap<String, Any?> {
         val map = HashMap<String, Any?>()

@@ -2,6 +2,11 @@
 
 - **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41, Dart 3.11 and Android SDK 24. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
+## 2.1.2
+
+- Fixed `explorer_not_found` on Android 11+ devices that hide the documents picker from apps, such as some Xiaomi HyperOS versions. [#2282](https://github.com/vicajilau/flutter_file_picker/pull/2282)
+- The picker now opens directly and only reports `explorer_not_found` when no app can handle it, instead of asking Android first, which can miss apps hidden from the plugin.
+
 ## 2.1.1
 
 - Fixed `AndroidSAFOptions` being ignored, so the grant, access mode and persistence they request now apply. [#2257](https://github.com/vicajilau/flutter_file_picker/issues/2257)
