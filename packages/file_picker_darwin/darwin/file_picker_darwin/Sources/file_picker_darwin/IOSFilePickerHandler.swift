@@ -246,7 +246,7 @@ final class IOSFilePickerHandler: NSObject,
             return
         }
 
-        let documents = loader.loadDocuments(urls)
+        let documents = loader.moveDocuments(urls)
         complete(
             currentResult,
             pickedCount: urls.count,

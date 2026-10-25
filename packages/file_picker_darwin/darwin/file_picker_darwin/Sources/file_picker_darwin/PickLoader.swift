@@ -1,27 +1,6 @@
 import Foundation
 import UniformTypeIdentifiers
 
-/// A photo library item picked by the user, as `PickLoader` needs it.
-///
-/// `PHPickerResult` provides it on iOS, and tests provide a mock that loads,
-/// fails or takes a while for specific items.
-protocol PickedMediaItem {
-    /// The photo library identifier, when the picker has library access.
-    var assetIdentifier: String? { get }
-    /// The file name the item suggests, which may lack an extension.
-    var suggestedName: String? { get }
-    /// The representations the item can be loaded as, in the order it
-    /// registered them.
-    var registeredTypeIdentifiers: [String] { get }
-    /// Loads the item as a file of the given type, calling `completion` with
-    /// its URL, or with `nil` and the error if it could not be loaded. The
-    /// file may be deleted as soon as `completion` returns, and `completion`
-    /// may be called on any queue.
-    func loadFile(
-        forTypeIdentifier typeIdentifier: String,
-        completion: @escaping (URL?, Error?) -> Void)
-}
-
 /// Turns picked items into the file descriptions sent back to Dart.
 ///
 /// Kept free of UIKit, AppKit and Flutter so it can be unit tested on its own.
@@ -91,7 +70,7 @@ struct PickLoader {
     ///
     /// The picker opens with `asCopy`, so each file is already a copy the app
     /// owns, and moving it avoids storing it twice (#2261).
-    func loadDocuments(_ urls: [URL]) -> (loaded: [[String: Any]], failures: [LoadFailure]) {
+    func moveDocuments(_ urls: [URL]) -> (loaded: [[String: Any]], failures: [LoadFailure]) {
         var loaded: [[String: Any]] = []
         var failures: [LoadFailure] = []
         for (index, url) in urls.enumerated() {
