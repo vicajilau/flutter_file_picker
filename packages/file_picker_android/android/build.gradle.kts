@@ -90,7 +90,12 @@ configure<LibraryExtension> {
 dependencies {
     add("implementation", "androidx.core:core:1.18.0")
     add("implementation", "androidx.core:core-ktx:1.18.0")
-    add("implementation", "androidx.annotation:annotation:1.10.0")
+    add("implementation", "androidx.annotation:annotation:1.11.0")
     add("implementation", "androidx.lifecycle:lifecycle-runtime:2.10.0")
+
+    add("testImplementation", "junit:junit:4.13.2")
+    // The org.json in android.jar is a stub on the JVM, so unit tests need
+    // the real implementation.
+    add("testImplementation", "org.json:json:20240303")
 }
 

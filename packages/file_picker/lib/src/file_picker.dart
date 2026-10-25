@@ -172,7 +172,15 @@ abstract final class FilePicker {
     String mimeType = 'application/octet-stream',
     String? dialogTitle,
     String? initialDirectory,
+    @Deprecated(
+      'Has no effect, saveFile() never used it. '
+      'This parameter will be removed in file_picker v14.0.0.',
+    )
     FileType type = FileType.any,
+    @Deprecated(
+      'Has no effect, saveFile() never used it. '
+      'This parameter will be removed in file_picker v14.0.0.',
+    )
     List<String>? allowedExtensions,
     Function(FilePickerStatus)? onFileSaving,
     WindowsOptions windowsOptions = const WindowsOptions(),

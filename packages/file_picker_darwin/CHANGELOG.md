@@ -1,6 +1,10 @@
+## 2.3.4
+
+- On macOS, the pickers now open in the window the user is in, and still open when no window is visible instead of completing with `null`. [#2277](https://github.com/vicajilau/flutter_file_picker/pull/2277)
+
 ## 2.3.3
 
-- Fixed the `load_failed` error on iOS dropping why the picked items could not be loaded. Its `details` now lists, for each item that failed with an error, the item's `index` and the error's `domain`, `code` and `message`, plus an `underlying` list with the errors it wraps. The domains and codes are what can tell apart causes that share one message, such as a device with no space left for the copy and a photo stored only in iCloud while the device is offline. The `code` and `message` of the error are unchanged.
+- The `load_failed` error on iOS now lists in its `details` why each picked item could not be loaded. [#2274](https://github.com/vicajilau/flutter_file_picker/pull/2274)
 
 ## 2.3.2
 
