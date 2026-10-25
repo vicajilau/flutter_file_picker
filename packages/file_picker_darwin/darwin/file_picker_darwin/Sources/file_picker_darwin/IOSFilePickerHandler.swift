@@ -166,6 +166,7 @@ final class IOSFilePickerHandler: NSObject,
         eventSink?(true)
         let group = DispatchGroup()
         var resolved = Array<[String: Any]?>(repeating: nil, count: results.count)
+        var failures: [LoadFailure] = []
         let resolvedLock = NSLock()
 
         for (index, item) in results.enumerated() {
@@ -178,21 +179,30 @@ final class IOSFilePickerHandler: NSObject,
                 preferringCompatible: assetRepresentationMode == .compatible)
             item.itemProvider.loadFileRepresentation(
                 forTypeIdentifier: typeIdentifier
-            ) { [weak self] url, _ in
+            ) { [weak self] url, error in
                 defer { group.leave() }
-                // iOS deletes this file when the handler returns, so it has to
-                // be copied.
-                guard let self, let sourceURL = url,
-                      let copiedURL = self.storeInTemporaryDirectory(sourceURL, copying: true)
-                else {
+                guard let self else {
                     return
                 }
-                if var fileInfo = self.makeFileInfo(from: copiedURL) {
+                do {
+                    // Should `url` be missing without an error, still report a
+                    // failure rather than nothing.
+                    guard let sourceURL = url else {
+                        throw error ?? CocoaError(.fileReadUnknown)
+                    }
+                    // iOS deletes this file when the handler returns, so it has
+                    // to be copied.
+                    let copiedURL = try self.storeInTemporaryDirectory(sourceURL, copying: true)
+                    var fileInfo = try self.makeFileInfo(from: copiedURL)
                     if let assetIdentifier = item.assetIdentifier {
                         fileInfo["assetIdentifier"] = assetIdentifier
                     }
                     resolvedLock.lock()
                     resolved[index] = fileInfo
+                    resolvedLock.unlock()
+                } catch {
+                    resolvedLock.lock()
+                    failures.append(LoadFailure(index: index, error: error))
                     resolvedLock.unlock()
                 }
             }
@@ -204,7 +214,11 @@ final class IOSFilePickerHandler: NSObject,
             }
             eventSink?(false)
             let orderedResolved = resolved.compactMap { $0 }
-            complete(currentResult, pickedCount: results.count, loaded: orderedResolved)
+            complete(
+                currentResult,
+                pickedCount: results.count,
+                loaded: orderedResolved,
+                failures: failures)
             result = nil
         }
     }
@@ -273,28 +287,32 @@ final class IOSFilePickerHandler: NSObject,
         }
 
         var resolved: [[String: Any]] = []
+        var failures: [LoadFailure] = []
 
-        for sourceURL in urls {
-            // The picker opens with `asCopy`, so each file is already a copy
-            // the app owns, and moving it avoids storing it twice (#2261).
-            guard let movedURL = storeInTemporaryDirectory(sourceURL, copying: false),
-                  let fileInfo = makeFileInfo(from: movedURL)
-            else {
-                continue
+        for (index, sourceURL) in urls.enumerated() {
+            do {
+                // The picker opens with `asCopy`, so each file is already a
+                // copy the app owns, and moving it avoids storing it twice
+                // (#2261).
+                let movedURL = try storeInTemporaryDirectory(sourceURL, copying: false)
+                resolved.append(try makeFileInfo(from: movedURL))
+            } catch {
+                failures.append(LoadFailure(index: index, error: error))
             }
-            resolved.append(fileInfo)
         }
 
-        complete(currentResult, pickedCount: urls.count, loaded: resolved)
+        complete(currentResult, pickedCount: urls.count, loaded: resolved, failures: failures)
         result = nil
     }
 
     /// Completes a pick of `pickedCount` items with the ones that could be
-    /// `loaded`, following `PickOutcome`.
+    /// `loaded`, following `PickOutcome`. `failures` holds why the others
+    /// could not be, where an error was available.
     private func complete(
         _ currentResult: FlutterResult,
         pickedCount: Int,
-        loaded: [[String: Any]]
+        loaded: [[String: Any]],
+        failures: [LoadFailure] = []
     ) {
         switch PickOutcome.resolve(pickedCount: pickedCount, loaded: loaded) {
         case .cancelled:
@@ -302,19 +320,23 @@ final class IOSFilePickerHandler: NSObject,
         case .loaded(let items):
             currentResult(items)
         case .loadFailed:
-            currentResult(loadFailedError())
+            currentResult(loadFailedError(failures))
         }
     }
 
     /// The error for a pick where the user picked at least one item but none
     /// could be loaded, for example photos only stored in iCloud while the
-    /// device is offline. Completing with `nil` instead would look like a
-    /// cancellation to the app.
-    private func loadFailedError() -> FlutterError {
+    /// device is offline, or a device with no space left for the copy.
+    /// Completing with `nil` instead would look like a cancellation to the app.
+    ///
+    /// `details` lists one `LoadFailure.details` map per item that failed with
+    /// an error, in pick order, so the app can tell those causes apart. It is
+    /// empty when no error was available, for example with `copyMedia: false`.
+    private func loadFailedError(_ failures: [LoadFailure]) -> FlutterError {
         FlutterError(
             code: "load_failed",
             message: "None of the picked items could be loaded.",
-            details: nil)
+            details: failures.sorted { $0.index < $1.index }.map(\.details))
     }
 
     private func presentMediaPicker(type: String, allowsMultipleSelection: Bool) {
@@ -480,26 +502,25 @@ final class IOSFilePickerHandler: NSObject,
     /// Giving each item its own directory removes the shared destination, so
     /// the copies can no longer observe or delete each other. The existence
     /// check is gone with it, the directory is new every time.
-    private func storeInTemporaryDirectory(_ sourceURL: URL, copying: Bool) -> URL? {
+    ///
+    /// Throws the file system error, such as a full disk, so the pick can
+    /// report why the item could not be loaded.
+    private func storeInTemporaryDirectory(_ sourceURL: URL, copying: Bool) throws -> URL {
         let directoryURL = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let destinationURL = directoryURL
             .appendingPathComponent(sourceURL.lastPathComponent)
 
-        do {
-            try FileManager.default.createDirectory(
-                at: directoryURL,
-                withIntermediateDirectories: true
-            )
-            if copying {
-                try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
-            } else {
-                try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
-            }
-            return destinationURL
-        } catch {
-            return nil
+        try FileManager.default.createDirectory(
+            at: directoryURL,
+            withIntermediateDirectories: true
+        )
+        if copying {
+            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+        } else {
+            try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
         }
+        return destinationURL
     }
 
     /// Describes a picked photo library asset without copying it, by its
@@ -538,20 +559,16 @@ final class IOSFilePickerHandler: NSObject,
         ]
     }
 
-    private func makeFileInfo(from fileURL: URL) -> [String: Any]? {
-        do {
-            let values = try fileURL.resourceValues(forKeys: [.fileSizeKey])
-            let size = values.fileSize ?? 0
+    private func makeFileInfo(from fileURL: URL) throws -> [String: Any] {
+        let values = try fileURL.resourceValues(forKeys: [.fileSizeKey])
+        let size = values.fileSize ?? 0
 
-            return [
-                "path": fileURL.path,
-                "identifier": fileURL.absoluteString,
-                "name": fileURL.lastPathComponent,
-                "size": size,
-            ]
-        } catch {
-            return nil
-        }
+        return [
+            "path": fileURL.path,
+            "identifier": fileURL.absoluteString,
+            "name": fileURL.lastPathComponent,
+            "size": size,
+        ]
     }
 
     private func finishCurrentRequest(_ value: Any?) {

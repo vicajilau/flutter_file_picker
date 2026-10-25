@@ -2,6 +2,7 @@ package com.mr.flutter.plugin.filepicker
 
 import android.app.Activity
 import android.content.Context
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -69,17 +70,12 @@ object FileUtils {
                 return@launch
             }
 
-            val grantStr = androidSafOptions?.get("grant") as? String
-            val accessStr = androidSafOptions?.get("access") as? String
-            val autoPersist = (androidSafOptions?.get("autoPersist") as? Boolean) ?: true
-            
-            val isPersist = grantStr == "lifetime"
-            val isReadWrite = accessStr == "readWrite"
-
-            val hasSafOptions = androidSafOptions != null
+            val safOptions = SafOptions.from(androidSafOptions)
+            val isReadWrite = safOptions.readWrite
+            val hasSafOptions = safOptions.requested
 
             fun maybeTakePersistableUriPermission(uri: Uri) {
-                 if (isPersist && autoPersist) {
+                 if (safOptions.persistsGrant) {
                      try {
                          val flags = if (isReadWrite) {
                             android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -239,15 +235,7 @@ object FileUtils {
                 putExtra("multi-pick", isMultipleSelection)
             }
         }
-        if (intent.resolveActivity(activity.packageManager) != null) {
-            activity.startActivityForResult(intent, REQUEST_CODE)
-        } else {
-            Log.e(
-                FilePickerDelegate.TAG,
-                "Can't find a valid activity to handle the request. Make sure you've a file explorer installed."
-            )
-            finishWithError("explorer_not_found", "Can't find a valid activity to handle the request. Make sure you have a file explorer installed.")
-        }
+        launchFileExplorer(intent, REQUEST_CODE)
     }
 
     /**
@@ -390,12 +378,28 @@ object FileUtils {
                 intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, initialDirectory.toUri())
             }
         }
-        if (intent.resolveActivity(activity.packageManager) != null) {
-            activity.startActivityForResult(intent, SAVE_FILE_CODE)
-        } else {
+        launchFileExplorer(intent, SAVE_FILE_CODE)
+    }
+
+    /**
+     * Starts [intent], or fails with `explorer_not_found` when no app on the
+     * device can handle it.
+     *
+     * Asking `resolveActivity()` first is not reliable: since Android 11 it
+     * only sees the apps this app is allowed to see, and some devices hide the
+     * system documents picker from it even though it can be launched (#2282).
+     * Starting the activity does not depend on that visibility, so the
+     * activity is started directly and only a real absence of a handler is
+     * reported, as Android recommends.
+     */
+    private fun FilePickerDelegate.launchFileExplorer(intent: Intent, requestCode: Int) {
+        try {
+            activity.startActivityForResult(intent, requestCode)
+        } catch (e: ActivityNotFoundException) {
             Log.e(
                 FilePickerDelegate.TAG,
-                "Can't find a valid activity to handle the request. Make sure you've a file explorer installed."
+                "Can't find a valid activity to handle the request. Make sure you've a file explorer installed.",
+                e
             )
             finishWithError("explorer_not_found", "Can't find a valid activity to handle the request. Make sure you have a file explorer installed.")
         }
@@ -417,14 +421,7 @@ object FileUtils {
         }
 
         val currentName = getFileName(uri, context) ?: return uri
-        val escapedExtension = Regex.escape(extension)
-
-        var (baseName, suffix) = extractBaseNameAndSuffix(currentName, escapedExtension)
-
-        // Clean up baseName if it already has one or more " (M)" suffixes to prevent nesting.
-        val normalized = normalizeBaseNameAndSuffix(baseName, suffix)
-        baseName = normalized.first
-        suffix = normalized.second
+        val (baseName, suffix) = SavedFileName.baseNameAndSuffix(currentName, extension)
 
         var finalUri = uri
         var success = false
@@ -472,65 +469,6 @@ object FileUtils {
         }
 
         return finalUri
-    }
-
-    private fun extractBaseNameAndSuffix(currentName: String, escapedExtension: String): Pair<String, Int?> {
-        // Android duplicate style "name.ext (N)" that we normalize. Example: "report.pdf (1)"
-        val androidCollisionRegex = Regex("^(.*)\\.$escapedExtension \\((\\d+)\\)$")
-        // Desired style "name (N).ext"
-        val normalizedCollisionRegex = Regex("^(.*) \\((\\d+)\\)\\.$escapedExtension$")
-        // Regular "name.ext"
-        val plainNameRegex = Regex("^(.*)\\.$escapedExtension$")
-        // The system's document picker can append its own extension on top
-        // of ours when the MIME type we declared doesn't match what it
-        // expects for our extension (e.g. "trace.gpx" becoming
-        // "trace.gpx.xml"). Detect our extension immediately followed by
-        // exactly one more extension and strip both, recovering the true
-        // base name, instead of leaving the mismatched extension in place
-        // and appending ours on top of it (which would produce
-        // "trace.gpx.xml.gpx").
-        val systemAppendedExtensionRegex = Regex("^(.*)\\.$escapedExtension\\.[^./\\\\]+$")
-
-        return when {
-            androidCollisionRegex.matches(currentName) -> {
-                val match = androidCollisionRegex.matchEntire(currentName)!!
-                match.groupValues[1] to match.groupValues[2].toInt()
-            }
-            normalizedCollisionRegex.matches(currentName) -> {
-                val match = normalizedCollisionRegex.matchEntire(currentName)!!
-                match.groupValues[1] to match.groupValues[2].toInt()
-            }
-            plainNameRegex.matches(currentName) -> {
-                val match = plainNameRegex.matchEntire(currentName)!!
-                match.groupValues[1] to null
-            }
-            systemAppendedExtensionRegex.matches(currentName) -> {
-                val match = systemAppendedExtensionRegex.matchEntire(currentName)!!
-                match.groupValues[1] to null
-            }
-            else -> {
-                currentName to null
-            }
-        }
-    }
-
-    private fun normalizeBaseNameAndSuffix(baseName: String, suffix: Int?): Pair<String, Int?> {
-        var normalizedBaseName = baseName
-        var normalizedSuffix = suffix
-        // Trailing numeric suffix chunk "name (N)" we repeatedly strip and accumulate.
-        // Example: "report (1)" -> base "report", suffix +1
-        val baseNameSuffixRegex = Regex("^(.*) \\((\\d+)\\)$")
-
-        while (true) {
-            val baseMatch = baseNameSuffixRegex.matchEntire(normalizedBaseName) ?: break
-
-            val realBase = baseMatch.groupValues[1]
-            val baseSuffix = baseMatch.groupValues[2].toInt()
-            normalizedBaseName = realBase
-            normalizedSuffix = (normalizedSuffix ?: 0) + baseSuffix
-        }
-
-        return normalizedBaseName to normalizedSuffix
     }
 
     private fun processUri(activity: Activity, uri: Uri, compressionQuality: Int): Uri {
@@ -767,16 +705,8 @@ object FileUtils {
         var fileOutputStream: FileOutputStream? = null
         val fileInfo = FileInfo.Builder()
         val fileName = getFileName(uri, context)
-        val path =
-            context.cacheDir.absolutePath + "/file_picker/" + System.currentTimeMillis() + "/" + (fileName
-                ?: "unamed")
-
-        val file = File(path)
-        
-        val safeDir = File(context.cacheDir.absolutePath + "/file_picker/").canonicalPath
-        if (!file.canonicalPath.startsWith(safeDir)) {
-            throw SecurityException("Path traversal detected. Escaping the intended cache directory is not allowed.")
-        }
+        val file = PickerPaths.cachedFile(context.cacheDir, System.currentTimeMillis(), fileName)
+        val path = file.path
 
         if (!file.exists()) {
             try {
@@ -823,26 +753,6 @@ object FileUtils {
         return fileInfo.build()
     }
 
-    private fun getPathFromTreeUri(uri: Uri): String {
-        val docId = DocumentsContract.getTreeDocumentId(uri)
-        val parts = docId.split(":")
-
-        // Check if the URI corresponds to external storage
-        return if (parts.size > 1) {
-            val volumeId = parts[0]
-            val path = parts[1]
-
-            // Map volume ID to external storage path
-            if ("primary".equals(volumeId, ignoreCase = true)) {
-                "${Environment.getExternalStorageDirectory()}/$path"
-            } else {
-                "/storage/$volumeId/$path"
-            }
-        } else {
-            "${Environment.getExternalStorageDirectory()}/${parts.last()}"
-        }
-    }
-
     @JvmStatic
     fun getFullPathFromTreeUri(treeUri: Uri?, context: Context): String? {
         if (treeUri == null) {
@@ -872,37 +782,10 @@ object FileUtils {
             }
         }
 
-        var volumePath = getPathFromTreeUri(treeUri)
-
-        if (volumePath.endsWith(File.separator)) {
-            volumePath = volumePath.dropLast(1)
-        }
-
-        var documentPath = getDocumentPathFromTreeUri(treeUri)
-
-        if (documentPath.endsWith(File.separator)) {
-            documentPath = documentPath.dropLast(1)
-        }
-        return if (documentPath.isNotEmpty()) {
-            if (volumePath.endsWith(documentPath)) {
-                volumePath
-            } else {
-                if (documentPath.startsWith(File.separator)) {
-                    volumePath + documentPath
-                } else {
-                    volumePath + File.separator + documentPath
-                }
-            }
-        } else {
-            volumePath
-        }
-    }
-
-    private fun getDocumentPathFromTreeUri(treeUri: Uri): String {
-        val docId = DocumentsContract.getTreeDocumentId(treeUri)
-        val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        return if ((split.size >= 2)) split[1]
-        else File.separator
+        return PickerPaths.directoryPath(
+            DocumentsContract.getTreeDocumentId(treeUri),
+            Environment.getExternalStorageDirectory().toString()
+        )
     }
 
     private fun recursiveDeleteFile(file: File?) {

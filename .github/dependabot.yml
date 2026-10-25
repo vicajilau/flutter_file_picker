@@ -137,3 +137,9 @@ updates:
       # (#2170).
       - dependency-name: "org.jetbrains.kotlin:kotlin-gradle-plugin"
       - dependency-name: "com.android.tools.build:gradle"
+      # 1.19 requires compileSdk 37 and Android Gradle plugin 9.1, which would
+      # force every app using the plugin onto them (#2273).
+      - dependency-name: "androidx.core:core"
+        versions: [">=1.19.0"]
+      - dependency-name: "androidx.core:core-ktx"
+        versions: [">=1.19.0"]

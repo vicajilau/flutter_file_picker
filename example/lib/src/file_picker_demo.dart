@@ -366,8 +366,6 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
 
     try {
       pickedSaveFileUri = await FilePicker.saveFile(
-        allowedExtensions: _allowedExtensionsFromInput(),
-        type: _pickingType,
         dialogTitle: _dialogTitleController.text,
         fileName: targetFileName,
         initialDirectory: _initialDirectoryController.text,

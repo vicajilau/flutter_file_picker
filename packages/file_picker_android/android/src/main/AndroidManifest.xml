@@ -5,5 +5,16 @@
       <action android:name="android.intent.action.GET_CONTENT" />
       <data android:mimeType="*/*" />
     </intent>
+    <intent>
+      <action android:name="android.intent.action.OPEN_DOCUMENT" />
+      <data android:mimeType="*/*" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.OPEN_DOCUMENT_TREE" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.CREATE_DOCUMENT" />
+      <data android:mimeType="*/*" />
+    </intent>
   </queries>
 </manifest>

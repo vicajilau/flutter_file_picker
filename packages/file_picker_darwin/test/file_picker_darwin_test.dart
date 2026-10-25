@@ -227,12 +227,29 @@ void main() {
 
     test('pickFiles surfaces load_failed instead of an empty list', () async {
       final picker = FilePickerDarwin();
+      // Why each item failed, in the shape the native side sends it.
+      final details = [
+        {
+          'index': 0,
+          'domain': 'NSItemProviderErrorDomain',
+          'code': -1000,
+          'message': 'Cannot load representation of type public.movie',
+          'underlying': [
+            {
+              'domain': 'NSCocoaErrorDomain',
+              'code': 640,
+              'message': 'You can’t save the file because the volume is full.',
+            },
+          ],
+        },
+      ];
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(picker.methodChannel, (call) async {
             throw PlatformException(
               code: 'load_failed',
               message: 'None of the picked items could be loaded.',
+              details: details,
             );
           });
       addTearDown(() {
@@ -243,7 +260,9 @@ void main() {
       await expectLater(
         picker.pickFiles(type: FileType.media),
         throwsA(
-          isA<PlatformException>().having((e) => e.code, 'code', 'load_failed'),
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'load_failed')
+              .having((e) => e.details, 'details', details),
         ),
       );
     });

@@ -1,3 +1,7 @@
+## 13.2.0
+
+- Deprecated the `type` and `allowedExtensions` parameters of `FilePicker.saveFile()`, which never had any effect. They will be removed in 14.0.0. [#2278](https://github.com/vicajilau/flutter_file_picker/pull/2278)
+
 ## 13.1.0
 
 - Added support for UIScene on iOS.
