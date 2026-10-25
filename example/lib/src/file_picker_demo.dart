@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'dart:typed_data';
 
 import 'file_picker_results.dart';
+import 'file_picker_scope.dart';
 import 'picked_directory_result.dart';
 import 'picked_files_results.dart';
 import 'file_picker_web_options.dart'
@@ -110,7 +111,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
     try {
       printInDebug("lockParentWindow: $_lockParentWindow");
       if (_multiPick) {
-        pickedFiles = await FilePicker.pickFiles(
+        pickedFiles = await FilePickerScope.of(context).pickFiles(
           type: _pickingType,
           onFileLoading: _onFileLoading,
           allowedExtensions: _allowedExtensionsFromInput(),
@@ -134,7 +135,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
         );
         printInDebug("pickedFiles: $pickedFiles");
       } else {
-        final file = await FilePicker.pickFile(
+        final file = await FilePickerScope.of(context).pickFile(
           type: _pickingType,
           onFileLoading: _onFileLoading,
           allowedExtensions: _allowedExtensionsFromInput(),
@@ -226,12 +227,13 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
     _resetState();
 
     try {
-      pickedFilesAndDirectories = await FilePicker.pickFileAndDirectoryPaths(
-        dialogTitle: _dialogTitleController.text,
-        type: _pickingType,
-        allowedExtensions: _allowedExtensionsFromInput(),
-        initialDirectory: _initialDirectoryController.text,
-      );
+      pickedFilesAndDirectories = await FilePickerScope.of(context)
+          .pickFileAndDirectoryPaths(
+            dialogTitle: _dialogTitleController.text,
+            type: _pickingType,
+            allowedExtensions: _allowedExtensionsFromInput(),
+            initialDirectory: _initialDirectoryController.text,
+          );
       hasUserAborted = pickedFilesAndDirectories.isEmpty;
     } on PlatformException catch (e) {
       _logException('Pick failed: $e');
@@ -292,7 +294,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
     _resetState();
 
     try {
-      pickedDirectoryPath = await FilePicker.getDirectoryPath(
+      pickedDirectoryPath = await FilePickerScope.of(context).getDirectoryPath(
         dialogTitle: _dialogTitleController.text,
         initialDirectory: _initialDirectoryController.text,
         windowsOptions: WindowsOptions(lockParentWindow: _lockParentWindow),
@@ -365,7 +367,8 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
     _resetState();
 
     try {
-      pickedSaveFileUri = await FilePicker.saveFile(
+      pickedSaveFileUri = await FilePickerScope.of(context).saveFile(
+        mimeType: 'application/octet-stream',
         dialogTitle: _dialogTitleController.text,
         fileName: targetFileName,
         initialDirectory: _initialDirectoryController.text,
