@@ -1,5 +1,6 @@
 import 'package:file/local.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:file_picker/file_picker_view_scope.dart';
 import 'package:android_file_picker/android_file_picker.dart';
 import 'package:flutter/foundation.dart';
 // Deprecated in favor of package:material_ui, which needs a newer Flutter than
@@ -10,7 +11,6 @@ import 'package:flutter/services.dart';
 import 'dart:typed_data';
 
 import 'file_picker_results.dart';
-import 'file_picker_scope.dart';
 import 'picked_directory_result.dart';
 import 'picked_files_results.dart';
 import 'file_picker_web_options.dart'
@@ -111,7 +111,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
     try {
       printInDebug("lockParentWindow: $_lockParentWindow");
       if (_multiPick) {
-        pickedFiles = await FilePickerScope.of(context).pickFiles(
+        pickedFiles = await FilePickerViewScope.of(context).pickFiles(
           type: _pickingType,
           onFileLoading: _onFileLoading,
           allowedExtensions: _allowedExtensionsFromInput(),
@@ -135,7 +135,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
         );
         printInDebug("pickedFiles: $pickedFiles");
       } else {
-        final file = await FilePickerScope.of(context).pickFile(
+        final file = await FilePickerViewScope.of(context).pickFile(
           type: _pickingType,
           onFileLoading: _onFileLoading,
           allowedExtensions: _allowedExtensionsFromInput(),
@@ -227,7 +227,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
     _resetState();
 
     try {
-      pickedFilesAndDirectories = await FilePickerScope.of(context)
+      pickedFilesAndDirectories = await FilePickerViewScope.of(context)
           .pickFileAndDirectoryPaths(
             dialogTitle: _dialogTitleController.text,
             type: _pickingType,
@@ -294,13 +294,15 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
     _resetState();
 
     try {
-      pickedDirectoryPath = await FilePickerScope.of(context).getDirectoryPath(
-        dialogTitle: _dialogTitleController.text,
-        initialDirectory: _initialDirectoryController.text,
-        windowsOptions: WindowsOptions(lockParentWindow: _lockParentWindow),
-        linuxOptions: LinuxOptions(lockParentWindow: _lockParentWindow),
-        androidOptions: _androidSafOptionsFromFlags() ?? const AndroidOptions(),
-      );
+      pickedDirectoryPath = await FilePickerViewScope.of(context)
+          .getDirectoryPath(
+            dialogTitle: _dialogTitleController.text,
+            initialDirectory: _initialDirectoryController.text,
+            windowsOptions: WindowsOptions(lockParentWindow: _lockParentWindow),
+            linuxOptions: LinuxOptions(lockParentWindow: _lockParentWindow),
+            androidOptions:
+                _androidSafOptionsFromFlags() ?? const AndroidOptions(),
+          );
       hasUserAborted = pickedDirectoryPath == null;
     } on PlatformException catch (e) {
       _logException('Picking a folder failed: $e');
@@ -367,7 +369,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
     _resetState();
 
     try {
-      pickedSaveFileUri = await FilePickerScope.of(context).saveFile(
+      pickedSaveFileUri = await FilePickerViewScope.of(context).saveFile(
         mimeType: 'application/octet-stream',
         dialogTitle: _dialogTitleController.text,
         fileName: targetFileName,

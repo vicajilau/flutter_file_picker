@@ -1,6 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:file_picker_darwin/file_picker_darwin.dart';
-import 'package:file_picker_example/src/file_picker_scope.dart';
+import 'package:file_picker/file_picker_view_scope.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,11 +13,13 @@ void main() {
     late FilePickerPlatform picker;
     final probe = Builder(
       builder: (context) {
-        picker = FilePickerScope.of(context);
+        picker = FilePickerViewScope.of(context);
         return const SizedBox();
       },
     );
-    await tester.pumpWidget(withScope ? FilePickerScope(child: probe) : probe);
+    await tester.pumpWidget(
+      withScope ? FilePickerViewScope(child: probe) : probe,
+    );
     return picker;
   }
 

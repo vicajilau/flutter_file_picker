@@ -7,6 +7,10 @@
 - **BREAKING CHANGE**: Removed `FilePicker.skipEntitlementsChecks()`. Use `FilePickerDarwin.skipEntitlementsChecks()` instead. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: Removed the `type` and `allowedExtensions` parameters of `FilePicker.saveFile()`, deprecated since 13.2.0. They never had any effect. [#2278](https://github.com/vicajilau/flutter_file_picker/pull/2278)
 
+## 13.3.0
+
+- Added `FilePickerViewScope` (`package:file_picker/file_picker_view_scope.dart`), which provides a picker per Flutter view, so in a multi-window macOS app each picker opens in its own window. Requires `file_picker_darwin ^2.4.0`.
+
 ## 13.2.0
 
 - Deprecated the `type` and `allowedExtensions` parameters of `FilePicker.saveFile()`, which never had any effect. They will be removed in 14.0.0. [#2278](https://github.com/vicajilau/flutter_file_picker/pull/2278)
