@@ -68,4 +68,30 @@ void main() {
       );
     }
   });
+
+  // A failure must not look like a cancel (#2286).
+  test(
+    'directory picks throw every failure, not just a missing window',
+    () async {
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        throw PlatformException(code: 'unknown_path');
+      });
+      final picker = FilePickerDarwin();
+      for (final pick in <Future<Object?> Function()>[
+        picker.getDirectoryPath,
+        picker.pickFileAndDirectoryPaths,
+      ]) {
+        await expectLater(
+          pick(),
+          throwsA(
+            isA<PlatformException>().having(
+              (e) => e.code,
+              'code',
+              'unknown_path',
+            ),
+          ),
+        );
+      }
+    },
+  );
 }

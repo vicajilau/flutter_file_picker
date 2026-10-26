@@ -6,6 +6,7 @@
 - `getDirectoryPath()` and `saveFile()` now take `darwinOptions`, so `DarwinOptions.acceptLabel` also sets their confirm button text on macOS. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: Removed `FilePicker.skipEntitlementsChecks()`. Use `FilePickerDarwin.skipEntitlementsChecks()` instead. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: Removed the `type` and `allowedExtensions` parameters of `FilePicker.saveFile()`, deprecated since 13.2.0. They never had any effect. [#2278](https://github.com/vicajilau/flutter_file_picker/pull/2278)
+- **BREAKING CHANGE**: `getDirectoryPath()` throws a `PlatformException` when the pick fails on Android, iOS or macOS, instead of returning `null` as if it was cancelled. See the migration guide. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 
 ## 13.3.0
 

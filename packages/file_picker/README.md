@@ -88,6 +88,11 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * **v13**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes, type: FileType.custom, allowedExtensions: ['pdf']);`
    * **v14**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes);`
 
+6. **`getDirectoryPath()` Throws on Failure**:
+   * On Android, iOS and macOS a failed directory pick used to return `null`, the same as a cancel. It now throws a `PlatformException`, and `null` only means the user cancelled.
+   * **v13**: `final dir = await FilePicker.getDirectoryPath(); if (dir == null) return;`
+   * **v14**: `try { final dir = await FilePicker.getDirectoryPath(); if (dir == null) return; } on PlatformException catch (e) { /* tell the user */ }`
+
 ## Migrating to v13
 
 1. **`PlatformFile.length()` Returns `Future<int?>`**:

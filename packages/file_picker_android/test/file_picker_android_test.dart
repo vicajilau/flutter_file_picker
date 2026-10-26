@@ -123,6 +123,30 @@ void main() {
       });
     });
 
+    // A failure must not look like a cancel (#2286).
+    test('getDirectoryPath throws the failures it used to swallow', () async {
+      final picker = FilePickerAndroid();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(picker.methodChannel, (call) async {
+            throw PlatformException(code: 'already_active');
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null),
+      );
+
+      await expectLater(
+        picker.getDirectoryPath(),
+        throwsA(
+          isA<PlatformException>().having(
+            (e) => e.code,
+            'code',
+            'already_active',
+          ),
+        ),
+      );
+    });
+
     group('retrieveLostData', () {
       late FilePickerAndroid picker;
 
