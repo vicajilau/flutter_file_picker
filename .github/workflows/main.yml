@@ -305,6 +305,16 @@ jobs:
           flutter pub get
           flutter build windows
 
+      # The Dart tests otherwise only run on Linux, where path handling differs
+      # from Windows, so the Windows implementation and the facade also run
+      # here, where Windows apps actually run them.
+      - name: Run Dart tests on Windows
+        working-directory: packages/file_picker_windows
+        run: flutter test
+      - name: Run facade tests on Windows
+        working-directory: packages/file_picker
+        run: flutter test
+
   build_darwin:
     needs: [check_changes, test_flutter_versions]
     if: ${{ needs.check_changes.outputs.darwin == 'true' }}
@@ -336,6 +346,12 @@ jobs:
         run: |
           flutter build macos --debug --config-only
           xcodebuild test -workspace macos/Runner.xcworkspace -scheme Runner -destination 'platform=macOS'
+
+      # The Dart tests otherwise only run on Linux, so the Darwin
+      # implementation also runs here, on the platform it ships for.
+      - name: Run Dart tests on macOS
+        working-directory: packages/file_picker_darwin
+        run: flutter test
 
       # file_picker_darwin declares ios and macos with sharedDarwinSource, so
       # both targets ship from the same sources and both need compiling. Reuses
