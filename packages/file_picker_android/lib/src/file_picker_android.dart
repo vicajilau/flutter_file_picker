@@ -174,10 +174,14 @@ class FilePickerAndroid extends FilePickerPlatform {
         'androidSafOptions': safOptionsMap,
       });
     } on PlatformException catch (ex) {
+      // Kept as null for now so apps that don't expect an exception here keep
+      // working, but every failure is logged so it isn't silent (#2286).
       if (ex.code == "unknown_path") {
         print(
           '[$_tag] Could not resolve directory path. Maybe it\'s a protected one or unsupported (such as Downloads folder). Make sure that you are on SDK 21 or above.',
         );
+      } else {
+        print('[$_tag] Could not pick a directory: ${ex.code}: ${ex.message}');
       }
     }
     return null;

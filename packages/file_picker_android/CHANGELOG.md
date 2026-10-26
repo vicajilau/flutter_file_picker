@@ -1,3 +1,7 @@
+## 2.1.3
+
+- `getDirectoryPath()` now logs every failure it returns `null` for, not just `unknown_path`, so a refused pick leaves a trace. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
+
 ## 2.1.2
 
 - Fixed `explorer_not_found` on Android 11+ devices that hide the documents picker from apps, such as some Xiaomi HyperOS versions. [#2282](https://github.com/vicajilau/flutter_file_picker/pull/2282)

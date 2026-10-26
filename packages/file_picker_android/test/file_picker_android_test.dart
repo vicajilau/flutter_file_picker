@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:android_file_picker/android_file_picker.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter/services.dart';
@@ -120,6 +122,44 @@ void main() {
         await picker.getDirectoryPath(androidOptions: options);
 
         expect(calls.single.arguments['androidSafOptions'], expected);
+      });
+    });
+
+    group('getDirectoryPath', () {
+      late FilePickerAndroid picker;
+      late List<String> printed;
+
+      setUp(() {
+        picker = FilePickerAndroid();
+        printed = [];
+      });
+      tearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null),
+      );
+
+      Future<String?> pickFailingWith(String code) {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, (call) async {
+              throw PlatformException(code: code, message: 'Refused.');
+            });
+        return runZoned(
+          () => picker.getDirectoryPath(),
+          zoneSpecification: ZoneSpecification(
+            print: (_, _, _, line) => printed.add(line),
+          ),
+        );
+      }
+
+      // Every failure leaves a trace, not just unknown_path (#2286).
+      test('logs any failure it turns into null', () async {
+        expect(await pickFailingWith('already_active'), isNull);
+        expect(printed.single, contains('already_active: Refused.'));
+      });
+
+      test('keeps the unknown_path hint', () async {
+        expect(await pickFailingWith('unknown_path'), isNull);
+        expect(printed.single, contains('Could not resolve directory path'));
       });
     });
 
