@@ -13,9 +13,9 @@ formatter:
 dependencies:
   flutter:
     sdk: flutter
-  file_picker: ^13.0.0
+  file_picker: ^13.3.0
   android_file_picker: ^2.0.0
-  file_picker_darwin: ^2.0.0
+  file_picker_darwin: ^2.4.0
   file_picker_linux: ^2.0.0
   file_picker_web: ^4.0.0
   windows_file_picker: ^2.0.0

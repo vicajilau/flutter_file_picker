@@ -5,6 +5,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
+// What `PlatformFile.path` reports for the test file on the current platform,
+// since `Uri.file` and `toFilePath` follow the platform's separators.
+final testFilePath = Uri.file('/path/to/test_file.txt').toFilePath();
+
 base class TestPlatformFile extends PlatformFile {
   TestPlatformFile({required this.name, required String path})
     : uri = Uri.file(path);
@@ -93,7 +97,7 @@ void main() {
       final files = await FilePicker.pickFiles();
       expect(files, isNotEmpty);
       expect(files.first.name, 'test_file.txt');
-      expect(files.first.path, '/path/to/test_file.txt');
+      expect(files.first.path, testFilePath);
     },
   );
 
@@ -120,7 +124,7 @@ void main() {
 
       expect(files, isNotEmpty);
       expect(files.first.name, 'test_file.txt');
-      expect(files.first.path, '/path/to/test_file.txt');
+      expect(files.first.path, testFilePath);
       expect(
         mockPlatform.lastDarwinOptions?.assetRepresentationMode,
         DarwinAssetRepresentationMode.automatic,
