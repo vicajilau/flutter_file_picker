@@ -96,6 +96,6 @@ dependencies {
     add("testImplementation", "junit:junit:4.13.2")
     // The org.json in android.jar is a stub on the JVM, so unit tests need
     // the real implementation.
-    add("testImplementation", "org.json:json:20240303")
+    add("testImplementation", "org.json:json:20260814")
 }
 
