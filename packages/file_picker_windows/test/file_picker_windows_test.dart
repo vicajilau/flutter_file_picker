@@ -60,6 +60,26 @@ void main() {
     });
   });
 
+  group('validateFileName', () {
+    final picker = FilePickerWindows();
+
+    test('accepts ordinary names', () {
+      for (final name in ['report.pdf', 'report (1).pdf', 'ñ #1 %.txt']) {
+        expect(() => picker.validateFileName(name), returnsNormally);
+      }
+    });
+
+    test('rejects the characters Windows reserves', () {
+      for (final char in ['<', '>', ':', '/', r'\', '|', '?', '*', '"']) {
+        expect(
+          () => picker.validateFileName('a${char}b.txt'),
+          throwsArgumentError,
+          reason: char,
+        );
+      }
+    });
+  });
+
   group('resolveDefaultExtension', () {
     final picker = FilePickerWindows();
     final port = ReceivePort();
