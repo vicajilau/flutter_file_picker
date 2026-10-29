@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
+import 'package:cross_file_io/cross_file_io.dart';
 import 'package:file_picker_darwin/file_picker_darwin.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter/foundation.dart';
@@ -116,6 +117,36 @@ void main() {
       expect(receivedLabel, isNull);
     });
 
+    test('getDirectoryPath and saveFile send acceptLabel', () async {
+      final picker = FilePickerDarwin();
+      final receivedLabels = <String, String?>{};
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(picker.methodChannel, (call) async {
+            receivedLabels[call.method] =
+                (call.arguments as Map)['acceptLabel'] as String?;
+            return null;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null);
+      });
+
+      await picker.getDirectoryPath(
+        darwinOptions: const DarwinOptions(acceptLabel: 'Use folder'),
+      );
+      await picker.saveFile(
+        fileName: 'a.txt',
+        bytes: Uint8List.fromList([1]),
+        mimeType: 'text/plain',
+        darwinOptions: const DarwinOptions(acceptLabel: 'Export'),
+      );
+      expect(receivedLabels, {'dir': 'Use folder', 'save': 'Export'});
+
+      await picker.getDirectoryPath();
+      expect(receivedLabels['dir'], isNull);
+    });
+
     test('pickFile and pickFiles send copyMedia', () async {
       final picker = FilePickerDarwin();
       bool? copyMedia;
@@ -167,6 +198,7 @@ void main() {
       });
 
       test('reads through its own XFile even with a ph URI', () async {
+        CrossFileIO.registerWith();
         final dir = Directory.systemTemp.createTempSync('file_picker_test');
         addTearDown(() => dir.deleteSync(recursive: true));
         final copy = File('${dir.path}/IMG_0001.HEIC')
@@ -176,7 +208,7 @@ void main() {
           name: 'IMG_0001.HEIC',
           uri: Uri.parse('ph:///ABC-123/L0/001'),
           assetIdentifier: 'ABC-123/L0/001',
-          xFile: XFile(copy.path),
+          xFile: XFile.fileSystem(path: copy.path),
         );
 
         expect(await file.readAsBytes(), [1, 2, 3]);
@@ -417,6 +449,34 @@ void main() {
       expect(await targetFile.readAsBytes(), equals(bytes));
     });
 
+    test(
+      'skipEntitlementsChecks only reaches the native side on macOS',
+      () async {
+        final picker = FilePickerDarwin();
+        final calls = <String>[];
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, (call) async {
+              calls.add(call.method);
+              return null;
+            });
+        final previousPlatform = debugDefaultTargetPlatformOverride;
+        addTearDown(() {
+          debugDefaultTargetPlatformOverride = previousPlatform;
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(picker.methodChannel, null);
+        });
+
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        await picker.skipEntitlementsChecks();
+        expect(calls, isEmpty);
+
+        debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+        await picker.skipEntitlementsChecks();
+        expect(calls, ['skipEntitlementsChecks']);
+      },
+    );
+
     test('pickFileAndDirectoryPaths calls the native combined picker and '
         'returns its paths', () async {
       final picker = FilePickerDarwin();
@@ -440,7 +500,7 @@ void main() {
     });
 
     test(
-      'pickFileAndDirectoryPaths returns an empty list on PlatformException',
+      'pickFileAndDirectoryPaths throws on PlatformException (#2286)',
       () async {
         final picker = FilePickerDarwin();
 
@@ -453,9 +513,10 @@ void main() {
               .setMockMethodCallHandler(picker.methodChannel, null);
         });
 
-        final result = await picker.pickFileAndDirectoryPaths();
-
-        expect(result, isEmpty);
+        await expectLater(
+          picker.pickFileAndDirectoryPaths(),
+          throwsA(isA<PlatformException>()),
+        );
       },
     );
   });

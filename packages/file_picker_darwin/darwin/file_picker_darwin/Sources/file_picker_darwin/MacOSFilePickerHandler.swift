@@ -218,6 +218,9 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
                 }
                 dialog.message = title
             }
+            if let acceptLabel = args["acceptLabel"] as? String, !acceptLabel.isEmpty {
+                dialog.prompt = acceptLabel
+            }
             dialog.showsHiddenFiles = false
             dialog.allowsMultipleSelection = false
             dialog.canChooseDirectories = true
@@ -234,7 +237,12 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
                     return
                 }
 
-                result(nil)
+                // The user confirmed, so a missing URL is a failure, not a
+                // cancel (#2286).
+                result(FlutterError(
+                    code: "unknown_path",
+                    message: "The picked directory has no path.",
+                    details: nil))
             }
         }
     }
@@ -255,6 +263,9 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
             dialog.canCreateDirectories = true
             dialog.isExtensionHidden = true
             dialog.nameFieldStringValue = args["fileName"] as? String ?? ""
+            if let acceptLabel = args["acceptLabel"] as? String, !acceptLabel.isEmpty {
+                dialog.prompt = acceptLabel
+            }
 
             if let initialDirectory = args["initialDirectory"] as? String,
                !initialDirectory.isEmpty {

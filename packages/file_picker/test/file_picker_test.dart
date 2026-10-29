@@ -20,7 +20,7 @@ base class TestPlatformFile extends PlatformFile {
   final Uri uri;
 
   @override
-  XFile get xFile => XFile(path ?? '');
+  XFile get xFile => XFile.fileSystem(path: path ?? '');
 
   @override
   int? lengthSync() => 100;
@@ -38,12 +38,6 @@ base class TestPlatformFile extends PlatformFile {
 class MockFilePickerPlatform extends FilePickerPlatform
     with MockPlatformInterfaceMixin {
   DarwinOptions? lastDarwinOptions;
-  bool skipEntitlementsChecksCalled = false;
-
-  @override
-  Future<void> skipEntitlementsChecks() async {
-    skipEntitlementsChecksCalled = true;
-  }
 
   @override
   Future<PlatformFile?> pickFile({
@@ -100,16 +94,6 @@ void main() {
       expect(files.first.path, testFilePath);
     },
   );
-
-  test('FilePicker.skipEntitlementsChecks delegates to '
-      'FilePickerPlatform.instance.skipEntitlementsChecks', () async {
-    final mockPlatform = MockFilePickerPlatform();
-    FilePickerPlatform.instance = mockPlatform;
-
-    await FilePicker.skipEntitlementsChecks();
-
-    expect(mockPlatform.skipEntitlementsChecksCalled, isTrue);
-  });
 
   group('FilePicker Darwin options', () {
     late MockFilePickerPlatform mockPlatform;

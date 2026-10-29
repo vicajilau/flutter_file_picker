@@ -29,10 +29,10 @@ class DarwinOptions {
 
   /// The label for the confirm button of the file dialog.
   ///
-  /// Maps to `NSOpenPanel.prompt` on macOS. Only honored by `pickFile()` and
-  /// `pickFiles()`, the only entry points that accept [DarwinOptions] on
-  /// macOS. Has no effect on iOS, `UIDocumentPickerViewController` has no
-  /// equivalent there.
+  /// Maps to the `prompt` of `NSOpenPanel` on macOS for `pickFile()`,
+  /// `pickFiles()` and `getDirectoryPath()`, and of `NSSavePanel` for
+  /// `saveFile()`. Has no effect on iOS, `UIDocumentPickerViewController` has
+  /// no equivalent there.
   final String? acceptLabel;
 
   /// Whether the iOS photo library picker numbers selected media and returns

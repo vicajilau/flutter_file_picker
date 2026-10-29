@@ -15,8 +15,6 @@ class FilePickerAndroid extends FilePickerPlatform {
     FilePickerPlatform.instance = FilePickerAndroid();
   }
 
-  static const String _tag = 'FilePickerAndroid';
-
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel(
@@ -160,27 +158,21 @@ class FilePickerAndroid extends FilePickerPlatform {
     String? dialogTitle,
     String? initialDirectory,
     AndroidOptions androidOptions = const FilePickerAndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    try {
-      final Map<String, Object?>? safOptionsMap = switch (androidOptions) {
-        FilePickerAndroidOptions opts => opts.safOptions.toMap(),
-        _ => null,
-      };
+    final Map<String, Object?>? safOptionsMap = switch (androidOptions) {
+      FilePickerAndroidOptions opts => opts.safOptions.toMap(),
+      _ => null,
+    };
 
-      return await methodChannel.invokeMethod<String>('dir', {
-        'androidSafOptions': safOptionsMap,
-      });
-    } on PlatformException catch (ex) {
-      if (ex.code == "unknown_path") {
-        print(
-          '[$_tag] Could not resolve directory path. Maybe it\'s a protected one or unsupported (such as Downloads folder). Make sure that you are on SDK 21 or above.',
-        );
-      }
-    }
-    return null;
+    // A failure is thrown as a PlatformException, so the app can tell it
+    // apart from a cancel, which completes with null (#2286).
+    return methodChannel.invokeMethod<String>('dir', {
+      'androidSafOptions': safOptionsMap,
+    });
   }
 
   /// Recovers the files picked before Android destroyed the activity, or the
@@ -233,6 +225,7 @@ class FilePickerAndroid extends FilePickerPlatform {
     String? dialogTitle,
     String? initialDirectory,
     Function(FilePickerStatus)? onFileSaving,
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),

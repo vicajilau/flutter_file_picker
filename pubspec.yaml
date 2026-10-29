@@ -42,8 +42,8 @@ melos:
       description: Run the web integration_test suite against the example app.
 
 environment:
-  sdk: ">=3.10.0 <4.0.0"
-  flutter: ">=3.38.0"
+  sdk: ">=3.11.0 <4.0.0"
+  flutter: ">=3.41.0"
 
 dev_dependencies:
   flutter_lints: ^6.0.0
