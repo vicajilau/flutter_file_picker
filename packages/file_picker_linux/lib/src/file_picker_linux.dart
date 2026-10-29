@@ -234,8 +234,8 @@ class FilePickerLinux extends FilePickerPlatform {
       ..._requestOptions(options, initialDirectory),
       'multiple': DBusBoolean(allowMultiple),
       'filters': filter.toDBusArray(),
-      if (options.acceptLabel != null)
-        'accept_label': DBusString(options.acceptLabel!),
+      if (options.acceptLabel case final acceptLabel?)
+        'accept_label': DBusString(acceptLabel),
     };
   }
 
