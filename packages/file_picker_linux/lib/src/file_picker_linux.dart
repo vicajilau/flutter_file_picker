@@ -105,56 +105,19 @@ class FilePickerLinux extends FilePickerPlatform {
   }) async {
     final options = resolveOptions(linuxOptions);
 
-    final filter = Filter(type, allowedExtensions);
-    Map<String, DBusValue> xdpOption = {
-      'handle_token': DBusString('flutter_picker'),
-      'multiple': DBusBoolean(allowMultiple),
-      'modal': DBusBoolean(options.lockParentWindow),
-      'filters': filter.toDBusArray(),
-    };
-
-    if (options.acceptLabel != null) {
-      xdpOption["accept_label"] = DBusString(options.acceptLabel!);
-    }
-
-    if (initialDirectory != null) {
-      final Uint8List tmp = _encodeDirectory(initialDirectory);
-      DBusArray directory = DBusArray.byte(tmp);
-      xdpOption["current_folder"] = directory;
-    }
-
     final replyPath = await xdpChooser.callOpenFile(
-      _formatParentWindow(options.parentWindow),
+      formatParentWindow(options.parentWindow),
       dialogTitle ?? "flutter picker",
-      xdpOption,
+      openFileOptions(
+        options,
+        allowMultiple: allowMultiple,
+        filter: Filter(type, allowedExtensions),
+        initialDirectory: initialDirectory,
+      ),
     );
 
-    List<Uri> uriPaths = [];
-
-    final request = OrgFreedesktopPortalRequest(
-      client,
-      destination,
-      path: replyPath,
-    );
-
-    await for (var response in request.response) {
-      final status = response.response;
-      if (status != 0) {
-        return [];
-      }
-      final result = response.results;
-      uriPaths =
-          result["uris"]
-              ?.asArray()
-              .map((data) => Uri.parse(data.asString()))
-              .toList() ??
-          [];
-      break;
-    }
-
-    return [
-      for (final uri in uriPaths) LinuxPlatformFile.fromPath(uri.toFilePath()),
-    ];
+    final paths = await _awaitPaths(replyPath) ?? [];
+    return [for (final path in paths) LinuxPlatformFile.fromPath(path)];
   }
 
   @override
@@ -184,46 +147,13 @@ class FilePickerLinux extends FilePickerPlatform {
   }) async {
     final options = resolveOptions(linuxOptions);
 
-    Map<String, DBusValue> xdpOption = {
-      'handle_token': DBusString('flutter_picker'),
-      'directory': DBusBoolean(true),
-      'modal': DBusBoolean(options.lockParentWindow),
-    };
-    if (initialDirectory != null) {
-      final Uint8List tmp = _encodeDirectory(initialDirectory);
-      DBusArray directory = DBusArray.byte(tmp);
-      xdpOption["current_folder"] = directory;
-    }
     final replyPath = await xdpChooser.callOpenFile(
-      _formatParentWindow(options.parentWindow),
+      formatParentWindow(options.parentWindow),
       dialogTitle ?? "flutter picker",
-      xdpOption,
+      directoryOptions(options, initialDirectory: initialDirectory),
     );
 
-    List<Uri> uriPaths = [];
-
-    final request = OrgFreedesktopPortalRequest(
-      client,
-      destination,
-      path: replyPath,
-    );
-
-    await for (var response in request.response) {
-      final status = response.response;
-      if (status != 0) {
-        return null;
-      }
-      final result = response.results;
-      uriPaths =
-          result["uris"]
-              ?.asArray()
-              .map((data) => Uri.parse(data.asString()))
-              .toList() ??
-          [];
-      break;
-    }
-
-    return uriPaths.firstOrNull?.toFilePath();
+    return (await _awaitPaths(replyPath))?.firstOrNull;
   }
 
   @override
@@ -240,45 +170,17 @@ class FilePickerLinux extends FilePickerPlatform {
   }) async {
     final options = resolveOptions(linuxOptions);
 
-    Map<String, DBusValue> xdpOption = {
-      'handle_token': DBusString('flutter_picker'),
-      'current_name': DBusString(fileName),
-      'modal': DBusBoolean(options.lockParentWindow),
-    };
-    if (initialDirectory != null) {
-      final Uint8List tmp = _encodeDirectory(initialDirectory);
-      DBusArray directory = DBusArray.byte(tmp);
-      xdpOption["current_folder"] = directory;
-    }
-
     final replyPath = await xdpChooser.callSaveFile(
-      _formatParentWindow(options.parentWindow),
+      formatParentWindow(options.parentWindow),
       dialogTitle ?? "flutter picker",
-      xdpOption,
-    );
-    final request = OrgFreedesktopPortalRequest(
-      client,
-      destination,
-      path: replyPath,
+      saveFileOptions(
+        options,
+        fileName: fileName,
+        initialDirectory: initialDirectory,
+      ),
     );
 
-    List<Uri> saveUris = [];
-    await for (var response in request.response) {
-      final status = response.response;
-      if (status != 0) {
-        return null;
-      }
-      final result = response.results;
-      saveUris =
-          result["uris"]
-              ?.asArray()
-              .map((data) => Uri.parse(data.asString()))
-              .toList() ??
-          saveUris;
-      break;
-    }
-
-    final savedFilePath = saveUris.firstOrNull?.toFilePath();
+    final savedFilePath = (await _awaitPaths(replyPath))?.firstOrNull;
 
     if (savedFilePath != null) {
       final file = File(savedFilePath);
@@ -289,8 +191,94 @@ class FilePickerLinux extends FilePickerPlatform {
     return null;
   }
 
-  Uint8List _encodeDirectory(String initialDirectory) {
-    return Uint8List.fromList([...utf8.encode(initialDirectory), 0]);
+  /// Waits for the portal's response to the request at [replyPath] and
+  /// returns the chosen paths, or `null` if the user cancelled or the
+  /// request failed.
+  Future<List<String>?> _awaitPaths(DBusObjectPath replyPath) async {
+    final request = OrgFreedesktopPortalRequest(
+      client,
+      destination,
+      path: replyPath,
+    );
+    await for (final response in request.response) {
+      return pathsFromResponse(response.response, response.results);
+    }
+    return null;
+  }
+
+  /// The options every portal request shares.
+  static Map<String, DBusValue> _requestOptions(
+    FilePickerLinuxOptions options,
+    String? initialDirectory,
+  ) {
+    return {
+      'handle_token': DBusString('flutter_picker'),
+      'modal': DBusBoolean(options.lockParentWindow),
+      if (initialDirectory != null)
+        // The portal expects a null terminated byte string.
+        'current_folder': DBusArray.byte(
+          Uint8List.fromList([...utf8.encode(initialDirectory), 0]),
+        ),
+    };
+  }
+
+  /// The portal options to pick files with.
+  @visibleForTesting
+  static Map<String, DBusValue> openFileOptions(
+    FilePickerLinuxOptions options, {
+    required bool allowMultiple,
+    required Filter filter,
+    String? initialDirectory,
+  }) {
+    return {
+      ..._requestOptions(options, initialDirectory),
+      'multiple': DBusBoolean(allowMultiple),
+      'filters': filter.toDBusArray(),
+      if (options.acceptLabel != null)
+        'accept_label': DBusString(options.acceptLabel!),
+    };
+  }
+
+  /// The portal options to pick a directory with.
+  @visibleForTesting
+  static Map<String, DBusValue> directoryOptions(
+    FilePickerLinuxOptions options, {
+    String? initialDirectory,
+  }) {
+    return {
+      ..._requestOptions(options, initialDirectory),
+      'directory': DBusBoolean(true),
+    };
+  }
+
+  /// The portal options to save [fileName] with.
+  @visibleForTesting
+  static Map<String, DBusValue> saveFileOptions(
+    FilePickerLinuxOptions options, {
+    required String fileName,
+    String? initialDirectory,
+  }) {
+    return {
+      ..._requestOptions(options, initialDirectory),
+      'current_name': DBusString(fileName),
+    };
+  }
+
+  /// The file paths in a portal response, or `null` if [status] says the
+  /// user cancelled (1) or the request failed (2).
+  @visibleForTesting
+  static List<String>? pathsFromResponse(
+    int status,
+    Map<String, DBusValue> results,
+  ) {
+    if (status != 0) {
+      return null;
+    }
+    return results['uris']
+            ?.asArray()
+            .map((uri) => Uri.parse(uri.asString()).toFilePath())
+            .toList() ??
+        [];
   }
 
   /// Narrows [linuxOptions] to the Linux specific type the portal calls need.
@@ -310,7 +298,11 @@ class FilePickerLinux extends FilePickerPlatform {
     };
   }
 
-  static String _formatParentWindow(String? parentWindow) {
+  /// The `parent_window` identifier for [parentWindow], accepting an X11
+  /// window id in hex or decimal, or an already prefixed `x11:` or
+  /// `wayland:` handle.
+  @visibleForTesting
+  static String formatParentWindow(String? parentWindow) {
     if (parentWindow == null || parentWindow.trim().isEmpty) {
       return '';
     }
