@@ -34,4 +34,6 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   # Exact, since CI checks the generated code, whose header names this version.
-  pigeon: 29.1.0
+  # Later versions need an analyzer that requires meta 1.18, while Flutter
+  # 3.41 pins meta 1.17, so the workspace would not resolve there.
+  pigeon: 27.3.0
