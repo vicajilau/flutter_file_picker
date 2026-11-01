@@ -1,7 +1,10 @@
 import 'package:android_file_picker/android_file_picker.dart';
+import 'package:android_file_picker/src/messages.g.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'fake_file_picker_api.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -59,20 +62,18 @@ void main() {
     test(
       'pickFileAndDirectoryPaths returns decoded paths that match the cached files',
       () async {
-        final picker = FilePickerAndroid();
         const cachedPath =
             '/data/user/0/app/cache/file_picker/1/AdSenseReport (3) #1 ñ%.PDF';
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(picker.methodChannel, (call) async {
-              return [
-                {'path': cachedPath, 'name': 'AdSenseReport (3) #1 ñ%.PDF'},
-              ];
-            });
-        addTearDown(
-          () => TestDefaultBinaryMessengerBinding
-              .instance
-              .defaultBinaryMessenger
-              .setMockMethodCallHandler(picker.methodChannel, null),
+        final picker = FilePickerAndroid(
+          api: FakeFilePickerApi(
+            (_, _) async => [
+              PickedFileMessage(
+                path: cachedPath,
+                name: 'AdSenseReport (3) #1 ñ%.PDF',
+                size: 0,
+              ),
+            ],
+          ),
         );
 
         expect(await picker.pickFileAndDirectoryPaths(), [cachedPath]);
@@ -87,51 +88,43 @@ void main() {
           persistGrant: false,
         ),
       );
-      const expected = {
-        'grant': 'lifetime',
-        'access': 'readWrite',
-        'autoPersist': false,
-      };
+      void expectSent(Object? sent) {
+        expect(
+          sent,
+          isA<SafOptionsMessage>()
+              .having((o) => o.grant, 'grant', SafGrantMessage.lifetime)
+              .having((o) => o.access, 'access', SafAccessMessage.readWrite)
+              .having((o) => o.autoPersist, 'autoPersist', isFalse),
+        );
+      }
 
+      late FakeFilePickerApi api;
       late FilePickerAndroid picker;
-      late List<MethodCall> calls;
 
       setUp(() {
-        picker = FilePickerAndroid();
-        calls = [];
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(picker.methodChannel, (call) async {
-              calls.add(call);
-              return call.method == 'dir' ? '/storage/dir' : [];
-            });
+        api = FakeFilePickerApi();
+        picker = FilePickerAndroid(api: api);
       });
-      tearDown(
-        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(picker.methodChannel, null),
-      );
 
       test('when picking files', () async {
         await picker.pickFiles(androidOptions: options);
 
-        expect(calls.single.arguments['androidSafOptions'], expected);
+        expectSent(api.calls.single.arguments[4]);
       });
 
       test('when picking a directory', () async {
         await picker.getDirectoryPath(androidOptions: options);
 
-        expect(calls.single.arguments['androidSafOptions'], expected);
+        expectSent(api.calls.single.arguments.single);
       });
     });
 
     test('saveFile returns the content URI of the saved document', () async {
-      final picker = FilePickerAndroid();
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(picker.methodChannel, (call) async {
-            return 'content://com.android.providers.downloads.documents/document/42';
-          });
-      addTearDown(
-        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(picker.methodChannel, null),
+      final picker = FilePickerAndroid(
+        api: FakeFilePickerApi(
+          (_, _) async =>
+              'content://com.android.providers.downloads.documents/document/42',
+        ),
       );
 
       final uri = await picker.saveFile(
@@ -149,14 +142,10 @@ void main() {
 
     // A failure must not look like a cancel (#2286).
     test('getDirectoryPath throws the failures it used to swallow', () async {
-      final picker = FilePickerAndroid();
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(picker.methodChannel, (call) async {
-            throw PlatformException(code: 'already_active');
-          });
-      addTearDown(
-        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(picker.methodChannel, null),
+      final picker = FilePickerAndroid(
+        api: FakeFilePickerApi(
+          (_, _) async => throw PlatformException(code: 'already_active'),
+        ),
       );
 
       await expectLater(
@@ -174,19 +163,14 @@ void main() {
     group('retrieveLostData', () {
       late FilePickerAndroid picker;
 
-      void respondWith(Object? response) {
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(picker.methodChannel, (call) async {
-              expect(call.method, 'retrieveLostData');
-              return response;
-            });
+      void respondWith(LostDataMessage? response) {
+        picker = FilePickerAndroid(
+          api: FakeFilePickerApi((method, _) async {
+            expect(method, 'retrieveLostData');
+            return response;
+          }),
+        );
       }
-
-      setUp(() => picker = FilePickerAndroid());
-      tearDown(
-        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(picker.methodChannel, null),
-      );
 
       test('returns null when nothing was lost', () async {
         respondWith(null);
@@ -194,12 +178,14 @@ void main() {
       });
 
       test('returns the lost files', () async {
-        respondWith({
-          'files': [
-            {'path': '/cache/a.pdf', 'name': 'a.pdf', 'size': 3},
-            {'path': '/cache/b.png', 'name': 'b.png', 'size': 5},
-          ],
-        });
+        respondWith(
+          LostDataMessage(
+            files: [
+              PickedFileMessage(path: '/cache/a.pdf', name: 'a.pdf', size: 3),
+              PickedFileMessage(path: '/cache/b.png', name: 'b.png', size: 5),
+            ],
+          ),
+        );
 
         final lost = await picker.retrieveLostData();
 
@@ -212,10 +198,12 @@ void main() {
       });
 
       test('returns the error raised while processing', () async {
-        respondWith({
-          'errorCode': 'out_of_memory',
-          'errorMessage': 'Selected files are too large to process.',
-        });
+        respondWith(
+          LostDataMessage(
+            errorCode: 'out_of_memory',
+            errorMessage: 'Selected files are too large to process.',
+          ),
+        );
 
         final lost = await picker.retrieveLostData();
 

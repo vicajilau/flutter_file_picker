@@ -18,32 +18,16 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.EventChannel.EventSink
-import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 
 /**
  * FilePickerPlugin
  */
-class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
+class FilePickerPlugin : FilePickerApi, FlutterPlugin,
     ActivityAware {
 
     companion object {
         private const val TAG = "FilePicker"
-        private const val CHANNEL = "miguelruivo.flutter.plugins.filepicker"
         private const val EVENT_CHANNEL = "miguelruivo.flutter.plugins.filepickerevent"
-
-        private fun resolveType(type: String): String? {
-            return when (type) {
-                "audio" -> "audio/*"
-                "image" -> "image/*"
-                "video" -> "video/*"
-                "media" -> "media"
-                "any", "custom" -> "*/*"
-                "dir" -> "dir"
-                else -> null
-            }
-        }
     }
 
     private inner class LifeCycleObserver
@@ -105,100 +89,89 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
     private var lifecycle: Lifecycle? = null
     private var observer: LifeCycleObserver? = null
     private var activity: Activity? = null
-    private var channel: MethodChannel? = null
+    private var messenger: BinaryMessenger? = null
 
-    override fun onMethodCall(call: MethodCall, rawResult: MethodChannel.Result) {
-        if (this.activity == null) {
-            rawResult.error(
-                "no_activity",
-                "file picker plugin requires a foreground activity",
-                null
-            )
-            return
+    /** The delegate of the foreground activity, or a `no_activity` error. */
+    private fun requireDelegate(): FilePickerDelegate =
+        delegate.takeIf { activity != null } ?: throw FilePickerFlutterError(
+            "no_activity",
+            "file picker plugin requires a foreground activity",
+            null
+        )
+
+    override suspend fun pickFiles(
+        type: FileTypeMessage,
+        allowMultiple: Boolean,
+        allowedExtensions: List<String>,
+        compressionQuality: Long,
+        safOptions: SafOptionsMessage?
+    ): List<PickedFileMessage>? {
+        val delegate = requireDelegate()
+        val mimeTypes = if (type == FileTypeMessage.CUSTOM) {
+            getMimeTypes(ArrayList(allowedExtensions))
+        } else {
+            arrayListOf()
         }
+        return awaitResult(::pickedFilesOf) { result ->
+            delegate.startFileExplorer(
+                type.mimeType(),
+                allowMultiple,
+                mimeTypes,
+                compressionQuality.toInt(),
+                safOptions?.toMap(),
+                result
+            )
+        }
+    }
 
-        val result: MethodChannel.Result = MethodResultWrapper(rawResult)
-        val arguments = call.arguments as? HashMap<*, *>
-        val method = call.method
+    override suspend fun pickDirectory(safOptions: SafOptionsMessage?): String? {
+        val delegate = requireDelegate()
+        return awaitResult({ it as String? }) { result ->
+            delegate.startFileExplorer("dir", false, arrayListOf(), 0, safOptions?.toMap(), result)
+        }
+    }
 
-        when (method) {
-            "clear" -> {
-                activity?.applicationContext?.let { clearCache(it) }
-                result.success(null)
-            }
+    override suspend fun saveFile(
+        fileName: String,
+        mimeType: String,
+        initialDirectory: String?,
+        bytes: ByteArray
+    ): String? {
+        val delegate = requireDelegate()
+        val name = if (fileName.isNotEmpty() && !fileName.contains(".")) {
+            "$fileName.${getFileExtension(bytes)}"
+        } else {
+            fileName
+        }
+        // The delegate works the MIME type out from the name and the bytes,
+        // so mimeType has never been used on Android. It only checks the type
+        // for "dir", which a saved file never is.
+        return awaitResult({ it as String? }) { result ->
+            delegate.saveFile(name, null, initialDirectory, bytes, result)
+        }
+    }
 
-            "retrieveLostData" -> {
-                val context = activity?.applicationContext
-                if (context == null) {
-                    result.success(null)
-                } else {
-                    LostDataStore.retrieve(context, result)
-                }
-            }
+    override suspend fun retrieveLostData(): LostDataMessage? {
+        requireDelegate()
+        val context = activity?.applicationContext ?: return null
+        return awaitResult(::lostDataOf) { result -> LostDataStore.retrieve(context, result) }
+    }
 
-            "releaseSafGrant" -> {
-                val uriStr = arguments?.get("uri") as? String
-                if (uriStr == null) {
-                  result.success(null)
-                  return
-                }
-                
-                try {
-                    val uri = android.net.Uri.parse(uriStr)
-                    val flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                            android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    activity?.applicationContext?.contentResolver?.releasePersistableUriPermission(uri, flags)
-                } catch (e: SecurityException) {
-                    // Ignore if we didn't have the permission or it was already released
-                    android.util.Log.e(TAG, "Failed to release SAF permission for $uriStr", e)
-                }
-                result.success(null)
-            }
+    override fun clearTemporaryFiles() {
+        requireDelegate()
+        activity?.applicationContext?.let { clearCache(it) }
+    }
 
-            "save" -> {
-                val type = resolveType(arguments?.get("fileType") as String)
-                val initialDirectory = arguments?.get("initialDirectory") as String?
-                val bytes = arguments?.get("bytes") as ByteArray?
-                val fileNameWithoutExtension = "${arguments?.get("fileName")}"
-                val fileName =
-                    if (fileNameWithoutExtension.isNotEmpty() && !fileNameWithoutExtension.contains(
-                            "."
-                        )
-                    ) "$fileNameWithoutExtension.${getFileExtension(bytes)}" else fileNameWithoutExtension
-                delegate?.saveFile(fileName, type, initialDirectory, bytes, result)
-            }
-
-            "custom" -> {
-                val allowedExtensions =
-                    getMimeTypes(arguments?.get("allowedExtensions") as ArrayList<String>?)
-                val androidSafOptions = arguments?.get("androidSafOptions") as? java.util.HashMap<*, *>
-                delegate?.startFileExplorer(
-                    resolveType(method),
-                    arguments?.get("allowMultipleSelection") as Boolean?,
-                    allowedExtensions,
-                    arguments?.get("compressionQuality") as Int?,
-                    androidSafOptions,
-                    result
-                )
-            }
-
-            else -> {
-                val fileType = resolveType(method)
-                if (fileType == null) {
-                    result.notImplemented()
-                    return
-                }
-
-                val androidSafOptions = arguments?.get("androidSafOptions") as? java.util.HashMap<*, *>
-                delegate?.startFileExplorer(
-                    fileType,
-                    arguments?.get("allowMultipleSelection") as Boolean?,
-                    arrayListOf(),
-                    arguments?.get("compressionQuality") as Int?,
-                    androidSafOptions,
-                    result
-                )
-            }
+    override fun releaseSafGrant(uri: String) {
+        requireDelegate()
+        try {
+            val flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            activity?.applicationContext?.contentResolver
+                ?.releasePersistableUriPermission(android.net.Uri.parse(uri), flags)
+        } catch (e: SecurityException) {
+            // Ignore if we didn't have the permission or it was already released
+            android.util.Log.e(TAG, "Failed to release SAF permission for $uri", e)
         }
     }
 
@@ -211,8 +184,8 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
         this.activity = activity
         this.application = application
         this.delegate = FilePickerDelegate(activity)
-        this.channel = MethodChannel(messenger, CHANNEL)
-        channel?.setMethodCallHandler(this)
+        this.messenger = messenger
+        FilePickerApi.setUp(messenger, this)
         delegate?.let { it ->
             EventChannel(messenger, EVENT_CHANNEL).setStreamHandler(object :
                 EventChannel.StreamHandler {
@@ -245,8 +218,8 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
         this.lifecycle = null
         delegate?.setEventHandler(null)
         this.delegate = null
-        channel?.setMethodCallHandler(null)
-        this.channel = null
+        messenger?.let { FilePickerApi.setUp(it, null) }
+        this.messenger = null
         this.application = null
     }
 
