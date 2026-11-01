@@ -23,6 +23,11 @@ final class IOSFilePickerHandler: NSObject,
     private var isDirectoryPicker = false
     private var isFileAndDirectoryPicker = false
     private var isSaveFile = false
+    /// The picker shown for the pending request, to tell a request that is
+    /// still open from one whose picker went away without a callback.
+    private weak var presentedPicker: UIViewController?
+    private var pickerWasPresented = false
+    private var isLoadingPickedItems = false
     private let loader = PickLoader()
 
     init(registrar: FlutterPluginRegistrar) {
@@ -37,15 +42,26 @@ final class IOSFilePickerHandler: NSObject,
         }
 
         if self.result != nil {
-            result(
-                FlutterError(
-                    code: "multiple_request",
-                    message: "Cancelled by a second request",
-                    details: nil))
-            return
+            let isStale = PendingRequest.isStale(
+                wasPresented: pickerWasPresented,
+                isStillPresented: presentedPicker?.presentingViewController != nil,
+                isLoadingPickedItems: isLoadingPickedItems)
+            guard isStale else {
+                result(
+                    FlutterError(
+                        code: "multiple_request",
+                        message: "Cancelled by a second request",
+                        details: nil))
+                return
+            }
+            // The previous picker is gone without telling us, so its request
+            // completes as cancelled instead of blocking this one (#2291).
+            finishCurrentRequest(nil)
         }
 
         self.result = result
+        presentedPicker = nil
+        pickerWasPresented = false
 
         if call.method == "dir" {
             isDirectoryPicker = true
@@ -168,11 +184,13 @@ final class IOSFilePickerHandler: NSObject,
         }
 
         eventSink?(true)
+        isLoadingPickedItems = true
         loader.loadMedia(results, preferringCompatible: preferringCompatible) {
             [weak self] loaded, failures in
             guard let self else {
                 return
             }
+            isLoadingPickedItems = false
             eventSink?(false)
             complete(
                 currentResult,
@@ -311,7 +329,7 @@ final class IOSFilePickerHandler: NSObject,
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
         picker.presentationController?.delegate = self
-        topViewController()?.present(picker, animated: true)
+        present(picker)
     }
 
     private func presentDocumentPicker(
@@ -325,7 +343,7 @@ final class IOSFilePickerHandler: NSObject,
         picker.delegate = self
         picker.presentationController?.delegate = self
         picker.allowsMultipleSelection = allowsMultipleSelection
-        topViewController()?.present(picker, animated: true)
+        present(picker)
     }
 
     private func saveFile(_ arguments: [String: Any]) {
@@ -368,7 +386,7 @@ final class IOSFilePickerHandler: NSObject,
                     asCopy: true)
                 picker.delegate = self
                 picker.presentationController?.delegate = self
-                self.topViewController()?.present(picker, animated: true)
+                self.present(picker)
             }
         }
     }
@@ -425,6 +443,13 @@ final class IOSFilePickerHandler: NSObject,
         }
 
         return topController
+    }
+
+    /// Shows `picker` for the pending request and remembers it.
+    private func present(_ picker: UIViewController) {
+        presentedPicker = picker
+        pickerWasPresented = true
+        topViewController()?.present(picker, animated: true)
     }
 
     private func finishCurrentRequest(_ value: Any?) {
