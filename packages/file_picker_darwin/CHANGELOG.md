@@ -4,6 +4,10 @@
 - `DarwinOptions.acceptLabel` now also sets the confirm button text of `getDirectoryPath()` and `saveFile()` on macOS. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: `getDirectoryPath()` and `pickFileAndDirectoryPaths()` throw the `PlatformException` of a failed pick instead of returning `null` or an empty list, and on macOS a confirmed directory pick without a path fails with `unknown_path`. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 
+## 2.4.1
+
+- Fixed iOS pickers getting stuck in `multiple_request` when the picker is swiped away while still appearing. [#2291](https://github.com/vicajilau/flutter_file_picker/issues/2291)
+
 ## 2.4.0
 
 - On macOS, `FilePickerDarwin(viewId:)` attaches the pickers to that Flutter view's window, and fails with `window_not_found` when that window is closed or hidden.
