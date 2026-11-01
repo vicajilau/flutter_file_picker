@@ -466,6 +466,34 @@ void main() {
       expect(await targetFile.readAsBytes(), equals(bytes));
     });
 
+    test(
+      'skipEntitlementsChecks only reaches the native side on macOS',
+      () async {
+        final picker = FilePickerDarwin();
+        final calls = <String>[];
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, (call) async {
+              calls.add(call.method);
+              return null;
+            });
+        final previousPlatform = debugDefaultTargetPlatformOverride;
+        addTearDown(() {
+          debugDefaultTargetPlatformOverride = previousPlatform;
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(picker.methodChannel, null);
+        });
+
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        await picker.skipEntitlementsChecks();
+        expect(calls, isEmpty);
+
+        debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+        await picker.skipEntitlementsChecks();
+        expect(calls, ['skipEntitlementsChecks']);
+      },
+    );
+
     test('pickFileAndDirectoryPaths calls the native combined picker and '
         'returns its paths', () async {
       final picker = FilePickerDarwin();

@@ -83,6 +83,11 @@ The iOS and macOS native implementations live under the shared Darwin source tre
      }
      ```
 
+4. **`FilePicker.skipEntitlementsChecks()` Removed**:
+   * Platform specific APIs now only live in their platform package. Add `file_picker_darwin` as a direct dependency and call it on `FilePickerDarwin`:
+   * **v13**: `await FilePicker.skipEntitlementsChecks();`
+   * **v14**: `if (FilePickerPlatform.instance case final FilePickerDarwin darwin) await darwin.skipEntitlementsChecks();`
+
 ## Migrating to v13
 
 1. **`PlatformFile.length()` Returns `Future<int?>`**:

@@ -136,13 +136,6 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// Default implementation is a no-op for platforms that do not create temporary files.
   Future<void> clearTemporaryFiles() async {}
 
-  /// Asks the underlying platform to skip the App Sandbox entitlement checks
-  /// performed before showing a dialog.
-  ///
-  /// Default implementation is a no-op for platforms that do not perform
-  /// entitlement checks.
-  Future<void> skipEntitlementsChecks() async {}
-
   /// Save the given [bytes] to a file with the given [fileName], using the native save file dialog.
   ///
   /// The [fileName] parameter specifies the default file name for saving (e.g. `myFile.txt`).
