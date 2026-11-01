@@ -1,3 +1,7 @@
+## 13.3.1
+
+- Raised the minimum versions of the platform implementations to the ones with the latest fixes, so updating `file_picker` also brings them in even when a lockfile pins older ones.
+
 ## 13.3.0
 
 - Added `FilePickerViewScope` (`package:file_picker/file_picker_view_scope.dart`), which provides a picker per Flutter view, so in a multi-window macOS app each picker opens in its own window. Requires `file_picker_darwin ^2.4.0`.
