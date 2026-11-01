@@ -8,6 +8,10 @@
 - **BREAKING CHANGE**: Removed the `type` and `allowedExtensions` parameters of `FilePicker.saveFile()`, deprecated since 13.2.0. They never had any effect. [#2278](https://github.com/vicajilau/flutter_file_picker/pull/2278)
 - **BREAKING CHANGE**: `getDirectoryPath()` throws a `PlatformException` when the pick fails on Android, iOS or macOS, instead of returning `null` as if it was cancelled. See the migration guide. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 
+## 13.3.1
+
+- Raised the minimum versions of the platform implementations to the ones with the latest fixes, so updating `file_picker` also brings them in even when a lockfile pins older ones.
+
 ## 13.3.0
 
 - Added `FilePickerViewScope` (`package:file_picker/file_picker_view_scope.dart`), which provides a picker per Flutter view, so in a multi-window macOS app each picker opens in its own window. Requires `file_picker_darwin ^2.4.0`.
