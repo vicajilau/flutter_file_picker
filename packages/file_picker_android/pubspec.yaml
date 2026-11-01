@@ -33,4 +33,5 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  pigeon: ^29.1.0
+  # Exact, since CI checks the generated code, whose header names this version.
+  pigeon: 29.1.0

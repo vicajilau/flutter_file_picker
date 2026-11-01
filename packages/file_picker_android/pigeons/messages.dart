@@ -82,7 +82,7 @@ class LostDataMessage {
 @HostApi()
 abstract class FilePickerApi {
   /// Picks files, or answers `null` when the user cancels.
-  @async
+  @asyncCallback
   List<PickedFileMessage>? pickFiles(
     FileTypeMessage type,
     bool allowMultiple,
@@ -93,12 +93,12 @@ abstract class FilePickerApi {
 
   /// Picks a directory and answers its path or URI, or `null` when the user
   /// cancels.
-  @async
+  @asyncCallback
   String? pickDirectory(SafOptionsMessage? safOptions);
 
   /// Saves [bytes] and answers the URI of the saved document, or `null` when
   /// the user cancels.
-  @async
+  @asyncCallback
   String? saveFile(
     String fileName,
     String mimeType,
@@ -108,7 +108,7 @@ abstract class FilePickerApi {
 
   /// Answers the outcome of the pick lost when Android destroyed the
   /// activity, once, or `null` when there is none.
-  @async
+  @asyncCallback
   LostDataMessage? retrieveLostData();
 
   /// Removes the cached copies of picked files.

@@ -13,12 +13,6 @@ import io.flutter.plugin.common.StandardMethodCodec
 import io.flutter.plugin.common.StandardMessageCodec
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 private object MessagesPigeonUtils {
 
   fun wrapResult(result: Any?): List<Any?> {
@@ -524,22 +518,22 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
  */
 interface FilePickerApi {
   /** Picks files, or answers `null` when the user cancels. */
-  suspend fun pickFiles(type: FileTypeMessage, allowMultiple: Boolean, allowedExtensions: List<String>, compressionQuality: Long, safOptions: SafOptionsMessage?): List<PickedFileMessage>?
+  fun pickFiles(type: FileTypeMessage, allowMultiple: Boolean, allowedExtensions: List<String>, compressionQuality: Long, safOptions: SafOptionsMessage?, callback: (Result<List<PickedFileMessage>?>) -> Unit)
   /**
    * Picks a directory and answers its path or URI, or `null` when the user
    * cancels.
    */
-  suspend fun pickDirectory(safOptions: SafOptionsMessage?): String?
+  fun pickDirectory(safOptions: SafOptionsMessage?, callback: (Result<String?>) -> Unit)
   /**
    * Saves [bytes] and answers the URI of the saved document, or `null` when
    * the user cancels.
    */
-  suspend fun saveFile(fileName: String, mimeType: String, initialDirectory: String?, bytes: ByteArray): String?
+  fun saveFile(fileName: String, mimeType: String, initialDirectory: String?, bytes: ByteArray, callback: (Result<String?>) -> Unit)
   /**
    * Answers the outcome of the pick lost when Android destroyed the
    * activity, once, or `null` when there is none.
    */
-  suspend fun retrieveLostData(): LostDataMessage?
+  fun retrieveLostData(callback: (Result<LostDataMessage?>) -> Unit)
   /** Removes the cached copies of picked files. */
   fun clearTemporaryFiles()
   /** Releases the persisted Storage Access Framework grant of [uri]. */
@@ -564,13 +558,14 @@ interface FilePickerApi {
             val allowedExtensionsArg = args[2] as List<String>
             val compressionQualityArg = args[3] as Long
             val safOptionsArg = args[4] as SafOptionsMessage?
-            CoroutineScope(Dispatchers.Main).launch {
-              val wrapped: List<Any?> = try {
-                listOf(api.pickFiles(typeArg, allowMultipleArg, allowedExtensionsArg, compressionQualityArg, safOptionsArg))
-              } catch (exception: Throwable) {
-                MessagesPigeonUtils.wrapError(exception)
+            api.pickFiles(typeArg, allowMultipleArg, allowedExtensionsArg, compressionQualityArg, safOptionsArg) { result: Result<List<PickedFileMessage>?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
               }
-              reply.reply(wrapped)
             }
           }
         } else {
@@ -583,13 +578,14 @@ interface FilePickerApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val safOptionsArg = args[0] as SafOptionsMessage?
-            CoroutineScope(Dispatchers.Main).launch {
-              val wrapped: List<Any?> = try {
-                listOf(api.pickDirectory(safOptionsArg))
-              } catch (exception: Throwable) {
-                MessagesPigeonUtils.wrapError(exception)
+            api.pickDirectory(safOptionsArg) { result: Result<String?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
               }
-              reply.reply(wrapped)
             }
           }
         } else {
@@ -605,13 +601,14 @@ interface FilePickerApi {
             val mimeTypeArg = args[1] as String
             val initialDirectoryArg = args[2] as String?
             val bytesArg = args[3] as ByteArray
-            CoroutineScope(Dispatchers.Main).launch {
-              val wrapped: List<Any?> = try {
-                listOf(api.saveFile(fileNameArg, mimeTypeArg, initialDirectoryArg, bytesArg))
-              } catch (exception: Throwable) {
-                MessagesPigeonUtils.wrapError(exception)
+            api.saveFile(fileNameArg, mimeTypeArg, initialDirectoryArg, bytesArg) { result: Result<String?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
               }
-              reply.reply(wrapped)
             }
           }
         } else {
@@ -622,13 +619,14 @@ interface FilePickerApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.android_file_picker.FilePickerApi.retrieveLostData$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            CoroutineScope(Dispatchers.Main).launch {
-              val wrapped: List<Any?> = try {
-                listOf(api.retrieveLostData())
-              } catch (exception: Throwable) {
-                MessagesPigeonUtils.wrapError(exception)
+            api.retrieveLostData{ result: Result<LostDataMessage?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
               }
-              reply.reply(wrapped)
             }
           }
         } else {

@@ -1,49 +1,45 @@
 package com.mr.flutter.plugin.filepicker
 
 import io.flutter.plugin.common.MethodChannel
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
- * Suspends until the [MethodChannel.Result] given to [start] is answered, and
- * returns its value through [convert].
+ * A [MethodChannel.Result] that answers [callback] with its value through
+ * [convert], once.
  *
  * The delegate is written against [MethodChannel.Result], so this lets the
  * Pigeon API keep it as is. Errors become a [FilePickerFlutterError], which
  * reaches Dart as a `PlatformException` with the same code.
  */
-internal suspend fun <T> awaitResult(
+internal fun <T> resultOf(
+    callback: (Result<T>) -> Unit,
     convert: (Any?) -> T,
-    start: (MethodChannel.Result) -> Unit,
-): T = suspendCancellableCoroutine { continuation ->
-    start(MethodResultWrapper(object : MethodChannel.Result {
-        override fun success(result: Any?) {
-            if (!continuation.isActive) return
+): MethodChannel.Result = MethodResultWrapper(object : MethodChannel.Result {
+    private var answered = false
+
+    private fun answer(result: Result<T>) {
+        if (answered) return
+        answered = true
+        callback(result)
+    }
+
+    override fun success(result: Any?) {
+        answer(
             try {
-                continuation.resume(convert(result))
+                Result.success(convert(result))
             } catch (e: Exception) {
-                continuation.resumeWithException(
-                    FilePickerFlutterError("invalid_result", e.message, null)
-                )
+                Result.failure(FilePickerFlutterError("invalid_result", e.message, null))
             }
-        }
+        )
+    }
 
-        override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
-            if (!continuation.isActive) return
-            continuation.resumeWithException(
-                FilePickerFlutterError(errorCode, errorMessage, errorDetails)
-            )
-        }
+    override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
+        answer(Result.failure(FilePickerFlutterError(errorCode, errorMessage, errorDetails)))
+    }
 
-        override fun notImplemented() {
-            if (!continuation.isActive) return
-            continuation.resumeWithException(
-                FilePickerFlutterError("not_implemented", null, null)
-            )
-        }
-    }))
-}
+    override fun notImplemented() {
+        answer(Result.failure(FilePickerFlutterError("not_implemented", null, null)))
+    }
+})
 
 /** The MIME type filter the delegate expects for a [FileTypeMessage]. */
 internal fun FileTypeMessage.mimeType(): String = when (this) {

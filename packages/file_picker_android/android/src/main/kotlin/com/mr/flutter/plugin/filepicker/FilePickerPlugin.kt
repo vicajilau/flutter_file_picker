@@ -99,45 +99,67 @@ class FilePickerPlugin : FilePickerApi, FlutterPlugin,
             null
         )
 
-    override suspend fun pickFiles(
+    /**
+     * Runs [start] with the delegate, and answers [callback] with the error it
+     * throws, since the generated handler does not catch it.
+     */
+    private fun <T> withDelegate(
+        callback: (Result<T>) -> Unit,
+        start: (FilePickerDelegate) -> Unit
+    ) {
+        val delegate = try {
+            requireDelegate()
+        } catch (e: FilePickerFlutterError) {
+            callback(Result.failure(e))
+            return
+        }
+        start(delegate)
+    }
+
+    override fun pickFiles(
         type: FileTypeMessage,
         allowMultiple: Boolean,
         allowedExtensions: List<String>,
         compressionQuality: Long,
-        safOptions: SafOptionsMessage?
-    ): List<PickedFileMessage>? {
-        val delegate = requireDelegate()
+        safOptions: SafOptionsMessage?,
+        callback: (Result<List<PickedFileMessage>?>) -> Unit
+    ) = withDelegate(callback) { delegate ->
         val mimeTypes = if (type == FileTypeMessage.CUSTOM) {
             getMimeTypes(ArrayList(allowedExtensions))
         } else {
             arrayListOf()
         }
-        return awaitResult(::pickedFilesOf) { result ->
-            delegate.startFileExplorer(
-                type.mimeType(),
-                allowMultiple,
-                mimeTypes,
-                compressionQuality.toInt(),
-                safOptions?.toMap(),
-                result
-            )
-        }
+        delegate.startFileExplorer(
+            type.mimeType(),
+            allowMultiple,
+            mimeTypes,
+            compressionQuality.toInt(),
+            safOptions?.toMap(),
+            resultOf(callback, ::pickedFilesOf)
+        )
     }
 
-    override suspend fun pickDirectory(safOptions: SafOptionsMessage?): String? {
-        val delegate = requireDelegate()
-        return awaitResult({ it as String? }) { result ->
-            delegate.startFileExplorer("dir", false, arrayListOf(), 0, safOptions?.toMap(), result)
-        }
+    override fun pickDirectory(
+        safOptions: SafOptionsMessage?,
+        callback: (Result<String?>) -> Unit
+    ) = withDelegate(callback) { delegate ->
+        delegate.startFileExplorer(
+            "dir",
+            false,
+            arrayListOf(),
+            0,
+            safOptions?.toMap(),
+            resultOf(callback) { it as String? }
+        )
     }
 
-    override suspend fun saveFile(
+    override fun saveFile(
         fileName: String,
         mimeType: String,
         initialDirectory: String?,
-        bytes: ByteArray
-    ): String? {
-        val delegate = requireDelegate()
+        bytes: ByteArray,
+        callback: (Result<String?>) -> Unit
+    ) = withDelegate(callback) { delegate ->
         val name = if (fileName.isNotEmpty() && !fileName.contains(".")) {
             "$fileName.${getFileExtension(bytes)}"
         } else {
@@ -146,16 +168,18 @@ class FilePickerPlugin : FilePickerApi, FlutterPlugin,
         // The delegate works the MIME type out from the name and the bytes,
         // so mimeType has never been used on Android. It only checks the type
         // for "dir", which a saved file never is.
-        return awaitResult({ it as String? }) { result ->
-            delegate.saveFile(name, null, initialDirectory, bytes, result)
-        }
+        delegate.saveFile(name, null, initialDirectory, bytes, resultOf(callback) { it as String? })
     }
 
-    override suspend fun retrieveLostData(): LostDataMessage? {
-        requireDelegate()
-        val context = activity?.applicationContext ?: return null
-        return awaitResult(::lostDataOf) { result -> LostDataStore.retrieve(context, result) }
-    }
+    override fun retrieveLostData(callback: (Result<LostDataMessage?>) -> Unit) =
+        withDelegate(callback) {
+            val context = activity?.applicationContext
+            if (context == null) {
+                callback(Result.success(null))
+            } else {
+                LostDataStore.retrieve(context, resultOf(callback, ::lostDataOf))
+            }
+        }
 
     override fun clearTemporaryFiles() {
         requireDelegate()
