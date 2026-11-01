@@ -51,7 +51,6 @@ base class AndroidPlatformFile extends PlatformFile {
       name: name,
       uri: uri,
       safHandle: safHandle,
-      xFile: path.isNotEmpty ? XFile(path, name: name) : null,
       bytesLength: data['size'] as int?,
     );
   }
@@ -68,15 +67,14 @@ base class AndroidPlatformFile extends PlatformFile {
   final XFile? _xFile;
   final int? _bytesLength;
 
+  /// A [FileSystemXFile] for a picked file cached on disk, or a
+  /// [ScopedStorageXFile] for a Storage Access Framework `content://` URI.
   @override
-  XFile get xFile {
-    final file = _xFile;
-    if (file != null) return file;
-    if (uri.scheme == 'file') {
-      return XFile(uri.toFilePath(), name: name);
-    }
-    return XFile(uri.toString(), name: name);
-  }
+  XFile get xFile =>
+      _xFile ??
+      (uri.scheme == 'file'
+          ? XFile.fileSystem(path: uri.toFilePath())
+          : XFile.scopedStorage(uri: uri.toString()));
 
   /// The size Android already reported for this file when it was picked.
   @override

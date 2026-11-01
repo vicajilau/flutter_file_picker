@@ -2,6 +2,7 @@
 
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0. `getDirectoryPath()` and `saveFile()` now take `darwinOptions`, and on macOS `DarwinOptions.acceptLabel` sets the confirm button text of their panels. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: `getDirectoryPath()` and `pickFileAndDirectoryPaths()` throw every `PlatformException`, not just `window_not_found`. They used to return `null` or an empty list, the same as a cancel. A confirmed pick without a path, on iOS or macOS, now fails with `unknown_path` instead of returning `null` or an empty list. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
+- **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41, Dart 3.11 and macOS 10.15. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 2.4.1
 
