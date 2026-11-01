@@ -62,6 +62,10 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * **v13**: `FilePickerWebOptions(withData: false, withReadStream: true, cancelUploadOnWindowBlur: false)`
    * **v14**: `FilePickerWebOptions(cancelUploadOnWindowBlur: false)`
 
+2. **Android `saveFile()` Returns a `content://` URI**:
+   * It used to return a `Uri` with only the path of the saved document, such as `/document/primary:Download/report.pdf`, which no API can open. It now returns the whole `content://` URI, which `ContentResolver` and the Storage Access Framework accept.
+   * If you only showed the result, nothing changes. If you used `uri.path` as a file system path, it never pointed to a real file, so use the URI itself.
+
 ## Migrating to v13
 
 1. **`PlatformFile.length()` Returns `Future<int?>`**:

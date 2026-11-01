@@ -123,6 +123,30 @@ void main() {
       });
     });
 
+    test('saveFile returns the content URI of the saved document', () async {
+      final picker = FilePickerAndroid();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(picker.methodChannel, (call) async {
+            return 'content://com.android.providers.downloads.documents/document/42';
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null),
+      );
+
+      final uri = await picker.saveFile(
+        fileName: 'report.pdf',
+        bytes: Uint8List.fromList([1]),
+        mimeType: 'application/pdf',
+      );
+
+      expect(uri?.scheme, 'content');
+      expect(
+        uri.toString(),
+        'content://com.android.providers.downloads.documents/document/42',
+      );
+    });
+
     group('retrieveLostData', () {
       late FilePickerAndroid picker;
 
