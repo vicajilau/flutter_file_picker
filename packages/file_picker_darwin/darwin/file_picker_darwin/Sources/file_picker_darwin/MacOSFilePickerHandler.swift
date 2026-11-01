@@ -185,7 +185,12 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
                 let pathResult = dialog.urls
 
                 if pathResult.isEmpty {
-                    result(nil)
+                    // The user confirmed, so a pick without a path is a
+                    // failure, not a cancel (#2286).
+                    result(FlutterError(
+                        code: "unknown_path",
+                        message: "The picked items have no path.",
+                        details: nil))
                 } else {
                     let paths = pathResult.map { $0.path }
                     result(paths)
