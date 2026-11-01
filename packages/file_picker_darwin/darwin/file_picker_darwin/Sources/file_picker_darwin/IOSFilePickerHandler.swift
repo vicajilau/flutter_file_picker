@@ -250,15 +250,31 @@ final class IOSFilePickerHandler: NSObject,
             return
         }
 
+        // The user confirmed, so a pick without a path is a failure, not a
+        // cancel (#2286).
         if isDirectoryPicker {
-            currentResult(urls.first?.path)
+            if let path = urls.first?.path {
+                currentResult(path)
+            } else {
+                currentResult(FlutterError(
+                    code: "unknown_path",
+                    message: "The picked directory has no path.",
+                    details: nil))
+            }
             result = nil
             isDirectoryPicker = false
             return
         }
 
         if isFileAndDirectoryPicker {
-            currentResult(urls.map { $0.path })
+            if urls.isEmpty {
+                currentResult(FlutterError(
+                    code: "unknown_path",
+                    message: "The picked items have no path.",
+                    details: nil))
+            } else {
+                currentResult(urls.map { $0.path })
+            }
             result = nil
             isFileAndDirectoryPicker = false
             return
