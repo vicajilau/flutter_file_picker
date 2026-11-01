@@ -68,8 +68,20 @@ The iOS and macOS native implementations live under the shared Darwin source tre
 
 3. **`getDirectoryPath()` Throws on Failure**:
    * On Android, iOS and macOS a failed directory pick used to return `null`, the same as a cancel. It now throws a `PlatformException`, and `null` only means the user cancelled.
-   * **v13**: `final dir = await FilePicker.getDirectoryPath(); if (dir == null) return;`
-   * **v14**: `try { final dir = await FilePicker.getDirectoryPath(); if (dir == null) return; } on PlatformException catch (e) { /* tell the user */ }`
+
+     ```dart
+     // v13
+     final dir = await FilePicker.getDirectoryPath();
+     if (dir == null) return; // cancelled, or failed
+
+     // v14
+     try {
+       final dir = await FilePicker.getDirectoryPath();
+       if (dir == null) return; // cancelled
+     } on PlatformException catch (e) {
+       // The pick failed, tell the user.
+     }
+     ```
 
 ## Migrating to v13
 
