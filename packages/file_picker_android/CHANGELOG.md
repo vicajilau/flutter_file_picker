@@ -1,5 +1,6 @@
 ## 3.0.0
 
+- **BREAKING CHANGE**: `saveFile()` returns the `content://` URI of the saved document. It used to return a `Uri` with only the path of that URI, such as `/document/primary:Download/report.pdf`, which could not open the file again.
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` take the new `darwinOptions` parameter of `file_picker_platform_interface` 5.0.0. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 
 ## 2.1.2

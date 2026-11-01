@@ -89,7 +89,10 @@ class FilePickerDelegate(
                     mimeType = saveMimeType
                 )
                 Handler(Looper.getMainLooper()).post {
-                    finishWithSuccess(renamedUri.path)
+                    // The whole content URI, since its path alone, such as
+                    // /document/primary:Download/report.pdf, cannot open the
+                    // saved file again.
+                    finishWithSuccess(renamedUri.toString())
                 }
             } catch (e: IOException) {
                 Log.e(TAG, "Error while saving file", e)
