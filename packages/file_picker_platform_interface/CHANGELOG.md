@@ -1,3 +1,7 @@
+## 5.0.0
+
+- **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` now take a `darwinOptions` parameter. Implementations must add it to their overrides. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+
 ## 4.2.0
 
 - Added `DarwinOptions.copyMedia`, `true` by default. [#2245](https://github.com/vicajilau/flutter_file_picker/issues/2245)

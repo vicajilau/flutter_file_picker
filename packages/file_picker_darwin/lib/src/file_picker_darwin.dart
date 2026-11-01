@@ -195,6 +195,7 @@ class FilePickerDarwin extends FilePickerPlatform {
     String? dialogTitle,
     String? initialDirectory,
     AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
@@ -204,6 +205,7 @@ class FilePickerDarwin extends FilePickerPlatform {
         'viewId': ?viewId,
         'dialogTitle': dialogTitle,
         'initialDirectory': initialDirectory,
+        'acceptLabel': darwinOptions.acceptLabel,
       });
     } on PlatformException catch (ex) {
       if (ex.code == _windowNotFound) rethrow;
@@ -249,6 +251,7 @@ class FilePickerDarwin extends FilePickerPlatform {
     String? dialogTitle,
     String? initialDirectory,
     Function(FilePickerStatus)? onFileSaving,
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
@@ -277,6 +280,7 @@ class FilePickerDarwin extends FilePickerPlatform {
             "fileName": fileName,
             "fileType": mimeType,
             "initialDirectory": initialDirectory,
+            "acceptLabel": darwinOptions.acceptLabel,
             if (!isMacOS) "bytes": bytes,
           });
 

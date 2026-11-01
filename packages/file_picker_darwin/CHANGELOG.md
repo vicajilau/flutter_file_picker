@@ -1,3 +1,7 @@
+## 3.0.0
+
+- **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0. `getDirectoryPath()` and `saveFile()` now take `darwinOptions`, and on macOS `DarwinOptions.acceptLabel` sets the confirm button text of their panels. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+
 ## 2.4.1
 
 - Fixed iOS pickers getting stuck in `multiple_request` when the picker is swiped away while still appearing. [#2291](https://github.com/vicajilau/flutter_file_picker/issues/2291)

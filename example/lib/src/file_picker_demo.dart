@@ -300,6 +300,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
             initialDirectory: _initialDirectoryController.text,
             windowsOptions: WindowsOptions(lockParentWindow: _lockParentWindow),
             linuxOptions: LinuxOptions(lockParentWindow: _lockParentWindow),
+            darwinOptions: DarwinOptions(acceptLabel: _acceptLabelFromInput()),
             androidOptions:
                 _androidSafOptionsFromFlags() ?? const AndroidOptions(),
           );
@@ -376,6 +377,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
         initialDirectory: _initialDirectoryController.text,
         windowsOptions: WindowsOptions(lockParentWindow: _lockParentWindow),
         linuxOptions: LinuxOptions(lockParentWindow: _lockParentWindow),
+        darwinOptions: DarwinOptions(acceptLabel: _acceptLabelFromInput()),
         webOptions: filePickerWebOptions(useDialog: _saveWithDialog),
         bytes: bytes,
       );

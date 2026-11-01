@@ -129,7 +129,7 @@ abstract final class FilePicker {
   /// The [dialogTitle], if provided, will be used as the title for the directory picker dialog.
   /// The [initialDirectory], if provided, will be used as the initial directory path for the directory picker.
   ///
-  /// The [androidOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
+  /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
   /// allow for platform-specific configurations when configuring the directory picker.
   ///
   /// Returns a [String] containing the selected directory path, or `null` if canceled.
@@ -137,6 +137,7 @@ abstract final class FilePicker {
     String? dialogTitle,
     String? initialDirectory,
     AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
@@ -145,6 +146,7 @@ abstract final class FilePicker {
       dialogTitle: dialogTitle,
       initialDirectory: initialDirectory,
       androidOptions: androidOptions,
+      darwinOptions: darwinOptions,
       windowsOptions: windowsOptions,
       linuxOptions: linuxOptions,
       webOptions: webOptions,
@@ -161,7 +163,7 @@ abstract final class FilePicker {
   /// The [initialDirectory], if provided, will be used as the initial directory path for the save file dialog.
   /// The [onFileSaving] callback, if provided, is triggered when the save dialog changes status.
   ///
-  /// The [windowsOptions], [linuxOptions], and [webOptions] parameters
+  /// The [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
   /// allow for platform-specific configurations when configuring the save file dialog.
   ///
   /// Returns the [Uri] of the saved file, or `null` if the user canceled the operation.
@@ -183,6 +185,7 @@ abstract final class FilePicker {
     )
     List<String>? allowedExtensions,
     Function(FilePickerStatus)? onFileSaving,
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
@@ -194,6 +197,7 @@ abstract final class FilePicker {
       dialogTitle: dialogTitle,
       initialDirectory: initialDirectory,
       onFileSaving: onFileSaving,
+      darwinOptions: darwinOptions,
       windowsOptions: windowsOptions,
       linuxOptions: linuxOptions,
       webOptions: webOptions,
