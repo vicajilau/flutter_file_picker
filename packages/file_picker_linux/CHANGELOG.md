@@ -1,3 +1,7 @@
+## 3.0.0
+
+- **BREAKING CHANGE**: Removed the `bytes` parameter of `LinuxPlatformFile.fromPath()`. The plugin never passed it, and the file content is read on demand by `readAsBytes()` and `readAsByteStream()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+
 ## 2.0.2
 
 - Fixed `pickFileAndDirectoryPaths()` returning percent-encoded paths that do not exist. [#2225](https://github.com/vicajilau/flutter_file_picker/issues/2225)
