@@ -116,34 +116,53 @@ void main() {
       expect(receivedLabel, isNull);
     });
 
-    test('getDirectoryPath and saveFile send acceptLabel', () async {
-      final picker = FilePickerDarwin();
-      final receivedLabels = <String, String?>{};
+    group('acceptLabel', () {
+      late FilePickerDarwin picker;
+      late List<String?> receivedLabels;
 
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(picker.methodChannel, (call) async {
-            receivedLabels[call.method] =
-                (call.arguments as Map)['acceptLabel'] as String?;
-            return null;
-          });
-      addTearDown(() {
+      setUp(() {
+        picker = FilePickerDarwin();
+        receivedLabels = [];
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, (call) async {
+              if (call.arguments case {'acceptLabel': final String? label}) {
+                receivedLabels.add(label);
+              }
+              return null;
+            });
+      });
+
+      tearDown(() {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(picker.methodChannel, null);
       });
 
-      await picker.getDirectoryPath(
-        darwinOptions: const DarwinOptions(acceptLabel: 'Use folder'),
-      );
-      await picker.saveFile(
-        fileName: 'a.txt',
-        bytes: Uint8List.fromList([1]),
-        mimeType: 'text/plain',
-        darwinOptions: const DarwinOptions(acceptLabel: 'Export'),
-      );
-      expect(receivedLabels, {'dir': 'Use folder', 'save': 'Export'});
+      Future<void> saveFile({DarwinOptions? darwinOptions}) {
+        return picker.saveFile(
+          fileName: 'a.txt',
+          bytes: Uint8List.fromList([1]),
+          mimeType: 'text/plain',
+          darwinOptions: darwinOptions ?? const DarwinOptions(),
+        );
+      }
 
-      await picker.getDirectoryPath();
-      expect(receivedLabels['dir'], isNull);
+      test('getDirectoryPath sends acceptLabel', () async {
+        await picker.getDirectoryPath(
+          darwinOptions: const DarwinOptions(acceptLabel: 'Use folder'),
+        );
+        await picker.getDirectoryPath();
+
+        expect(receivedLabels, ['Use folder', null]);
+      });
+
+      test('saveFile sends acceptLabel', () async {
+        await saveFile(
+          darwinOptions: const DarwinOptions(acceptLabel: 'Export'),
+        );
+        await saveFile();
+
+        expect(receivedLabels, ['Export', null]);
+      });
     });
 
     test('pickFile and pickFiles send copyMedia', () async {

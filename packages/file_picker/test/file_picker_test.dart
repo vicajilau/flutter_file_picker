@@ -174,13 +174,16 @@ void main() {
       }
     });
 
-    test('getDirectoryPath and saveFile forward darwinOptions', () async {
+    test('getDirectoryPath forwards darwinOptions', () async {
       const options = DarwinOptions(acceptLabel: 'Choose');
 
       await FilePicker.getDirectoryPath(darwinOptions: options);
       expect(mockPlatform.lastDarwinOptions, same(options));
+    });
 
-      mockPlatform.lastDarwinOptions = null;
+    test('saveFile forwards darwinOptions', () async {
+      const options = DarwinOptions(acceptLabel: 'Choose');
+
       await FilePicker.saveFile(
         fileName: 'a.txt',
         bytes: Uint8List.fromList([1]),
