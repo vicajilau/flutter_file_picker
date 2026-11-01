@@ -116,6 +116,36 @@ void main() {
       expect(receivedLabel, isNull);
     });
 
+    test('getDirectoryPath and saveFile send acceptLabel', () async {
+      final picker = FilePickerDarwin();
+      final receivedLabels = <String, String?>{};
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(picker.methodChannel, (call) async {
+            receivedLabels[call.method] =
+                (call.arguments as Map)['acceptLabel'] as String?;
+            return null;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null);
+      });
+
+      await picker.getDirectoryPath(
+        darwinOptions: const DarwinOptions(acceptLabel: 'Use folder'),
+      );
+      await picker.saveFile(
+        fileName: 'a.txt',
+        bytes: Uint8List.fromList([1]),
+        mimeType: 'text/plain',
+        darwinOptions: const DarwinOptions(acceptLabel: 'Export'),
+      );
+      expect(receivedLabels, {'dir': 'Use folder', 'save': 'Export'});
+
+      await picker.getDirectoryPath();
+      expect(receivedLabels['dir'], isNull);
+    });
+
     test('pickFile and pickFiles send copyMedia', () async {
       final picker = FilePickerDarwin();
       bool? copyMedia;

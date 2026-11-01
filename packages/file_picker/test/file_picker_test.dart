@@ -85,6 +85,37 @@ class MockFilePickerPlatform extends FilePickerPlatform
       TestPlatformFile(name: 'test_file.txt', path: '/path/to/test_file.txt'),
     ];
   }
+
+  @override
+  Future<String?> getDirectoryPath({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    lastDarwinOptions = darwinOptions;
+    return null;
+  }
+
+  @override
+  Future<Uri?> saveFile({
+    required String fileName,
+    required Uint8List bytes,
+    required String mimeType,
+    String? dialogTitle,
+    String? initialDirectory,
+    Function(FilePickerStatus)? onFileSaving,
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    lastDarwinOptions = darwinOptions;
+    return null;
+  }
 }
 
 void main() {
@@ -141,6 +172,21 @@ void main() {
         await FilePicker.pickFiles(darwinOptions: options);
         expect(mockPlatform.lastDarwinOptions, same(options));
       }
+    });
+
+    test('getDirectoryPath and saveFile forward darwinOptions', () async {
+      const options = DarwinOptions(acceptLabel: 'Choose');
+
+      await FilePicker.getDirectoryPath(darwinOptions: options);
+      expect(mockPlatform.lastDarwinOptions, same(options));
+
+      mockPlatform.lastDarwinOptions = null;
+      await FilePicker.saveFile(
+        fileName: 'a.txt',
+        bytes: Uint8List.fromList([1]),
+        darwinOptions: options,
+      );
+      expect(mockPlatform.lastDarwinOptions, same(options));
     });
 
     test('rejects non-automatic modes with compression', () {

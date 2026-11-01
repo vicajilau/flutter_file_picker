@@ -115,7 +115,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// The [dialogTitle], if provided, will be used as the title for the directory picker dialog.
   /// The [initialDirectory], if provided, will be used as the initial directory path for the directory picker.
   ///
-  /// The [androidOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
+  /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
   /// allow platform-specific configurations for the directory picker.
   ///
   /// Returns the absolute path of the selected directory, or `null` if the user canceled the operation.
@@ -123,6 +123,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
     String? dialogTitle,
     String? initialDirectory,
     AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
@@ -151,7 +152,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// The [initialDirectory], if provided, will be used as the initial directory path for the save file dialog.
   /// The [onFileSaving] callback, if provided, is triggered when the save dialog changes status.
   ///
-  /// The [windowsOptions], [linuxOptions], and [webOptions] parameters
+  /// The [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
   /// allow platform-specific configurations for the save file dialog.
   ///
   /// Returns the [Uri] of the saved file, or `null` if the user canceled the operation.
@@ -163,6 +164,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
     String? dialogTitle,
     String? initialDirectory,
     Function(FilePickerStatus)? onFileSaving,
+    DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
