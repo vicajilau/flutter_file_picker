@@ -83,6 +83,11 @@ The iOS and macOS native implementations live under the shared Darwin source tre
      }
      ```
 
+4. **`type` and `allowedExtensions` Removed from `saveFile()`**:
+   * They never had any effect on `saveFile()`, so just drop them.
+   * **v13**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes, type: FileType.custom, allowedExtensions: ['pdf']);`
+   * **v14**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes);`
+
 ## Migrating to v13
 
 1. **`PlatformFile.length()` Returns `Future<int?>`**:
