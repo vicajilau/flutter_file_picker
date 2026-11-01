@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dbus/dbus.dart';
 
@@ -32,11 +31,12 @@ void main() {
       final withoutBytes = LinuxPlatformFile.fromPath('/tmp/test.png');
       expect(withoutBytes.lengthSync(), isNull);
 
-      final withBytes = LinuxPlatformFile.fromPath(
-        '/tmp/test.png',
-        bytes: Uint8List.fromList([1, 2, 3]),
+      final withLength = LinuxPlatformFile(
+        name: 'test.png',
+        uri: Uri.file('/tmp/test.png'),
+        bytesLength: 3,
       );
-      expect(withBytes.lengthSync(), equals(3));
+      expect(withLength.lengthSync(), equals(3));
     });
 
     test('Filter constructs filters correctly', () {

@@ -1,6 +1,7 @@
 ## 14.0.0
 
 - **BREAKING CHANGE**: Removed `withData`, `withReadStream` and `readSequential` from `FilePickerWebOptions`, deprecated since `file_picker_web` 4.1.0. Picked files are no longer read at pick time, use `PlatformFile.readAsBytes()` or `readAsByteStream()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- Requires `file_picker_linux` 3.0.0 and `windows_file_picker` 3.0.0, which remove the `bytes` parameter of `LinuxPlatformFile.fromPath()` and `WindowsPlatformFile.fromPath()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 13.3.1
 
