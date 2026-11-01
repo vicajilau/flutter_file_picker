@@ -237,7 +237,12 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
                     return
                 }
 
-                result(nil)
+                // The user confirmed, so a missing URL is a failure, not a
+                // cancel (#2286).
+                result(FlutterError(
+                    code: "unknown_path",
+                    message: "The picked directory has no path.",
+                    details: nil))
             }
         }
     }

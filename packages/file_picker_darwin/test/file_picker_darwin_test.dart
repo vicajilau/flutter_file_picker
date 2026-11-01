@@ -489,7 +489,7 @@ void main() {
     });
 
     test(
-      'pickFileAndDirectoryPaths returns an empty list on PlatformException',
+      'pickFileAndDirectoryPaths throws on PlatformException (#2286)',
       () async {
         final picker = FilePickerDarwin();
 
@@ -502,9 +502,10 @@ void main() {
               .setMockMethodCallHandler(picker.methodChannel, null);
         });
 
-        final result = await picker.pickFileAndDirectoryPaths();
-
-        expect(result, isEmpty);
+        await expectLater(
+          picker.pickFileAndDirectoryPaths(),
+          throwsA(isA<PlatformException>()),
+        );
       },
     );
   });

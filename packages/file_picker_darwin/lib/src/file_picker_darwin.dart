@@ -35,9 +35,6 @@ class FilePickerDarwin extends FilePickerPlatform {
   /// panels on macOS.
   final int? viewId;
 
-  static const String _tag = 'FilePickerDarwin';
-  static const String _windowNotFound = 'window_not_found';
-
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel(
@@ -172,22 +169,14 @@ class FilePickerDarwin extends FilePickerPlatform {
     FileType type = FileType.any,
     List<String>? allowedExtensions,
   }) async {
-    try {
-      final List<String>? result = await methodChannel
-          .invokeListMethod<String>('pickFileAndDirectoryPaths', {
-            'viewId': ?viewId,
-            'dialogTitle': dialogTitle,
-            'initialDirectory': initialDirectory,
-            'allowedExtensions': allowedExtensions,
-          });
-      return result ?? [];
-    } on PlatformException catch (ex) {
-      if (ex.code == _windowNotFound) rethrow;
-      print(
-        '[$_tag] Could not resolve file and directory paths: ${ex.message}',
-      );
-    }
-    return [];
+    final List<String>? result = await methodChannel
+        .invokeListMethod<String>('pickFileAndDirectoryPaths', {
+          'viewId': ?viewId,
+          'dialogTitle': dialogTitle,
+          'initialDirectory': initialDirectory,
+          'allowedExtensions': allowedExtensions,
+        });
+    return result ?? [];
   }
 
   @override
@@ -200,18 +189,14 @@ class FilePickerDarwin extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    try {
-      return await methodChannel.invokeMethod<String>('dir', {
-        'viewId': ?viewId,
-        'dialogTitle': dialogTitle,
-        'initialDirectory': initialDirectory,
-        'acceptLabel': darwinOptions.acceptLabel,
-      });
-    } on PlatformException catch (ex) {
-      if (ex.code == _windowNotFound) rethrow;
-      print('[$_tag] Could not resolve directory path: ${ex.message}');
-    }
-    return null;
+    // A failure is thrown as a PlatformException, so the app can tell it
+    // apart from a cancel, which completes with null (#2286).
+    return methodChannel.invokeMethod<String>('dir', {
+      'viewId': ?viewId,
+      'dialogTitle': dialogTitle,
+      'initialDirectory': initialDirectory,
+      'acceptLabel': darwinOptions.acceptLabel,
+    });
   }
 
   @override

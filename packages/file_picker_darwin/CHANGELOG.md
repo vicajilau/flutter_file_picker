@@ -1,6 +1,7 @@
 ## 3.0.0
 
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0. `getDirectoryPath()` and `saveFile()` now take `darwinOptions`, and on macOS `DarwinOptions.acceptLabel` sets the confirm button text of their panels. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+- **BREAKING CHANGE**: `getDirectoryPath()` and `pickFileAndDirectoryPaths()` throw every `PlatformException`, not just `window_not_found`. They used to return `null` or an empty list, the same as a cancel. On macOS a confirmed folder panel without a URL now fails with `unknown_path` instead of returning `null`. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 
 ## 2.4.1
 

@@ -133,6 +133,8 @@ abstract final class FilePicker {
   /// allow for platform-specific configurations when configuring the directory picker.
   ///
   /// Returns a [String] containing the selected directory path, or `null` if canceled.
+  /// Throws a `PlatformException` if the pick fails, so a failure is never
+  /// mistaken for a cancel.
   static Future<String?> getDirectoryPath({
     String? dialogTitle,
     String? initialDirectory,
