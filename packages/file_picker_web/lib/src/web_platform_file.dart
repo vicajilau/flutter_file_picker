@@ -8,25 +8,20 @@ import 'platform_file_web_fetch.dart';
 
 /// A Web-specific implementation of [PlatformFile].
 ///
-/// Wraps files selected or processed in a web environment, providing
-/// access to file metadata, underlying bytes, stream readers, and `blob:` or
-/// `data:` URIs.
+/// Wraps a file selected in a web environment. Its content is read on demand
+/// from a `blob:` or `data:` URI.
 base class WebPlatformFile extends PlatformFile {
   /// Creates a new [WebPlatformFile] instance.
   ///
-  /// Requires a file [name] and [uri]. Optional parameters include preloaded
-  /// [bytes], a custom [readStream], file size in [bytesLength], or an underlying [xFile].
+  /// Requires a file [name] and [uri]. Optional parameters include the file
+  /// size in [bytesLength] and an underlying [xFile].
   WebPlatformFile({
     required this.name,
     required this.uri,
     XFile? xFile,
     int? bytesLength,
-    Uint8List? bytes,
-    Stream<Uint8List>? readStream,
   }) : _xFile = xFile,
-       _bytesLength = bytesLength,
-       _bytes = bytes,
-       _readStream = readStream {
+       _bytesLength = bytesLength {
     if (name.isEmpty) {
       throw ArgumentError('name cannot be empty');
     }
@@ -45,23 +40,20 @@ base class WebPlatformFile extends PlatformFile {
 
   final XFile? _xFile;
   final int? _bytesLength;
-  final Uint8List? _bytes;
-  final Stream<Uint8List>? _readStream;
 
   /// Returns an [XFile] instance representing this web file.
   @override
   XFile get xFile {
     final file = _xFile;
     if (file != null) return file;
-    return XFile(uri.toString(), name: name, bytes: _bytes);
+    return XFile(uri.toString(), name: name);
   }
 
-  /// The browser's `File.size`, or the loaded bytes' length.
+  /// The browser's `File.size`, if known.
   @override
   int? lengthSync() {
     final len = _bytesLength;
-    if (len != null && len > 0) return len;
-    return _bytes?.length;
+    return (len != null && len > 0) ? len : null;
   }
 
   /// Asynchronously calculates and returns the size of the file in bytes.
@@ -69,8 +61,6 @@ base class WebPlatformFile extends PlatformFile {
   Future<int?> length() async {
     final len = _bytesLength;
     if (len != null && len > 0) return len;
-    final bytes = _bytes;
-    if (bytes != null) return bytes.length;
     try {
       return await xFile.length();
     } catch (_) {
@@ -80,13 +70,9 @@ base class WebPlatformFile extends PlatformFile {
 
   /// Asynchronously reads the file content as a byte array (`Uint8List`).
   ///
-  /// If bytes are cached or readable from a `blob:`/`data:` URL, they will be
-  /// retrieved directly; otherwise falls back to [xFile].
+  /// Reads a `blob:` or `data:` URL directly, otherwise falls back to [xFile].
   @override
   Future<Uint8List> readAsBytes() async {
-    final bytes = _bytes;
-    if (bytes != null) return bytes;
-
     // Try fetching from blob or data URL
     final fetched = await fetchBytesFromWebPath(uri.toString());
     if (fetched != null) return fetched;
@@ -103,12 +89,6 @@ base class WebPlatformFile extends PlatformFile {
   /// may be shorter, so consumers can rely on evenly sized buffers.
   @override
   Stream<Uint8List> readAsByteStream() async* {
-    final readStream = _readStream;
-    if (readStream != null) {
-      yield* readStream;
-      return;
-    }
-
     final webStream = fetchStreamFromWebPath(uri.toString());
     if (webStream != null) {
       yield* webStream;

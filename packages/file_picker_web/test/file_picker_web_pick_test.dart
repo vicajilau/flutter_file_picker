@@ -66,14 +66,4 @@ void main() {
       await pickFiles([fileWith(name: 'big.txt', content: bigContent())]),
     );
   });
-
-  test('picked files stream evenly sized chunks with withReadStream', () async {
-    await expectEvenChunks(
-      await pickFiles(
-        [fileWith(name: 'big.txt', content: bigContent())],
-        // ignore: deprecated_member_use_from_same_package
-        webOptions: const FilePickerWebOptions(withReadStream: true),
-      ),
-    );
-  });
 }
