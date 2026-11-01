@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dbus/dbus.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import 'file_picker_linux_options.dart';
 import 'filters.dart';
@@ -194,8 +195,9 @@ class FilePickerLinux extends FilePickerPlatform {
   }
 
   /// Waits for the portal's response to the request at [replyPath] and
-  /// returns the chosen paths, or `null` if the user cancelled or the
-  /// request failed.
+  /// returns the chosen paths, or `null` if the user cancelled.
+  ///
+  /// Throws a [PlatformException] if the request failed.
   Future<List<String>?> _awaitPaths(DBusObjectPath replyPath) async {
     final request = OrgFreedesktopPortalRequest(
       client,
@@ -267,14 +269,28 @@ class FilePickerLinux extends FilePickerPlatform {
   }
 
   /// The file paths in a portal response, or `null` if [status] says the
-  /// user cancelled (1) or the request failed (2).
+  /// user cancelled (1).
+  ///
+  /// Throws a [PlatformException] with the `portal_error` code for any other
+  /// status, such as 2 when the request ended in some other way, so a failure
+  /// is never mistaken for a cancel (#2286).
   @visibleForTesting
   static List<String>? pathsFromResponse(
     int status,
     Map<String, DBusValue> results,
   ) {
-    if (status != 0) {
-      return null;
+    switch (status) {
+      case 0:
+        break;
+      case 1:
+        return null;
+      default:
+        throw PlatformException(
+          code: 'portal_error',
+          message:
+              'The file chooser portal ended the request with status '
+              '$status.',
+        );
     }
     return results['uris']
             ?.asArray()

@@ -1,6 +1,7 @@
 ## 14.0.0
 
 - **BREAKING CHANGE**: On Android, `saveFile()` returns the `content://` URI of the saved document instead of a `Uri` with only its path. See the migration guide.
+- **BREAKING CHANGE**: On Linux, a pick throws a `PlatformException` with the `portal_error` code when the file chooser portal fails, instead of returning as if it was cancelled. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 - **BREAKING CHANGE**: Removed `withData`, `withReadStream` and `readSequential` from `FilePickerWebOptions`, deprecated since `file_picker_web` 4.1.0. Picked files are no longer read at pick time, use `PlatformFile.readAsBytes()` or `readAsByteStream()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - Requires `file_picker_linux` 3.0.0 and `windows_file_picker` 3.0.0, which remove the `bytes` parameter of `LinuxPlatformFile.fromPath()` and `WindowsPlatformFile.fromPath()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - `getDirectoryPath()` and `saveFile()` now take `darwinOptions`, so `DarwinOptions.acceptLabel` also sets their confirm button text on macOS. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
