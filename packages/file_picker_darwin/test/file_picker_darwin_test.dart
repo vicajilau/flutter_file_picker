@@ -137,15 +137,6 @@ void main() {
             .setMockMethodCallHandler(picker.methodChannel, null);
       });
 
-      Future<void> saveFile({DarwinOptions? darwinOptions}) {
-        return picker.saveFile(
-          fileName: 'a.txt',
-          bytes: Uint8List.fromList([1]),
-          mimeType: 'text/plain',
-          darwinOptions: darwinOptions ?? const DarwinOptions(),
-        );
-      }
-
       test('getDirectoryPath sends acceptLabel', () async {
         await picker.getDirectoryPath(
           darwinOptions: const DarwinOptions(acceptLabel: 'Use folder'),
@@ -156,6 +147,15 @@ void main() {
       });
 
       test('saveFile sends acceptLabel', () async {
+        Future<void> saveFile({DarwinOptions? darwinOptions}) {
+          return picker.saveFile(
+            fileName: 'a.txt',
+            bytes: Uint8List.fromList([1]),
+            mimeType: 'text/plain',
+            darwinOptions: darwinOptions ?? const DarwinOptions(),
+          );
+        }
+
         await saveFile(
           darwinOptions: const DarwinOptions(acceptLabel: 'Export'),
         );
