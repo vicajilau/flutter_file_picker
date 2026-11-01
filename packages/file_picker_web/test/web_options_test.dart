@@ -3,10 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('FilePickerWebOptions initializes with default properties', () {
-    const options = FilePickerWebOptions(withData: false, withReadStream: true);
-    expect(options.withData, isFalse);
-    expect(options.withReadStream, isTrue);
-    expect(options.readSequential, isFalse);
+    const options = FilePickerWebOptions();
     expect(options.cancelUploadOnWindowBlur, isTrue);
+    expect(options.saveMode, WebSaveFileMode.download);
   });
 }

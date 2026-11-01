@@ -55,6 +55,13 @@ See the [official API reference on pub.dev](https://pub.dev/documentation/file_p
 
 The iOS and macOS native implementations live under the shared Darwin source tree (`file_picker_darwin`). The iOS implementation requires iOS 14.0 or newer because it uses `PHPickerViewController` and `PHPickerResult`.
 
+## Migrating to v14
+
+1. **Web Reading Options Removed**:
+   * `withData`, `withReadStream` and `readSequential` are removed from `FilePickerWebOptions`. Picked files are no longer read at pick time, and `readAsBytes()`/`readAsByteStream()` read them on demand.
+   * **v13**: `FilePickerWebOptions(withData: false, withReadStream: true, cancelUploadOnWindowBlur: false)`
+   * **v14**: `FilePickerWebOptions(cancelUploadOnWindowBlur: false)`
+
 ## Migrating to v13
 
 1. **`PlatformFile.length()` Returns `Future<int?>`**:
