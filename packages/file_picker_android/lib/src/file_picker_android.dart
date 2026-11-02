@@ -97,14 +97,17 @@ class FilePickerAndroid extends FilePickerPlatform {
 
     try {
       if (onFileLoading != null) {
-        _eventSubscription = eventChannel.receiveBroadcastStream().listen((
-          data,
-        ) {
-          if (data is! bool) return;
-          onFileLoading(
-            data ? FilePickerStatus.picking : FilePickerStatus.done,
-          );
-        }, onError: (error) => throw Exception(error));
+        _eventSubscription = eventChannel.receiveBroadcastStream().listen(
+          (data) {
+            if (data is! bool) return;
+            onFileLoading(
+              data ? FilePickerStatus.picking : FilePickerStatus.done,
+            );
+          },
+          // A status update that fails is not worth failing the call over,
+          // and throwing here only surfaced as an uncaught error.
+          onError: (_) {},
+        );
       }
 
       final Map<String, Object?>? safOptionsMap = switch (androidOptions) {
@@ -129,8 +132,6 @@ class FilePickerAndroid extends FilePickerPlatform {
       }
 
       return platformFiles;
-    } catch (e) {
-      rethrow;
     } finally {
       await _eventSubscription?.cancel();
       _eventSubscription = null;
@@ -233,12 +234,17 @@ class FilePickerAndroid extends FilePickerPlatform {
     try {
       if (onFileSaving != null) {
         onFileSaving(FilePickerStatus.picking);
-        _eventSubscription = eventChannel.receiveBroadcastStream().listen((
-          data,
-        ) {
-          if (data is! bool) return;
-          onFileSaving(data ? FilePickerStatus.picking : FilePickerStatus.done);
-        }, onError: (error) => throw Exception(error));
+        _eventSubscription = eventChannel.receiveBroadcastStream().listen(
+          (data) {
+            if (data is! bool) return;
+            onFileSaving(
+              data ? FilePickerStatus.picking : FilePickerStatus.done,
+            );
+          },
+          // A status update that fails is not worth failing the call over,
+          // and throwing here only surfaced as an uncaught error.
+          onError: (_) {},
+        );
       }
 
       final String? savedPath = await methodChannel
@@ -249,15 +255,11 @@ class FilePickerAndroid extends FilePickerPlatform {
             "bytes": bytes,
           });
 
-      if (onFileSaving != null) {
-        onFileSaving(FilePickerStatus.done);
-      }
-
       if (savedPath == null) return null;
       return Uri.tryParse(savedPath) ?? Uri.file(savedPath);
-    } catch (e) {
-      rethrow;
     } finally {
+      // Also when saving fails, so the app does not stay in the picking state.
+      onFileSaving?.call(FilePickerStatus.done);
       await _eventSubscription?.cancel();
       _eventSubscription = null;
     }

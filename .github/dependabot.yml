@@ -24,6 +24,12 @@ updates:
       # or camera, which still require 0.3. It ships with 14.0.0 (#2236).
       - dependency-name: "cross_file"
         versions: [">=0.4.0"]
+      # file_picker_linux allows `>=0.7.13 <0.9.0` so apps can still resolve
+      # alongside plugins on dbus 0.7 (geolocator_linux). Updates inside that
+      # range would only raise the published lower bound and bring the
+      # conflict back.
+      - dependency-name: "dbus"
+        versions: ["<0.9.0"]
 
   - package-ecosystem: "pub"
     directory: "/packages/file_picker_platform_interface"
@@ -80,6 +86,12 @@ updates:
       # or camera, which still require 0.3. It ships with 14.0.0 (#2236).
       - dependency-name: "cross_file"
         versions: [">=0.4.0"]
+      # file_picker_linux allows `>=0.7.13 <0.9.0` so apps can still resolve
+      # alongside plugins on dbus 0.7 (geolocator_linux). Updates inside that
+      # range would only raise the published lower bound and bring the
+      # conflict back.
+      - dependency-name: "dbus"
+        versions: ["<0.9.0"]
 
   - package-ecosystem: "pub"
     directory: "/packages/file_picker_windows"

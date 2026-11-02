@@ -171,6 +171,56 @@ void main() {
       );
     });
 
+    group('status updates', () {
+      late FilePickerAndroid picker;
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+      setUp(() {
+        picker = FilePickerAndroid();
+        // The status stream fails as soon as it is listened to.
+        messenger.setMockStreamHandler(
+          picker.eventChannel,
+          MockStreamHandler.inline(
+            onListen: (_, events) => events.error(code: 'stream_error'),
+          ),
+        );
+      });
+
+      tearDown(() {
+        messenger.setMockStreamHandler(picker.eventChannel, null);
+        messenger.setMockMethodCallHandler(picker.methodChannel, null);
+      });
+
+      test('a failing status stream does not fail the pick', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          // Let the stream error arrive while the pick is still running.
+          await pumpEventQueue();
+          return null;
+        });
+
+        expect(await picker.pickFiles(onFileLoading: (_) {}), isEmpty);
+      });
+
+      test('saveFile reports done when saving fails', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          throw PlatformException(code: 'save_failed');
+        });
+        final statuses = <FilePickerStatus>[];
+
+        await expectLater(
+          picker.saveFile(
+            fileName: 'a.txt',
+            bytes: Uint8List.fromList([1]),
+            mimeType: 'text/plain',
+            onFileSaving: statuses.add,
+          ),
+          throwsA(isA<PlatformException>()),
+        );
+        expect(statuses.last, FilePickerStatus.done);
+      });
+    });
+
     group('retrieveLostData', () {
       late FilePickerAndroid picker;
 
