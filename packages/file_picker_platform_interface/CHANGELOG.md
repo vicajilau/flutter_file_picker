@@ -1,6 +1,7 @@
 ## 5.0.0
 
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` now take a `darwinOptions` parameter. Implementations must add it to their overrides. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+- **BREAKING CHANGE**: Removed `FilePickerPlatform.skipEntitlementsChecks()`. It is now only on `FilePickerDarwin`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 
 ## 4.2.0
 
