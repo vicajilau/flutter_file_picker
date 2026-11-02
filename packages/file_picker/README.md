@@ -53,20 +53,36 @@ See the [official API reference on pub.dev](https://pub.dev/documentation/file_p
 
 ### Darwin implementation notes
 
-The iOS and macOS native implementations live under the shared Darwin source tree (`file_picker_darwin`). The iOS implementation requires iOS 14.0 or newer because it uses `PHPickerViewController` and `PHPickerResult`.
+The iOS and macOS native implementations live under the shared Darwin source tree (`file_picker_darwin`). The iOS implementation requires iOS 14.0 or newer because it uses `PHPickerViewController` and `PHPickerResult`. The macOS implementation requires macOS 10.15 or newer.
 
 ## Migrating to v14
 
-1. **Web Reading Options Removed**:
+1. **Minimum Versions Raised**: Flutter 3.41, Dart 3.11, Android SDK 24 and macOS 10.15, required by `cross_file` 0.4.0.
+
+2. **`PlatformFile.xFile` Uses `cross_file` 0.4.0**:
+   * `XFile.path`, `XFile.mimeType`, `XFile.saveTo()` and `XFile.fromData` no longer exist, and `XFile.name` is now `Future<String?> name()`.
+   * Use `PlatformFile.path`, `PlatformFile.name`, `readAsBytes()` and `readAsByteStream()` when you do not need an `XFile`. For a file system path, check for a `FileSystemXFile`:
+
+     ```dart
+     import 'package:cross_file/cross_file.dart';
+
+     final path = switch (file.xFile) {
+       FileSystemXFile(:final path) => path,
+       _ => null,
+     };
+     ```
+   * See the [`cross_file` changelog](https://pub.dev/packages/cross_file/changelog) for the full list.
+
+3. **Web Reading Options Removed**:
    * `withData`, `withReadStream` and `readSequential` are removed from `FilePickerWebOptions`. Picked files are no longer read at pick time, and `readAsBytes()`/`readAsByteStream()` read them on demand.
    * **v13**: `FilePickerWebOptions(withData: false, withReadStream: true, cancelUploadOnWindowBlur: false)`
    * **v14**: `FilePickerWebOptions(cancelUploadOnWindowBlur: false)`
 
-2. **Android `saveFile()` Returns a `content://` URI**:
+4. **Android `saveFile()` Returns a `content://` URI**:
    * It used to return a `Uri` with only the path of the saved document, such as `/document/primary:Download/report.pdf`, which no API can open. It now returns the whole `content://` URI, which `ContentResolver` and the Storage Access Framework accept.
    * If you only showed the result, nothing changes. If you used `uri.path` as a file system path, it never pointed to a real file, so use the URI itself.
 
-3. **`getDirectoryPath()` Throws on Failure**:
+5. **`getDirectoryPath()` Throws on Failure**:
    * On Android, iOS and macOS a failed directory pick used to return `null`, the same as a cancel. It now throws a `PlatformException`, and `null` only means the user cancelled.
 
      ```dart
@@ -83,11 +99,11 @@ The iOS and macOS native implementations live under the shared Darwin source tre
      }
      ```
 
-4. **`FilePicker.skipEntitlementsChecks()` Removed**:
+6. **`FilePicker.skipEntitlementsChecks()` Removed**:
    * Platform specific APIs now only live in their platform package. Add `file_picker_darwin` as a direct dependency and call it on `FilePickerDarwin`:
    * **v13**: `await FilePicker.skipEntitlementsChecks();`
    * **v14**: `if (FilePickerPlatform.instance case final FilePickerDarwin darwin) await darwin.skipEntitlementsChecks();`
-5. **`type` and `allowedExtensions` Removed from `saveFile()`**:
+7. **`type` and `allowedExtensions` Removed from `saveFile()`**:
    * They never had any effect on `saveFile()`, so just drop them.
    * **v13**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes, type: FileType.custom, allowedExtensions: ['pdf']);`
    * **v14**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes);`
