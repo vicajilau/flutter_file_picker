@@ -4,6 +4,7 @@ import 'package:dbus/dbus.dart';
 
 import 'package:file_picker_linux/file_picker_linux.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -215,8 +216,19 @@ void main() {
       );
     });
 
-    test('returns null when the request fails', () {
-      expect(FilePickerLinux.pathsFromResponse(2, {}), isNull);
+    test('throws when the request fails instead of cancelling (#2286)', () {
+      for (final status in [2, 3]) {
+        expect(
+          () => FilePickerLinux.pathsFromResponse(status, {}),
+          throwsA(
+            isA<PlatformException>().having(
+              (e) => e.code,
+              'code',
+              'portal_error',
+            ),
+          ),
+        );
+      }
     });
   });
 
