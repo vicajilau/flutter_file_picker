@@ -4,6 +4,10 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` and `pickFileAndDirectoryPaths()` throw every `PlatformException`, not just `window_not_found`. They used to return `null` or an empty list, the same as a cancel. A confirmed pick without a path, on iOS or macOS, now fails with `unknown_path` instead of returning `null` or an empty list. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0. `skipEntitlementsChecks()` is no longer an override, since the platform interface and `file_picker` 14.0.0 no longer have it. Call it on `FilePickerDarwin` directly. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 
+## 2.4.2
+
+- Fixed `onFileSaving` staying on `picking` when saving fails, and an error of the status stream escaping as an uncaught error.
+
 ## 2.4.1
 
 - Fixed iOS pickers getting stuck in `multiple_request` when the picker is swiped away while still appearing. [#2291](https://github.com/vicajilau/flutter_file_picker/issues/2291)

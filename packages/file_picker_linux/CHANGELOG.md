@@ -5,6 +5,10 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` take the new `darwinOptions` parameter of `file_picker_platform_interface` 5.0.0. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0, which no longer has `skipEntitlementsChecks()`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 
+## 2.0.3
+
+- Widened the `dbus` dependency to `>=0.7.13 <0.9.0`.
+
 ## 2.0.2
 
 - Fixed `pickFileAndDirectoryPaths()` returning percent-encoded paths that do not exist. [#2225](https://github.com/vicajilau/flutter_file_picker/issues/2225)
