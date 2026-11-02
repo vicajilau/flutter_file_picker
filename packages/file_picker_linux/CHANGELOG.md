@@ -1,3 +1,7 @@
+## 2.0.3
+
+- Widened the `dbus` dependency to `>=0.7.13 <0.9.0`. 2.0.1 raised it to `^0.8.0` with no need for it, which made apps that also depend on a package still on `dbus` 0.7 (such as `geolocator_linux`) fail to resolve.
+
 ## 2.0.2
 
 - Fixed `pickFileAndDirectoryPaths()` returning percent-encoded paths that do not exist. [#2225](https://github.com/vicajilau/flutter_file_picker/issues/2225)
