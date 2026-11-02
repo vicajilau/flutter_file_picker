@@ -97,6 +97,20 @@ jobs:
         if: matrix.flutter == 'stable'
         run: dart format --output=none --set-exit-if-changed .
 
+      # The channels of a package with a pigeons/ folder are generated from
+      # it, on both the Dart and the native side. Regenerating them must
+      # change nothing, or someone edited the definition without running
+      # Pigeon, or edited the generated code by hand.
+      - name: Verify Pigeon generated code
+        if: matrix.flutter == 'stable'
+        run: |
+          set -euo pipefail
+          for input in packages/*/pigeons/messages.dart; do
+            package="${input%/pigeons/messages.dart}"
+            (cd "$package" && dart run pigeon --input pigeons/messages.dart && dart format lib)
+          done
+          git diff --exit-code -- packages
+
       - name: Analyze project source
         run: melos exec --concurrency=1 -- flutter analyze .
 

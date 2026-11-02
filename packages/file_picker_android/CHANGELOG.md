@@ -1,5 +1,6 @@
 ## 3.0.0
 
+- The channel to the Kotlin side is generated with Pigeon from `pigeons/messages.dart`, so the arguments and results are checked on both sides instead of travelling as untyped maps. `FilePickerAndroid.methodChannel`, which was only meant for tests, is gone. Tests can pass a fake `FilePickerApi` to `FilePickerAndroid(api: ...)`. [#2258](https://github.com/vicajilau/flutter_file_picker/issues/2258)
 - **BREAKING CHANGE**: `saveFile()` returns the `content://` URI of the saved document. It used to return a `Uri` with only the path of that URI, such as `/document/primary:Download/report.pdf`, which could not open the file again.
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` take the new `darwinOptions` parameter of `file_picker_platform_interface` 5.0.0. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: `getDirectoryPath()` throws a `PlatformException` when the pick fails, such as an `unknown_path` for a folder that cannot be resolved, or an `already_active` for a second pick while one is open. It used to return `null`, the same as a cancel. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
