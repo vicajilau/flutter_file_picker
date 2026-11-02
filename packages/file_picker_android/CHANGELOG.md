@@ -1,3 +1,10 @@
+## 2.1.3
+
+- Fixed picks and saves that never completed, leaving every later pick failing with `already_active`, when the picker or the save dialog ended with an unexpected result code, when a save came back without a location, or when a pick had no type. They now fail with `unknown_result` or `invalid_type`.
+- Fixed the results of activities started by other plugins failing a pending pick.
+- Fixed a `SecurityException` while writing a saved file crashing the app instead of failing the save.
+- Fixed `onFileSaving` staying on `picking` when saving fails, and an error of the status stream escaping as an uncaught error.
+
 ## 2.1.2
 
 - Fixed `explorer_not_found` on Android 11+ devices that hide the documents picker from apps, such as some Xiaomi HyperOS versions. [#2282](https://github.com/vicajilau/flutter_file_picker/pull/2282)
