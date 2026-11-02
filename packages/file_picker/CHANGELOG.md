@@ -1,3 +1,7 @@
+## 13.3.2
+
+- Requires `android_file_picker` 2.1.3 and `file_picker_darwin` 2.4.2, with fixes for Android picks that could never complete and for `onFileSaving` when saving fails.
+
 ## 13.3.1
 
 - Raised the minimum versions of the platform implementations to the ones with the latest fixes, so updating `file_picker` also brings them in even when a lockfile pins older ones.

@@ -1,3 +1,7 @@
+## 2.4.2
+
+- Fixed `onFileSaving` staying on `picking` when saving fails, and an error of the status stream escaping as an uncaught error.
+
 ## 2.4.1
 
 - Fixed iOS pickers getting stuck in `multiple_request` when the picker is swiped away while still appearing. [#2291](https://github.com/vicajilau/flutter_file_picker/issues/2291)
