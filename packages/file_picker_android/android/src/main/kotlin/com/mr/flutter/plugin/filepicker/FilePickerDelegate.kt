@@ -11,7 +11,6 @@ import com.mr.flutter.plugin.filepicker.FileUtils.processFiles
 import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry.ActivityResultListener
-import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,29 +54,26 @@ class FilePickerDelegate(
                     handleFilePickerResult(resultCode, data)
                 }
             }
-            else -> false.also {
-                finishWithError(
-                    "unknown_activity",
-                    "Unknown activity error, please file an issue."
-                )
-            }
-        }
-    }
-
-    private fun handleSaveFileResult(resultCode: Int, data: Intent?): Boolean {
-        return when (resultCode) {
-            Activity.RESULT_OK -> saveFile(data?.data)
-            Activity.RESULT_CANCELED -> {
-                finishWithSuccess(null)
-                false
-            }
-
+            // Results of activities this plugin did not start, such as
+            // those of other plugins, are not ours to answer.
             else -> false
         }
     }
 
-    private fun saveFile(uri: Uri?): Boolean {
-        uri ?: return false
+    private fun handleSaveFileResult(resultCode: Int, data: Intent?): Boolean {
+        val uri = data?.data
+        when (ResultOutcome.of(resultCode, hasData = uri != null)) {
+            ResultOutcome.DELIVER -> saveFile(uri!!)
+            ResultOutcome.CANCEL -> finishWithSuccess(null)
+            ResultOutcome.FAIL -> finishWithError(
+                "unknown_result",
+                "The save dialog ended without a location, with result code $resultCode."
+            )
+        }
+        return true
+    }
+
+    private fun saveFile(uri: Uri) {
         dispatchEventStatus(true)
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -94,31 +90,31 @@ class FilePickerDelegate(
                     // saved file again.
                     finishWithSuccess(renamedUri.toString())
                 }
-            } catch (e: IOException) {
+            } catch (e: Exception) {
+                // Not only IOException: a SecurityException from the provider
+                // would otherwise escape the coroutine and crash the app.
                 Log.e(TAG, "Error while saving file", e)
                 Handler(Looper.getMainLooper()).post {
                     finishWithError("Error while saving file", e.message)
                 }
             }
         }
-        return true
     }
 
     private fun handleFilePickerResult(resultCode: Int, data: Intent?): Boolean {
-        return when (resultCode) {
-            Activity.RESULT_OK -> {
+        when (ResultOutcome.of(resultCode)) {
+            ResultOutcome.DELIVER -> {
                 dispatchEventStatus(true)
                 processFiles(activity, data, compressionQuality, type.orEmpty(), androidSafOptions)
-                true
             }
 
-            Activity.RESULT_CANCELED -> {
-                finishWithSuccess(null)
-                true
-            }
-
-            else -> false
+            ResultOutcome.CANCEL -> finishWithSuccess(null)
+            ResultOutcome.FAIL -> finishWithError(
+                "unknown_result",
+                "The picker ended with result code $resultCode."
+            )
         }
+        return true
     }
 
     /**
