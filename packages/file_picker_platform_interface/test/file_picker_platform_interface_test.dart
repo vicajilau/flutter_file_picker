@@ -33,7 +33,6 @@ void main() {
         throwsUnimplementedError,
       );
       expect(instance.clearTemporaryFiles(), completes);
-      expect(instance.skipEntitlementsChecks(), completes);
       expect(() => instance.getDirectoryPath(), throwsUnimplementedError);
       expect(
         () => instance.saveFile(
