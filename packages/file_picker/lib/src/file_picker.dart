@@ -176,16 +176,6 @@ abstract final class FilePicker {
     String mimeType = 'application/octet-stream',
     String? dialogTitle,
     String? initialDirectory,
-    @Deprecated(
-      'Has no effect, saveFile() never used it. '
-      'This parameter will be removed in file_picker v14.0.0.',
-    )
-    FileType type = FileType.any,
-    @Deprecated(
-      'Has no effect, saveFile() never used it. '
-      'This parameter will be removed in file_picker v14.0.0.',
-    )
-    List<String>? allowedExtensions,
     Function(FilePickerStatus)? onFileSaving,
     DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
@@ -204,23 +194,5 @@ abstract final class FilePicker {
       linuxOptions: linuxOptions,
       webOptions: webOptions,
     );
-  }
-
-  /// Skips the macOS App Sandbox entitlement checks performed before showing a dialog.
-  ///
-  /// Only relevant for non-sandboxed macOS apps, which do not declare the
-  /// `com.apple.security.files.user-selected.read-only`/`read-write` entitlements
-  /// and would otherwise be incorrectly blocked by those checks. Call this before
-  /// any other file picking method.
-  ///
-  /// Delegates to `FilePickerPlatform.instance.skipEntitlementsChecks()`,
-  /// whose default implementation is a no-op. Only `FilePickerDarwin`
-  /// overrides it, and only macOS performs the check in the first place, so
-  /// this method does nothing on platforms other than macOS.
-  ///
-  /// Note: skipping entitlement checks may lead to unexpected behavior if the
-  /// app is actually sandboxed. Use with caution.
-  static Future<void> skipEntitlementsChecks() async {
-    await FilePickerPlatform.instance.skipEntitlementsChecks();
   }
 }

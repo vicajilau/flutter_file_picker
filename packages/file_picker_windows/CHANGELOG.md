@@ -3,6 +3,7 @@
 - **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41 and Dart 3.11. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: Removed the `bytes` parameter of `WindowsPlatformFile.fromPath()`. The plugin never passed it, and the file content is read on demand by `readAsBytes()` and `readAsByteStream()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` take the new `darwinOptions` parameter of `file_picker_platform_interface` 5.0.0. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
+- **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0, which no longer has `skipEntitlementsChecks()`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 
 ## 2.0.1
 
