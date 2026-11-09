@@ -81,33 +81,28 @@ class FilePickerWindows extends FilePickerPlatform {
     int compressionQuality = 0,
     WindowsOptions windowsOptions = const FilePickerWindowsOptions(),
   }) async {
-    onFileLoading?.call(FilePickerStatus.picking);
-    try {
-      final resolved = _resolveWindowsOptions(windowsOptions);
+    final resolved = _resolveWindowsOptions(windowsOptions);
 
-      final fileNames =
-          await compute(
-            _callPickFiles,
-            OpenSaveFileArgs(
-              dialogTitle: dialogTitle,
-              initialDirectory: initialDirectory,
-              type: type,
-              allowedExtensions: allowedExtensions,
-              allowMultiple: allowMultiple,
-              lockParentWindow: resolved.lockParentWindow,
-              parentWindowHandle: resolved.parentWindowHandle,
-              acceptLabel: resolved.acceptLabel,
-            ),
-          ) ??
-          <String>[];
-      if (fileNames.isEmpty) {
-        return [];
-      }
-
-      return [for (final path in fileNames) WindowsPlatformFile.fromPath(path)];
-    } finally {
-      onFileLoading?.call(FilePickerStatus.done);
+    final fileNames =
+        await compute(
+          _callPickFiles,
+          OpenSaveFileArgs(
+            dialogTitle: dialogTitle,
+            initialDirectory: initialDirectory,
+            type: type,
+            allowedExtensions: allowedExtensions,
+            allowMultiple: allowMultiple,
+            lockParentWindow: resolved.lockParentWindow,
+            parentWindowHandle: resolved.parentWindowHandle,
+            acceptLabel: resolved.acceptLabel,
+          ),
+        ) ??
+        <String>[];
+    if (fileNames.isEmpty) {
+      return [];
     }
+
+    return [for (final path in fileNames) WindowsPlatformFile.fromPath(path)];
   }
 
   @override
@@ -233,32 +228,27 @@ class FilePickerWindows extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    onFileSaving?.call(FilePickerStatus.picking);
-    try {
-      final resolved = _resolveWindowsOptions(windowsOptions);
+    final resolved = _resolveWindowsOptions(windowsOptions);
 
-      final savedFilePath = await compute(
-        _callSaveFile,
-        OpenSaveFileArgs(
-          defaultFileName: fileName,
-          dialogTitle: dialogTitle,
-          initialDirectory: initialDirectory,
-          lockParentWindow: resolved.lockParentWindow,
-          confirmOverwrite: true,
-          parentWindowHandle: resolved.parentWindowHandle,
-          acceptLabel: resolved.acceptLabel,
-        ),
-      );
-      if (savedFilePath != null) {
-        final file = File(savedFilePath);
-        await file.writeAsBytes(bytes);
-        return Uri.file(savedFilePath);
-      }
-
-      return null;
-    } finally {
-      onFileSaving?.call(FilePickerStatus.done);
+    final savedFilePath = await compute(
+      _callSaveFile,
+      OpenSaveFileArgs(
+        defaultFileName: fileName,
+        dialogTitle: dialogTitle,
+        initialDirectory: initialDirectory,
+        lockParentWindow: resolved.lockParentWindow,
+        confirmOverwrite: true,
+        parentWindowHandle: resolved.parentWindowHandle,
+        acceptLabel: resolved.acceptLabel,
+      ),
+    );
+    if (savedFilePath != null) {
+      final file = File(savedFilePath);
+      await file.writeAsBytes(bytes);
+      return Uri.file(savedFilePath);
     }
+
+    return null;
   }
 
   /// Opens the [IFileOpenDialog] to select one or more files.

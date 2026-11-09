@@ -73,7 +73,7 @@ void main() {
 
     for (final multiple in [false, true]) {
       test(
-        'pickFiles multiple=$multiple propagates failure and reports done',
+        'pickFiles multiple=$multiple propagates failure without status callbacks',
         () async {
           final statuses = <FilePickerStatus>[];
           final picker = FilePickerWindows();
@@ -90,12 +90,12 @@ void main() {
             result.timeout(const Duration(seconds: 5)),
             throwsA(isNot(isA<TimeoutException>())),
           );
-          expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+          expect(statuses, isEmpty);
         },
       );
     }
 
-    test('saveFile propagates failure and reports done', () async {
+    test('saveFile propagates failure without status callbacks', () async {
       final statuses = <FilePickerStatus>[];
       await expectLater(
         FilePickerWindows()
@@ -109,7 +109,15 @@ void main() {
             .timeout(const Duration(seconds: 5)),
         throwsA(isNot(isA<TimeoutException>())),
       );
-      expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+      expect(statuses, isEmpty);
+    });
+    test('directory propagates native failure', () async {
+      await expectLater(
+        FilePickerWindows()
+            .getDirectoryPath(initialDirectory: missingDirectory)
+            .timeout(const Duration(seconds: 5)),
+        throwsA(isNot(isA<TimeoutException>())),
+      );
     });
   }, skip: !Platform.isWindows);
 
