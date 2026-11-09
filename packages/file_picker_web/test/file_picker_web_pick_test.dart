@@ -37,6 +37,23 @@ void main() {
   File fileWith({required String name, required String content}) =>
       File([utf8.encode(content).toJS].toJS, name);
 
+  test(
+    'overlapping picks fail without orphaning the original request',
+    () async {
+      final original = FilePickerPlatform.instance.pickFiles();
+      final input =
+          document.querySelector('flt-file-picker-inputs input')!
+              as HTMLInputElement;
+
+      await expectLater(
+        FilePickerPlatform.instance.pickFiles(),
+        throwsStateError,
+      );
+      input.dispatchEvent(Event('cancel'));
+      expect(await original, isEmpty);
+    },
+  );
+
   test('picked files point at a readable blob: URL', () async {
     final files = await pickFiles([fileWith(name: 'a.txt', content: 'hello')]);
 

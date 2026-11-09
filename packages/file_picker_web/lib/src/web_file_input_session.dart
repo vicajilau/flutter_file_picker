@@ -119,6 +119,7 @@ class WebFileInputSession {
     _removeInput();
 
     if (files == null) {
+      onFileLoading?.call(FilePickerStatus.done);
       if (!_completer.isCompleted) {
         _completer.complete(null);
       }

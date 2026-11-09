@@ -3,6 +3,7 @@ library;
 
 import 'dart:js_interop';
 
+import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:file_picker_web/file_picker_web.dart';
 import 'package:file_picker_web/src/web_file_input_session.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,13 +21,14 @@ void main() {
 
   WebFileInputSession createSession({
     FilePickerWebOptions webOptions = const FilePickerWebOptions(),
+    Function(FilePickerStatus)? onFileLoading,
   }) {
     return WebFileInputSession(
       target: target,
       accept: '',
       allowMultiple: false,
       webOptions: webOptions,
-      onFileLoading: null,
+      onFileLoading: onFileLoading,
       processFiles: (files, _) async => [
         for (var i = 0; i < files.length; i++)
           WebPlatformFile(
@@ -95,6 +97,16 @@ void main() {
       expect(target.childNodes.length, 0);
     },
   );
+
+  test('notifies status completion even when the user cancels', () async {
+    final statuses = <FilePickerStatus>[];
+    final result = createSession(onFileLoading: statuses.add).start();
+
+    attachedInput().dispatchEvent(Event('cancel'));
+
+    expect(await result, isNull);
+    expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+  });
 
   test('completes with null on the input cancel event', () async {
     final result = createSession(

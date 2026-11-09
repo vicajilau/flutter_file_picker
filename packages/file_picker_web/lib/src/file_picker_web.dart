@@ -24,6 +24,7 @@ class FilePickerWeb extends FilePickerPlatform {
   static const String _kFilePickerInputsDomId = '__file_picker_web-file-input';
 
   late Element _target;
+  WebFileInputSession? _activeSession;
 
   FilePickerWeb._() {
     _target = _ensureInitialized(_kFilePickerInputsDomId);
@@ -129,6 +130,10 @@ class FilePickerWeb extends FilePickerPlatform {
         ? webOptions
         : const FilePickerWebOptions();
 
+    if (_activeSession != null) {
+      throw StateError('A file picker is already active.');
+    }
+
     final session = WebFileInputSession(
       target: _target,
       accept: _fileType(type, allowedExtensions),
@@ -138,8 +143,13 @@ class FilePickerWeb extends FilePickerPlatform {
       processFiles: _processSelectedFiles,
     );
 
-    final List<PlatformFile>? files = await session.start();
-    return files ?? <PlatformFile>[];
+    _activeSession = session;
+    try {
+      final List<PlatformFile>? files = await session.start();
+      return files ?? <PlatformFile>[];
+    } finally {
+      _activeSession = null;
+    }
   }
 
   /// Processes the selected [FileList] according to [webOptions] and returns
