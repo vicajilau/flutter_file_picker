@@ -3,17 +3,8 @@ package com.mr.flutter.plugin.filepicker
 import java.io.File
 import java.util.UUID
 
-/**
- * Builds the file system paths the plugin returns or writes to.
- *
- * Kept free of Android APIs so it can be unit tested on the JVM.
- */
 internal object PickerPaths {
-    /**
-     * The path of the directory behind a tree document id, such as
-     * `primary:Documents/Sub` or `1234-5678:Music`, given the primary
-     * [externalStorageDirectory].
-     */
+    /** Resolves a storage tree document ID to its directory path. */
     fun directoryPath(treeDocumentId: String, externalStorageDirectory: String): String {
         val volumePath = getVolumePath(treeDocumentId, externalStorageDirectory)
         val documentPath = getDocumentPath(treeDocumentId)
@@ -33,29 +24,14 @@ internal object PickerPaths {
         }
     }
 
-    /**
-     * Where a picked file is cached: its own directory, named after [stamp],
-     * under `file_picker` in [cacheDir].
-     *
-     * Throws a [SecurityException] if [fileName], which comes from the
-     * document provider, would place the file outside that directory.
-     */
-    fun cachedFile(cacheDir: File, stamp: Long, fileName: String?): File =
-        cachedFileWithKey(cacheDir, stamp.toString(), fileName)
-
-    /**
-     * Gives every picked document a distinct cache destination, even when two
-     * providers return the same name within the same millisecond.
-     */
-    fun uniqueCachedFile(cacheDir: File, fileName: String?): File =
-        cachedFileWithKey(cacheDir, UUID.randomUUID().toString(), fileName)
-
-    private fun cachedFileWithKey(cacheDir: File, key: String, fileName: String?): File {
+    // Each pick owns a UUID directory, even when provider names and timestamps match.
+    fun uniqueCachedFile(cacheDir: File, fileName: String?): File {
         val root = File(cacheDir, "file_picker").canonicalFile
-        val directory = File(root, key).canonicalFile
+        val directory = File(root, UUID.randomUUID().toString()).canonicalFile
         val file = File(directory, fileName ?: "unamed").canonicalFile
-        return file.takeIf { directory.parentFile == root && it.parentFile == directory }
-            ?: throw SecurityException("Path traversal detected. Escaping the intended cache directory is not allowed.")
+        return file.takeIf {
+            directory.parentFile == root && it.path.startsWith(directory.path + File.separator)
+        } ?: throw SecurityException("Path traversal detected. Escaping the intended cache directory is not allowed.")
     }
 
     /** The path of the volume, without a trailing separator. */
