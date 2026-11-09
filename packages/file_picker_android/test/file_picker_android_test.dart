@@ -56,6 +56,15 @@ void main() {
       expect(withoutSize.lengthSync(), isNull);
     });
 
+    test('a reported empty file needs no size lookup', () async {
+      final file = AndroidPlatformFile.fromMap({
+        'path': '/tmp/empty.txt',
+        'size': 0,
+      });
+      expect(file.lengthSync(), 0);
+      expect(await file.length(), 0);
+    });
+
     test(
       'pickFileAndDirectoryPaths returns decoded paths that match the cached files',
       () async {

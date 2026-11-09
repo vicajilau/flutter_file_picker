@@ -90,15 +90,14 @@ base class DarwinPlatformFile extends PlatformFile {
   /// The size iOS/macOS already reported for this file when it was picked.
   @override
   int? lengthSync() {
-    final len = _bytesLength;
-    return (len != null && len > 0) ? len : null;
+    return _bytesLength;
   }
 
   @override
   Future<int?> length() async {
     if (_isAssetReference) return null;
     final len = _bytesLength;
-    if (len != null && len > 0) return len;
+    if (len != null) return len;
     try {
       return await xFile.length();
     } catch (_) {
