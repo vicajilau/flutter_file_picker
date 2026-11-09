@@ -523,14 +523,14 @@ class FilePickerWindows extends FilePickerPlatform {
           pattern: '*.bmp;*.gif;*.jpeg;*.jpg;*.png;*.webp',
         ),
       ],
+      // Windows displays only the active filter, so separate image/video
+      // filters cannot show both kinds together.
       FileType.media => const [
         (
-          name: 'Videos (*.avi,*.flv,*.mkv,*.mov,*.mp4,*.mpeg,*.webm,*.wmv)',
-          pattern: '*.avi;*.flv;*.mkv;*.mov;*.mp4;*.mpeg;*.webm;*.wmv',
-        ),
-        (
-          name: 'Images (*.bmp,*.gif,*.jpeg,*.jpg,*.png)',
-          pattern: '*.bmp;*.gif;*.jpeg;*.jpg;*.png',
+          name: 'Images and videos',
+          pattern:
+              '*.avi;*.bmp;*.flv;*.gif;*.jpeg;*.jpg;*.mkv;*.mov;'
+              '*.mp4;*.mpeg;*.png;*.webm;*.webp;*.wmv',
         ),
       ],
       FileType.video => const [
