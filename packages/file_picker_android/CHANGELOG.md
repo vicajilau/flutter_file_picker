@@ -1,3 +1,8 @@
+## 2.1.4
+
+- Fixed `allowedExtensions` in upper case, such as `CSV`, missing the `text/csv` filter that Google Drive needs.
+- Fixed `saveFile()` not recognizing an upper case extension with an `I`, such as `backup.ZIP`, on devices set to Turkish.
+
 ## 2.1.3
 
 - Fixed picks and saves that never completed, leaving every later pick failing with `already_active`, when the picker or the save dialog ended with an unexpected result code, when a save came back without a location, or when a pick had no type. They now fail with `unknown_result` or `invalid_type`.
