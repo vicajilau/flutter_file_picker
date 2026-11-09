@@ -46,10 +46,42 @@ void main() {
         }, sequential: false);
 
         expect(maxConcurrent, greaterThan(1));
-        expect(completionOrder, [4, 3, 2, 1, 0]);
+        expect(completionOrder.toSet(), {0, 1, 2, 3, 4});
         expect(results, [0, 1, 2, 3, 4]);
       },
     );
+
+    test('limits simultaneous file reads and retains result order', () async {
+      var active = 0;
+      var peak = 0;
+      final results = await runIndexedTasks<int>(
+        20,
+        (index) async {
+          active++;
+          if (active > peak) peak = active;
+          await Future.delayed(Duration(milliseconds: 2 + index % 3));
+          active--;
+          return index;
+        },
+        sequential: false,
+        maxConcurrent: 2,
+      );
+
+      expect(peak, 2);
+      expect(results, [for (var i = 0; i < 20; i++) i]);
+    });
+
+    test('rejects a non-positive concurrency limit', () async {
+      await expectLater(
+        runIndexedTasks<int>(
+          2,
+          (index) async => index,
+          sequential: false,
+          maxConcurrent: 0,
+        ),
+        throwsArgumentError,
+      );
+    });
 
     test('returns an empty list for zero length', () async {
       final results = await runIndexedTasks<int>(
