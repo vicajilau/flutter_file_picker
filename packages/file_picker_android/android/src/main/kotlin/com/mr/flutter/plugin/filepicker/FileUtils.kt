@@ -188,8 +188,10 @@ object FileUtils {
     fun FilePickerDelegate.startFileExplorer() {
         val intent: Intent
 
-        // Temporary fix, remove this null-check after Flutter Engine 1.14 has landed on stable
+        // Every pick sets a type, but answer instead of leaving the Dart call
+        // waiting forever if one ever does not.
         if (type == null) {
+            finishWithError("invalid_type", "No file type was given for the pick.")
             return
         }
 

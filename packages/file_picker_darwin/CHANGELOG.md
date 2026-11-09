@@ -5,6 +5,10 @@
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0. `skipEntitlementsChecks()` is no longer an override, since the platform interface and `file_picker` 14.0.0 no longer have it. Call it on `FilePickerDarwin` directly. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 - **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41, Dart 3.11 and macOS 10.15. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
+## 2.4.2
+
+- Fixed `onFileSaving` staying on `picking` when saving fails, and an error of the status stream escaping as an uncaught error.
+
 ## 2.4.1
 
 - Fixed iOS pickers getting stuck in `multiple_request` when the picker is swiped away while still appearing. [#2291](https://github.com/vicajilau/flutter_file_picker/issues/2291)

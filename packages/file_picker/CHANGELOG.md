@@ -11,6 +11,10 @@
 - **BREAKING CHANGE**: Removed `FilePicker.skipEntitlementsChecks()`. Platform specific APIs now only live in their platform package, so call `FilePickerDarwin.skipEntitlementsChecks()` from `package:file_picker_darwin` instead. See the migration guide. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 - **BREAKING CHANGE**: Removed the `type` and `allowedExtensions` parameters of `FilePicker.saveFile()`, deprecated since 13.2.0. They never had any effect. [#2278](https://github.com/vicajilau/flutter_file_picker/pull/2278)
 
+## 13.3.2
+
+- Requires `android_file_picker` 2.1.3 and `file_picker_darwin` 2.4.2, with fixes for Android picks that could never complete and for `onFileSaving` when saving fails.
+
 ## 13.3.1
 
 - Raised the minimum versions of the platform implementations to the ones with the latest fixes, so updating `file_picker` also brings them in even when a lockfile pins older ones.
