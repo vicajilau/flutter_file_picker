@@ -1,3 +1,8 @@
+## 2.5.0
+
+- Added the `FlutterFramework` dependency to `Package.swift`, which Swift Package Manager builds warn about and future Flutter versions will require. It was lost when the Darwin code moved into this package. [#2308](https://github.com/vicajilau/flutter_file_picker/issues/2308)
+- Requires Flutter 3.41 and Dart 3.11, the first versions that provide `FlutterFramework` to plugins.
+
 ## 2.4.2
 
 - Fixed `onFileSaving` staying on `picking` when saving fails, and an error of the status stream escaping as an uncaught error.
