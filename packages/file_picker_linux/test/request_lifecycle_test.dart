@@ -32,6 +32,33 @@ class _FailingChooser extends OrgFreedesktopPortalFileChooser {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('multiple pick reports done and preserves a portal error', () async {
+    final client = DBusClient(DBusAddress('unix:path=/unused'));
+    addTearDown(client.close);
+    final picker = FilePickerLinux(
+      client: client,
+      xdpChooser: _FailingChooser(client),
+    );
+    final statuses = <FilePickerStatus>[];
+
+    await expectLater(
+      picker.pickFiles(onFileLoading: statuses.add),
+      throwsStateError,
+    );
+    expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+  });
+
+  test('directory preserves a portal error', () async {
+    final client = DBusClient(DBusAddress('unix:path=/unused'));
+    addTearDown(client.close);
+    final picker = FilePickerLinux(
+      client: client,
+      xdpChooser: _FailingChooser(client),
+    );
+
+    await expectLater(picker.getDirectoryPath(), throwsStateError);
+  });
+
   test('pick reports done and preserves a portal error', () async {
     final client = DBusClient(DBusAddress('unix:path=/unused'));
     addTearDown(client.close);
