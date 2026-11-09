@@ -20,6 +20,8 @@ class FilePickerLinux extends FilePickerPlatform {
   }
 
   static const String destination = 'org.freedesktop.portal.Desktop';
+  static int _nextRequestToken = 0;
+
   DBusClient? _client;
   OrgFreedesktopPortalFileChooser? _xdpChooser;
 
@@ -103,21 +105,26 @@ class FilePickerLinux extends FilePickerPlatform {
     int compressionQuality = 0,
     LinuxOptions linuxOptions = const FilePickerLinuxOptions(),
   }) async {
-    final options = resolveOptions(linuxOptions);
+    onFileLoading?.call(FilePickerStatus.picking);
+    try {
+      final options = resolveOptions(linuxOptions);
 
-    final replyPath = await xdpChooser.callOpenFile(
-      formatParentWindow(options.parentWindow),
-      dialogTitle ?? "flutter picker",
-      openFileOptions(
-        options,
-        allowMultiple: allowMultiple,
-        filter: Filter(type, allowedExtensions),
-        initialDirectory: initialDirectory,
-      ),
-    );
+      final replyPath = await xdpChooser.callOpenFile(
+        formatParentWindow(options.parentWindow),
+        dialogTitle ?? "flutter picker",
+        openFileOptions(
+          options,
+          allowMultiple: allowMultiple,
+          filter: Filter(type, allowedExtensions),
+          initialDirectory: initialDirectory,
+        ),
+      );
 
-    final paths = await _awaitPaths(replyPath) ?? [];
-    return [for (final path in paths) LinuxPlatformFile.fromPath(path)];
+      final paths = await _awaitPaths(replyPath) ?? [];
+      return [for (final path in paths) LinuxPlatformFile.fromPath(path)];
+    } finally {
+      onFileLoading?.call(FilePickerStatus.done);
+    }
   }
 
   @override
@@ -168,27 +175,32 @@ class FilePickerLinux extends FilePickerPlatform {
     LinuxOptions linuxOptions = const FilePickerLinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    final options = resolveOptions(linuxOptions);
+    onFileSaving?.call(FilePickerStatus.picking);
+    try {
+      final options = resolveOptions(linuxOptions);
 
-    final replyPath = await xdpChooser.callSaveFile(
-      formatParentWindow(options.parentWindow),
-      dialogTitle ?? "flutter picker",
-      saveFileOptions(
-        options,
-        fileName: fileName,
-        initialDirectory: initialDirectory,
-      ),
-    );
+      final replyPath = await xdpChooser.callSaveFile(
+        formatParentWindow(options.parentWindow),
+        dialogTitle ?? "flutter picker",
+        saveFileOptions(
+          options,
+          fileName: fileName,
+          initialDirectory: initialDirectory,
+        ),
+      );
 
-    final savedFilePath = (await _awaitPaths(replyPath))?.firstOrNull;
+      final savedFilePath = (await _awaitPaths(replyPath))?.firstOrNull;
 
-    if (savedFilePath != null) {
-      final file = File(savedFilePath);
-      await file.writeAsBytes(bytes);
-      return Uri.file(savedFilePath);
+      if (savedFilePath != null) {
+        final file = File(savedFilePath);
+        await file.writeAsBytes(bytes);
+        return Uri.file(savedFilePath);
+      }
+
+      return null;
+    } finally {
+      onFileSaving?.call(FilePickerStatus.done);
     }
-
-    return null;
   }
 
   /// Waits for the portal's response to the request at [replyPath] and
@@ -212,7 +224,7 @@ class FilePickerLinux extends FilePickerPlatform {
     String? initialDirectory,
   ) {
     return {
-      'handle_token': DBusString('flutter_picker'),
+      'handle_token': DBusString('flutter_picker_${_nextRequestToken++}'),
       'modal': DBusBoolean(options.lockParentWindow),
       if (initialDirectory != null)
         // The portal expects a null terminated byte string.
