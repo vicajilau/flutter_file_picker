@@ -130,10 +130,7 @@ class FilePickerWeb extends FilePickerPlatform {
         ? webOptions
         : const FilePickerWebOptions();
 
-    if (_activeSession != null) {
-      throw StateError('A file picker is already active.');
-    }
-
+    final previous = _activeSession;
     final session = WebFileInputSession(
       target: _target,
       accept: _fileType(type, allowedExtensions),
@@ -145,10 +142,12 @@ class FilePickerWeb extends FilePickerPlatform {
 
     _activeSession = session;
     try {
+      previous?.cancel();
+      if (!identical(_activeSession, session)) return [];
       final List<PlatformFile>? files = await session.start();
       return files ?? <PlatformFile>[];
     } finally {
-      _activeSession = null;
+      if (identical(_activeSession, session)) _activeSession = null;
     }
   }
 

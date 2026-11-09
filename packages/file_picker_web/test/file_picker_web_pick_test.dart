@@ -38,19 +38,81 @@ void main() {
       File([utf8.encode(content).toJS].toJS, name);
 
   test(
-    'overlapping picks fail without orphaning the original request',
+    'three picks supersede old sessions without browser cancel events',
     () async {
-      final original = FilePickerPlatform.instance.pickFiles();
+      const options = FilePickerWebOptions(cancelUploadOnWindowBlur: false);
+      final statuses = List.generate(3, (_) => <FilePickerStatus>[]);
+      HTMLInputElement input() =>
+          document.querySelector('flt-file-picker-inputs input')!
+              as HTMLInputElement;
+      final first = FilePickerPlatform.instance.pickFiles(
+        webOptions: options,
+        onFileLoading: statuses[0].add,
+      );
+      final firstInput = input();
+      final second = FilePickerPlatform.instance.pickFiles(
+        webOptions: options,
+        onFileLoading: statuses[1].add,
+      );
+      final secondInput = input();
+      expect(await first, isEmpty);
+      final third = FilePickerPlatform.instance.pickFiles(
+        webOptions: options,
+        onFileLoading: statuses[2].add,
+      );
+      final thirdInput = input();
+      expect(await second.timeout(const Duration(seconds: 2)), isEmpty);
+      expect(firstInput.isConnected, isFalse);
+      expect(secondInput.isConnected, isFalse);
+      firstInput.dispatchEvent(Event('cancel'));
+      secondInput.dispatchEvent(Event('change'));
+      expect(input(), thirdInput);
+      thirdInput.dispatchEvent(Event('cancel'));
+      expect(await third, isEmpty);
+      for (final values in statuses) {
+        expect(values, [FilePickerStatus.picking, FilePickerStatus.done]);
+      }
+    },
+  );
+
+  test('invalid replacement leaves the current picker usable', () async {
+    final pending = FilePickerPlatform.instance.pickFiles(
+      webOptions: const FilePickerWebOptions(cancelUploadOnWindowBlur: false),
+    );
+    final input =
+        document.querySelector('flt-file-picker-inputs input')!
+            as HTMLInputElement;
+    await expectLater(
+      FilePickerPlatform.instance.pickFiles(type: FileType.custom),
+      throwsArgumentError,
+    );
+    expect(document.querySelector('flt-file-picker-inputs input'), input);
+    final transfer = DataTransfer();
+    transfer.items.add(fileWith(name: 'kept.txt', content: 'kept'));
+    input.files = transfer.files;
+    input.dispatchEvent(Event('change'));
+    expect((await pending).single.name, 'kept.txt');
+  });
+
+  test(
+    'a replacement started by done is not orphaned by the outer request',
+    () async {
+      Future<List<PlatformFile>>? replacement;
+      final first = FilePickerPlatform.instance.pickFiles(
+        onFileLoading: (status) {
+          if (status == FilePickerStatus.done) {
+            replacement = FilePickerPlatform.instance.pickFiles();
+          }
+        },
+      );
+      final second = FilePickerPlatform.instance.pickFiles();
+      expect(await first, isEmpty);
+      expect(await second.timeout(const Duration(seconds: 2)), isEmpty);
       final input =
           document.querySelector('flt-file-picker-inputs input')!
               as HTMLInputElement;
-
-      await expectLater(
-        FilePickerPlatform.instance.pickFiles(),
-        throwsStateError,
-      );
       input.dispatchEvent(Event('cancel'));
-      expect(await original, isEmpty);
+      expect(await replacement!, isEmpty);
     },
   );
 

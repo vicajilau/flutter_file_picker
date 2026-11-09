@@ -1,6 +1,7 @@
 @TestOn('browser')
 library;
 
+import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
@@ -135,4 +136,45 @@ void main() {
 
     await expectLater(result, throwsStateError);
   });
+
+  for (final fail in [false, true]) {
+    test(
+      'superseded session ignores a late ${fail ? "error" : "result"}',
+      () async {
+        final processing = Completer<List<PlatformFile>>();
+        final statuses = <FilePickerStatus>[];
+        final session = WebFileInputSession(
+          target: target,
+          accept: '',
+          allowMultiple: false,
+          webOptions: const FilePickerWebOptions(
+            cancelUploadOnWindowBlur: false,
+          ),
+          onFileLoading: statuses.add,
+          processFiles: (_, _) => processing.future,
+        );
+        final result = session.start();
+        final oldInput = attachedInput();
+        selectFile(oldInput, 'old.txt');
+        oldInput.dispatchEvent(Event('change'));
+        session.cancel();
+        session.cancel();
+        expect(await result, isNull);
+        final next = createSession();
+        final nextResult = next.start();
+        final nextInput = attachedInput();
+        if (fail) {
+          processing.completeError(StateError('late failure'));
+        } else {
+          processing.complete([]);
+        }
+        await pumpEventQueue();
+        expect(attachedInput(), nextInput);
+        expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+        next.cancel();
+        expect(await nextResult, isNull);
+        expect(target.childNodes.length, 0);
+      },
+    );
+  }
 }

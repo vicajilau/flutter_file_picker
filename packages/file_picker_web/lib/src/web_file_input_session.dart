@@ -14,10 +14,7 @@ typedef ProcessFilesCallback =
       FilePickerWebOptions options,
     );
 
-/// Internal helper class managing the life cycle of an HTML file input session on the web.
-///
-/// Encapsulates DOM element creation, event listening (`change`, `cancel`, `focus`),
-/// cancel timeout handling, and conversion of selected files.
+/// Manages one attached file input and its selection/cancellation completion.
 @internal
 class WebFileInputSession {
   /// Creates a new [WebFileInputSession] instance.
@@ -51,15 +48,12 @@ class WebFileInputSession {
   final Completer<List<PlatformFile>?> _completer = Completer();
   bool _eventTriggered = false;
 
-  // Kept attached to [target] (and referenced here) for the whole session.
-  // WebKit does not deliver the `change` event to a file input that is not in
-  // the document, which left the returned future hanging on Safari.
+  // WebKit requires the input to remain attached while the picker is open
+  // or its change event may never arrive.
   HTMLInputElement? _input;
 
-  // Cached once and reused for both addEventListener and removeEventListener.
-  // Function.toJS creates a new JS function object on every call, so passing
-  // freshly-created ones to removeEventListener would never actually match
-  // the listener added earlier, silently leaving it attached forever.
+  // Cache JS function identities so removeEventListener can match the
+  // exact listeners registered earlier.
   late final JSFunction _onFileSelectionListener = _onFileSelection.toJS;
   late final JSFunction _onCancelListener = _onCancel.toJS;
 
@@ -89,6 +83,12 @@ class WebFileInputSession {
     return _completer.future;
   }
 
+  /// Completes a picker superseded by a newer request without a browser event.
+  void cancel() {
+    _eventTriggered = true;
+    _finish(null);
+  }
+
   void _onFileSelection(Event e) async {
     if (_eventTriggered) return;
     _eventTriggered = true;
@@ -105,9 +105,8 @@ class WebFileInputSession {
       if (_eventTriggered) return;
       _eventTriggered = true;
 
-      // Safari can fire the window `focus` event well before `change` once
-      // the dialog closes. If the input already holds a selection, use it
-      // instead of reporting a cancellation.
+      // Safari may send focus before change; keep an existing selection
+      // instead of reporting cancellation.
       final input = _input;
       final files = input?.files;
       _cleanupListeners(input);
@@ -117,12 +116,10 @@ class WebFileInputSession {
 
   Future<void> _complete(FileList? files) async {
     _removeInput();
+    if (_completer.isCompleted) return;
 
     if (files == null) {
-      onFileLoading?.call(FilePickerStatus.done);
-      if (!_completer.isCompleted) {
-        _completer.complete(null);
-      }
+      _finish(null);
       return;
     }
 
@@ -132,17 +129,27 @@ class WebFileInputSession {
     } catch (error, stackTrace) {
       // Without this the error escapes the event listener uncaught and the
       // returned future never completes.
-      onFileLoading?.call(FilePickerStatus.done);
-      if (!_completer.isCompleted) {
-        _completer.completeError(error, stackTrace);
-      }
+      _finish(null, error: error, stackTrace: stackTrace);
       return;
     }
 
-    onFileLoading?.call(FilePickerStatus.done);
-    if (!_completer.isCompleted) {
-      _completer.complete(pickedFiles);
+    _finish(pickedFiles);
+  }
+
+  void _finish(
+    List<PlatformFile>? files, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    if (_completer.isCompleted) return;
+    _cleanupListeners(_input);
+    _removeInput();
+    if (error == null) {
+      _completer.complete(files);
+    } else {
+      _completer.completeError(error, stackTrace);
     }
+    onFileLoading?.call(FilePickerStatus.done);
   }
 
   void _removeInput() {
