@@ -1,6 +1,5 @@
 import 'dart:ffi';
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
@@ -82,30 +81,33 @@ class FilePickerWindows extends FilePickerPlatform {
     int compressionQuality = 0,
     WindowsOptions windowsOptions = const FilePickerWindowsOptions(),
   }) async {
-    final resolved = _resolveWindowsOptions(windowsOptions);
+    onFileLoading?.call(FilePickerStatus.picking);
+    try {
+      final resolved = _resolveWindowsOptions(windowsOptions);
 
-    final port = ReceivePort();
-    await Isolate.spawn(
-      _callPickFiles,
-      OpenSaveFileArgs(
-        port: port.sendPort,
-        dialogTitle: dialogTitle,
-        initialDirectory: initialDirectory,
-        type: type,
-        allowedExtensions: allowedExtensions,
-        allowMultiple: allowMultiple,
-        lockParentWindow: resolved.lockParentWindow,
-        parentWindowHandle: resolved.parentWindowHandle,
-        acceptLabel: resolved.acceptLabel,
-      ),
-    );
+      final fileNames =
+          await compute(
+            _callPickFiles,
+            OpenSaveFileArgs(
+              dialogTitle: dialogTitle,
+              initialDirectory: initialDirectory,
+              type: type,
+              allowedExtensions: allowedExtensions,
+              allowMultiple: allowMultiple,
+              lockParentWindow: resolved.lockParentWindow,
+              parentWindowHandle: resolved.parentWindowHandle,
+              acceptLabel: resolved.acceptLabel,
+            ),
+          ) ??
+          <String>[];
+      if (fileNames.isEmpty) {
+        return [];
+      }
 
-    final fileNames = (await port.first) as List<String>? ?? [];
-    if (fileNames.isEmpty) {
-      return [];
+      return [for (final path in fileNames) WindowsPlatformFile.fromPath(path)];
+    } finally {
+      onFileLoading?.call(FilePickerStatus.done);
     }
-
-    return [for (final path in fileNames) WindowsPlatformFile.fromPath(path)];
   }
 
   @override
@@ -231,31 +233,32 @@ class FilePickerWindows extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    final resolved = _resolveWindowsOptions(windowsOptions);
+    onFileSaving?.call(FilePickerStatus.picking);
+    try {
+      final resolved = _resolveWindowsOptions(windowsOptions);
 
-    final port = ReceivePort();
-    await Isolate.spawn(
-      _callSaveFile,
-      OpenSaveFileArgs(
-        port: port.sendPort,
-        defaultFileName: fileName,
-        dialogTitle: dialogTitle,
-        initialDirectory: initialDirectory,
-        lockParentWindow: resolved.lockParentWindow,
-        confirmOverwrite: true,
-        parentWindowHandle: resolved.parentWindowHandle,
-        acceptLabel: resolved.acceptLabel,
-      ),
-    );
+      final savedFilePath = await compute(
+        _callSaveFile,
+        OpenSaveFileArgs(
+          defaultFileName: fileName,
+          dialogTitle: dialogTitle,
+          initialDirectory: initialDirectory,
+          lockParentWindow: resolved.lockParentWindow,
+          confirmOverwrite: true,
+          parentWindowHandle: resolved.parentWindowHandle,
+          acceptLabel: resolved.acceptLabel,
+        ),
+      );
+      if (savedFilePath != null) {
+        final file = File(savedFilePath);
+        await file.writeAsBytes(bytes);
+        return Uri.file(savedFilePath);
+      }
 
-    final savedFilePath = (await port.first) as String?;
-    if (savedFilePath != null) {
-      final file = File(savedFilePath);
-      await file.writeAsBytes(bytes);
-      return Uri.file(savedFilePath);
+      return null;
+    } finally {
+      onFileSaving?.call(FilePickerStatus.done);
     }
-
-    return null;
   }
 
   /// Opens the [IFileOpenDialog] to select one or more files.
@@ -543,14 +546,12 @@ class FilePickerWindows extends FilePickerPlatform {
   }
 
   /// Top-level isolate callback to invoke [_pickFiles].
-  static void _callPickFiles(OpenSaveFileArgs args) {
-    final impl = FilePickerWindows();
-    args.port.send(impl._pickFiles(args));
+  static List<String>? _callPickFiles(OpenSaveFileArgs args) {
+    return FilePickerWindows()._pickFiles(args);
   }
 
   /// Top-level isolate callback to invoke [_saveFile].
-  static void _callSaveFile(OpenSaveFileArgs args) {
-    final impl = FilePickerWindows();
-    args.port.send(impl._saveFile(args));
+  static String? _callSaveFile(OpenSaveFileArgs args) {
+    return FilePickerWindows()._saveFile(args);
   }
 }
