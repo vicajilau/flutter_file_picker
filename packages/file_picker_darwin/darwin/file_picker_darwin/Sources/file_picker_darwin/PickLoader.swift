@@ -121,8 +121,8 @@ struct PickLoader {
         ]
     }
 
-    /// Unique subdirectories prevent concurrent items with the same name from
-    /// overwriting each other. Copy sources the app does not own; move the rest.
+    /// Same-name Photos files can delete another item's in-flight copy target.
+    /// UUID directories under the picker root and propagated errors prevent false cancellation.
     func store(_ sourceURL: URL, copying: Bool) throws -> URL {
         let directoryURL = temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

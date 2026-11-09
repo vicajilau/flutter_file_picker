@@ -357,7 +357,9 @@ final class IOSFilePickerHandler: NSObject,
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             do {
                 guard let data = bytes?.data else {
-                    throw CocoaError(.fileWriteInvalidFileName)
+                    throw NSError(
+                        domain: "file_picker", code: 1,
+                        userInfo: [NSLocalizedDescriptionKey: "File bytes are missing."])
                 }
                 try FileManager.default.createDirectory(
                     at: tempFile.deletingLastPathComponent(),
