@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 @available(iOS 14.0, macOS 11.0, *)
 struct PickLoader {
     /// Where picked files are stored, each one in its own subdirectory.
-    var temporaryDirectory = URL(fileURLWithPath: NSTemporaryDirectory())
+    var temporaryDirectory = PickerTemporaryFiles.root()
 
     /// Loads and copies each of `items`, then calls `completion` on `queue`
     /// with the ones that loaded, in the order of `items`, and why the others
@@ -121,34 +121,8 @@ struct PickLoader {
         ]
     }
 
-    /// Moves a picked item into its own freshly created subdirectory of
-    /// `temporaryDirectory`, or copies it when `copying` is set, for sources
-    /// the app does not own.
-    ///
-    /// The destination used to be `NSTemporaryDirectory()` plus the source's
-    /// `lastPathComponent`, which is not unique: two picked assets can share a
-    /// file name. Photos edited in the Photos app are exported under a fixed
-    /// name, and Live Photos arrive as `.pvt` packages. These copies also run
-    /// concurrently, because `loadFileRepresentation` calls its completion
-    /// handler on an arbitrary queue, once per selected item. Colliding names
-    /// therefore raced:
-    ///
-    ///     A: fileExists? no  -> starts copying to /tmp/NAME
-    ///     B: fileExists? yes -> removes /tmp/NAME, deleting A's in-flight copy
-    ///     A: copyItem throws -> returns nil
-    ///     B: copyItem throws -> returns nil
-    ///
-    /// Both items are then dropped by the `compactMap` over `resolved`, and
-    /// when every item loses the race the picker calls back with `nil`, which
-    /// reaches Dart as an empty list. That is indistinguishable from the user
-    /// cancelling, so the failure is silent.
-    ///
-    /// Giving each item its own directory removes the shared destination, so
-    /// the copies can no longer observe or delete each other. The existence
-    /// check is gone with it, the directory is new every time.
-    ///
-    /// Throws the file system error, such as a full disk, so the pick can
-    /// report why the item could not be loaded.
+    /// Unique subdirectories prevent concurrent items with the same name from
+    /// overwriting each other. Copy sources the app does not own; move the rest.
     func store(_ sourceURL: URL, copying: Bool) throws -> URL {
         let directoryURL = temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

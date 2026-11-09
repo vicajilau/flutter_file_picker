@@ -350,20 +350,20 @@ final class IOSFilePickerHandler: NSObject,
         isSaveFile = true
         let fileName = (arguments["fileName"] as? String) ?? ""
         let bytes = arguments["bytes"] as? FlutterStandardTypedData
-        let tempFile = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent(fileName)
+        let tempFile = PickerTemporaryFiles.uniqueExportURL(fileName: fileName)
 
         eventSink?(true)
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             do {
-                let fileManager = FileManager.default
-                if fileManager.fileExists(atPath: tempFile.path) {
-                    try fileManager.removeItem(at: tempFile)
+                guard let data = bytes?.data else {
+                    throw CocoaError(.fileWriteInvalidFileName)
                 }
-                if let data = bytes?.data {
-                    try data.write(to: tempFile, options: .atomic)
-                }
+                try FileManager.default.createDirectory(
+                    at: tempFile.deletingLastPathComponent(),
+                    withIntermediateDirectories: true
+                )
+                try data.write(to: tempFile, options: .atomic)
             } catch {
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
@@ -412,14 +412,8 @@ final class IOSFilePickerHandler: NSObject,
     }
 
     private func clearTemporaryFiles() -> Bool {
-        let tmpDirectory = NSTemporaryDirectory()
-
         do {
-            let files = try FileManager.default.contentsOfDirectory(atPath: tmpDirectory)
-            for file in files {
-                let filePath = (tmpDirectory as NSString).appendingPathComponent(file)
-                try FileManager.default.removeItem(atPath: filePath)
-            }
+            try PickerTemporaryFiles.clear()
             return true
         } catch {
             return false
