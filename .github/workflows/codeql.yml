@@ -1,0 +1,94 @@
+name: CodeQL
+
+# Replaces GitHub's default CodeQL setup, which cannot build the Swift code.
+#
+# The default setup builds packages/file_picker_darwin/darwin/file_picker_darwin
+# on its own with xcodebuild. Its Package.swift depends on
+# ../FlutterFramework, a package Flutter only generates while it builds an
+# app (#2308), so that build fails. Here Swift is analyzed while Flutter
+# builds the example app instead, which provides it.
+#
+# GitHub rejects results from a workflow while the default setup is enabled,
+# so it has to stay disabled in Settings > Code security.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main, 'release/**' ]
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ${{ matrix.language == 'swift' && 'macos-latest' || 'ubuntu-latest' }}
+    timeout-minutes: ${{ matrix.language == 'swift' && 60 || 20 }}
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+          - language: c-cpp
+            build-mode: none
+          - language: swift
+            build-mode: manual
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        if: matrix.language == 'swift'
+        with:
+          channel: stable
+          cache: true
+
+      # Flutter only prepares the Xcode projects here, which also generates
+      # the FlutterFramework package. The Swift build itself has to run
+      # xcodebuild directly: when the flutter tool starts it through xcrun,
+      # macOS drops the tracing CodeQL relies on, and CodeQL sees no Swift.
+      - name: Prepare the example app for macOS and iOS
+        if: matrix.language == 'swift'
+        working-directory: example
+        run: |
+          flutter config --enable-swift-package-manager
+          flutter pub get
+          flutter build macos --debug --config-only
+          flutter build ios --debug --simulator --config-only
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      # The Swift sources are shared by iOS and macOS, with parts behind
+      # `#if os(iOS)` and `#if os(macOS)`, so both are built to analyze all
+      # of them.
+      - name: Build the example app for macOS and iOS
+        if: matrix.language == 'swift'
+        working-directory: example
+        run: |
+          xcodebuild build \
+            -workspace macos/Runner.xcworkspace -scheme Runner -configuration Debug \
+            -destination 'generic/platform=macOS' CODE_SIGNING_ALLOWED=NO
+          xcodebuild build \
+            -workspace ios/Runner.xcworkspace -scheme Runner -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
