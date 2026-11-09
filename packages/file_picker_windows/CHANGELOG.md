@@ -4,6 +4,10 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` take the new `darwinOptions` parameter of `file_picker_platform_interface` 5.0.0. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0, which no longer has `skipEntitlementsChecks()`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 
+## 2.0.2
+
+- Fixed `lengthSync()` returning `null` for a file made from empty bytes, and `length()` reading it from disk instead. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
+
 ## 2.0.1
 
 - Fixed `pickFileAndDirectoryPaths()` returning URI paths instead of Windows paths. [#2225](https://github.com/vicajilau/flutter_file_picker/issues/2225)

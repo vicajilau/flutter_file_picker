@@ -43,6 +43,16 @@ void main() {
       },
     );
 
+    test('a known zero length is kept', () async {
+      final file = WindowsPlatformFile(
+        name: 'empty.txt',
+        uri: Uri.file(r'C:\Users\Test\empty.txt', windows: true),
+        bytesLength: 0,
+      );
+      expect(file.lengthSync(), 0);
+      expect(await file.length(), 0);
+    });
+
     test('FilePickerWindowsOptions contains expected properties', () {
       const options = FilePickerWindowsOptions(
         parentWindowHandle: 12345,

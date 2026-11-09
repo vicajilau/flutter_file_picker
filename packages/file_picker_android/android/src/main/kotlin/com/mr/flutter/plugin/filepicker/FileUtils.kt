@@ -160,12 +160,8 @@ object FileUtils {
         uri: Uri,
         bytes: ByteArray?
     ): Uri {
-        context.contentResolver.openOutputStream(uri)?.use { output ->
-            bytes?.let {
-                output.write(it)
-            }
-        }
-
+        val data = bytes ?: throw IOException("No file bytes were provided to the save operation.")
+        SaveFileWriter.write(context.contentResolver.openOutputStream(uri), data)
         return uri
     }
 

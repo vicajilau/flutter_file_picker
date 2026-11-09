@@ -40,6 +40,16 @@ void main() {
       expect(withLength.lengthSync(), equals(3));
     });
 
+    test('a known zero length is kept', () async {
+      final file = LinuxPlatformFile(
+        name: 'empty.txt',
+        uri: Uri.file('/tmp/empty.txt'),
+        bytesLength: 0,
+      );
+      expect(file.lengthSync(), 0);
+      expect(await file.length(), 0);
+    });
+
     test('Filter constructs filters correctly', () {
       final filter = Filter(FileType.custom, ['png', 'jpg']);
       expect(filter.info.containsKey('Custom'), isTrue);
