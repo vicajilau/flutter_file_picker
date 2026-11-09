@@ -39,6 +39,15 @@ void main() {
       expect(withBytes.lengthSync(), equals(3));
     });
 
+    test('empty in-memory files have a known zero length', () async {
+      final file = LinuxPlatformFile.fromPath(
+        '/tmp/empty.txt',
+        bytes: Uint8List(0),
+      );
+      expect(file.lengthSync(), 0);
+      expect(await file.length(), 0);
+    });
+
     test('Filter constructs filters correctly', () {
       final filter = Filter(FileType.custom, ['png', 'jpg']);
       expect(filter.info.containsKey('Custom'), isTrue);

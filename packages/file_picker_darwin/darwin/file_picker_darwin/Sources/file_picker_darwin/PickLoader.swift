@@ -170,13 +170,14 @@ struct PickLoader {
     /// Describes a stored file for Dart.
     func fileInfo(for fileURL: URL) throws -> [String: Any] {
         let values = try fileURL.resourceValues(forKeys: [.fileSizeKey])
-        let size = values.fileSize ?? 0
+        let size = values.fileSize
 
-        return [
+        var info: [String: Any] = [
             "path": fileURL.path,
             "identifier": fileURL.absoluteString,
             "name": fileURL.lastPathComponent,
-            "size": size,
         ]
+        if let size { info["size"] = size }
+        return info
     }
 }

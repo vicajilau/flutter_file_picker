@@ -35,6 +35,15 @@ void main() {
       expect(file.lengthSync(), isNull);
     });
 
+    test('a reported empty file needs no size lookup', () async {
+      final file = DarwinPlatformFile.fromMap({
+        'path': '/tmp/empty.txt',
+        'size': 0,
+      });
+      expect(file.lengthSync(), 0);
+      expect(await file.length(), 0);
+    });
+
     test(
       'pickFile and pickFiles send every asset representation mode',
       () async {
