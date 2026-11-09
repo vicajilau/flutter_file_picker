@@ -642,27 +642,18 @@ object FileUtils {
     }
 
     /**
-     * Calculates the largest power-of-two [BitmapFactory.Options.inSampleSize]
-     * that keeps both dimensions at least as large as the requested size, as
-     * recommended by https://developer.android.com/topic/performance/graphics/load-bitmap.
+     * Calculates the smallest power-of-two [BitmapFactory.Options.inSampleSize]
+     * that bounds both decoded dimensions, including highly asymmetric images.
      */
     private fun calculateInSampleSize(
         options: BitmapFactory.Options,
         reqWidth: Int,
         reqHeight: Int
-    ): Int {
-        val height = options.outHeight
-        val width = options.outWidth
-        var inSampleSize = 1
-        if (height > reqHeight || width > reqWidth) {
-            val halfHeight = height / 2
-            val halfWidth = width / 2
-            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
-                inSampleSize *= 2
-            }
-        }
-        return inSampleSize
-    }
+    ): Int = ImageSampling.forMaximumDimension(
+        options.outWidth,
+        options.outHeight,
+        minOf(reqWidth, reqHeight)
+    )
 
     @Throws(IOException::class)
     private fun createImageFile(context: Context, compressFormat: Bitmap.CompressFormat): File {
