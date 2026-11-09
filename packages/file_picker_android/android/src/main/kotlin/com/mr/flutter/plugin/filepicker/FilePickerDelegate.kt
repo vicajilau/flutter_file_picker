@@ -85,7 +85,7 @@ class FilePickerDelegate(
                     mimeType = saveMimeType
                 )
                 Handler(Looper.getMainLooper()).post {
-                    finishWithSuccess(renamedUri.path)
+                    finishWithSuccess(renamedUri.toString())
                 }
             } catch (e: Exception) {
                 // Not only IOException: a SecurityException from the provider

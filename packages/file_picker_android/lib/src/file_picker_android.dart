@@ -263,7 +263,10 @@ class FilePickerAndroid extends FilePickerPlatform {
           });
 
       if (savedPath == null) return null;
-      return Uri.tryParse(savedPath) ?? Uri.file(savedPath);
+      final savedUri = Uri.tryParse(savedPath);
+      return savedUri != null && savedUri.hasScheme
+          ? savedUri
+          : Uri.file(savedPath);
     } finally {
       // Also when saving fails, so the app does not stay in the picking state.
       onFileSaving?.call(FilePickerStatus.done);

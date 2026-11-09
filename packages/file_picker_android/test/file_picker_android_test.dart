@@ -43,6 +43,65 @@ void main() {
       expect(file.path, equals('/tmp/test_file.txt'));
     });
 
+    test('AndroidPlatformFile uses original SAF URI when path is absent', () {
+      final file = AndroidPlatformFile.fromMap({
+        'name': 'book.pdf',
+        'identifier': 'content://com.android.providers.documents/document/42',
+      });
+      expect(
+        file.uri,
+        Uri.parse('content://com.android.providers.documents/document/42'),
+      );
+      expect(file.path, isNull);
+    });
+
+    test('AndroidPlatformFile supports an explicit URI-only result', () {
+      final file = AndroidPlatformFile.fromMap({
+        'name': 'book.pdf',
+        'uri': 'content://media/external/file/1',
+      });
+      expect(file.uri.scheme, 'content');
+    });
+
+    test('AndroidPlatformFile rejects an absent original URI', () {
+      expect(
+        () =>
+            AndroidPlatformFile.fromMap({'name': 'bad', 'identifier': 'null'}),
+        throwsArgumentError,
+      );
+    });
+
+    test('saveFile preserves content URIs and converts plain paths', () async {
+      final picker = FilePickerAndroid();
+      var value = 'content://com.android.providers.documents/document/42';
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(picker.methodChannel, (call) async {
+            expect(call.method, 'save');
+            return value;
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null),
+      );
+
+      final content = await picker.saveFile(
+        fileName: 'book.pdf',
+        bytes: Uint8List.fromList([1]),
+        mimeType: 'application/pdf',
+      );
+      expect(content?.scheme, 'content');
+      expect(content?.host, 'com.android.providers.documents');
+
+      value = '/storage/emulated/0/Download/book.pdf';
+      final local = await picker.saveFile(
+        fileName: 'book.pdf',
+        bytes: Uint8List.fromList([1]),
+        mimeType: 'application/pdf',
+      );
+      expect(local?.scheme, 'file');
+      expect(local, Uri.file(value));
+    });
+
     test('AndroidPlatformFile.lengthSync() reflects the reported size', () {
       final withSize = AndroidPlatformFile.fromMap({
         'path': '/tmp/test_file.txt',
