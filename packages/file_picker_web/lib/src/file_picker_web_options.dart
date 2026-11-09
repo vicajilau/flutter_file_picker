@@ -18,6 +18,10 @@ enum WebSaveFileMode {
 final class FilePickerWebOptions extends WebOptions {
   /// Whether to read each picked file into memory at pick time.
   ///
+  /// Defaults to false to avoid allocating the full payload of every selected
+  /// PDF, book or database just to return file names and metadata. Set to
+  /// true only if the application explicitly needs eager loading.
+  ///
   /// Files larger than 2 GB are never preloaded, since browsers cannot hold
   /// them in a single buffer. Their content can be read on demand through
   /// `PlatformFile.readAsBytes()` and `readAsByteStream()` instead.
@@ -57,7 +61,7 @@ final class FilePickerWebOptions extends WebOptions {
       'Picked files are read on demand by PlatformFile.readAsBytes() and '
       'readAsByteStream(). This option will be removed in file_picker v14.0.0.',
     )
-    this.withData = true,
+    this.withData = false,
     @Deprecated(
       'PlatformFile.readAsByteStream() already reads on demand in evenly '
       'sized chunks. This option will be removed in file_picker v14.0.0.',

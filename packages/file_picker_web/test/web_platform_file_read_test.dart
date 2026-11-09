@@ -17,6 +17,72 @@ void main() {
   WebPlatformFile fileAt(String url) =>
       WebPlatformFile(name: 'a.txt', uri: Uri.parse(url));
 
+  test(
+    'native browser File supports direct reads without an object URL',
+    () async {
+      final native = File([content.toJS].toJS, 'lazy.txt');
+      final file = WebPlatformFile(
+        name: native.name,
+        sourceFile: native,
+        bytesLength: native.size,
+      );
+
+      expect(file.hasCreatedObjectUrl, isFalse);
+      expect(await file.readAsBytes(), content);
+      final chunks = await file.readAsByteStream().toList();
+      expect(chunks.expand((chunk) => chunk).toList(), content);
+      expect(file.hasCreatedObjectUrl, isFalse);
+
+      final firstUri = file.uri;
+      expect(firstUri.scheme, 'blob');
+      expect(file.hasCreatedObjectUrl, isTrue);
+      file.releaseObjectUrl();
+      expect(file.hasCreatedObjectUrl, isFalse);
+      expect(await file.readAsBytes(), content);
+      final nextUri = file.uri;
+      expect(nextUri, isNot(firstUri));
+      file.releaseObjectUrl();
+    },
+  );
+
+  test('releasing a lazy URL preserves set membership and file identity', () {
+    final native = File([content.toJS].toJS, 'lazy.txt');
+    final file = WebPlatformFile(name: native.name, sourceFile: native);
+    final files = {file};
+    final initialHash = file.hashCode;
+    expect(file.hasCreatedObjectUrl, isFalse);
+    final firstUri = file.uri;
+    file.releaseObjectUrl();
+    expect(file.uri, isNot(firstUri));
+    expect(file.hashCode, initialHash);
+    expect(files.contains(file), isTrue);
+    expect(WebPlatformFile(name: native.name, sourceFile: native), file);
+    file.releaseObjectUrl();
+  });
+
+  test(
+    'explicit URI identity is symmetric and independent of source files',
+    () {
+      final native = File([content.toJS].toJS, 'lazy.txt');
+      final lazy = WebPlatformFile(name: native.name, sourceFile: native);
+      final uri = lazy.uri;
+      final explicit = WebPlatformFile(name: native.name, uri: uri);
+      final both = WebPlatformFile(
+        name: native.name,
+        uri: uri,
+        sourceFile: native,
+      );
+      expect(lazy == explicit, isFalse);
+      expect(explicit == lazy, isFalse);
+      expect(explicit, both);
+      expect(both, explicit);
+      expect(explicit.hashCode, both.hashCode);
+      lazy.releaseObjectUrl();
+      explicit.releaseObjectUrl();
+      expect(explicit.uri, uri);
+    },
+  );
+
   test('readAsBytes() reads a blob URL', () async {
     final url = createBlobUrl();
     addTearDown(() => URL.revokeObjectURL(url));

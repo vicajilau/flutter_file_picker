@@ -207,9 +207,11 @@ class FilePickerWeb extends FilePickerPlatform {
     return completer.future;
   }
 
-  /// Creates a [WebPlatformFile] from an HTML [File], resolving its `blob:` URI.
+  /// Creates a [WebPlatformFile] from an HTML [File].
   ///
-  /// The URI always points at the picked [file] itself, which avoids creating a copy.
+  /// The URL is created lazily only if the caller needs [PlatformFile.uri];
+  /// reading the file through its native browser [File] avoids an object URL
+  /// allocation and an extra fetch.
   WebPlatformFile _createWebPlatformFile({
     required File file,
     Uint8List? bytes,
@@ -217,7 +219,7 @@ class FilePickerWeb extends FilePickerPlatform {
   }) {
     return WebPlatformFile(
       name: file.name,
-      uri: Uri.parse(URL.createObjectURL(file)),
+      sourceFile: file,
       bytesLength: bytes != null ? bytes.length : file.size,
       bytes: bytes,
       readStream: readStream,

@@ -1,7 +1,21 @@
+import 'package:file_picker_web/src/file_picker_web_options.dart';
 import 'package:file_picker_web/src/preload_policy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('picker defaults to lazy file reads, while eager loading is opt-in', () {
+    const defaults = FilePickerWebOptions();
+    // ignore: deprecated_member_use_from_same_package
+    expect(defaults.withData, isFalse);
+    // ignore: deprecated_member_use_from_same_package
+    expect(shouldPreloadBytes(1024, withData: defaults.withData), isFalse);
+
+    // ignore: deprecated_member_use_from_same_package
+    const eager = FilePickerWebOptions(withData: true);
+    // ignore: deprecated_member_use_from_same_package
+    expect(shouldPreloadBytes(1024, withData: eager.withData), isTrue);
+  });
+
   test('preloads files up to 2 GB when withData is true', () {
     expect(shouldPreloadBytes(0, withData: true), isTrue);
     expect(shouldPreloadBytes(maxPreloadBytes, withData: true), isTrue);

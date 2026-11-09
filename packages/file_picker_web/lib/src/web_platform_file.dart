@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:js_interop';
 import 'dart:typed_data';
 
 import 'package:cross_file/cross_file.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
+import 'package:meta/meta.dart';
+import 'package:web/web.dart';
 
 import 'platform_file_web_fetch.dart';
 
@@ -14,21 +17,28 @@ import 'platform_file_web_fetch.dart';
 base class WebPlatformFile extends PlatformFile {
   /// Creates a new [WebPlatformFile] instance.
   ///
-  /// Requires a file [name] and [uri]. Optional parameters include preloaded
-  /// [bytes], a custom [readStream], file size in [bytesLength], or an underlying [xFile].
+  /// Requires [name] and either [uri] or [sourceFile]. Optional parameters
+  /// include preloaded [bytes], a custom [readStream], the file size in
+  /// [bytesLength], and an underlying [xFile].
   WebPlatformFile({
     required this.name,
-    required this.uri,
+    Uri? uri,
+    File? sourceFile,
     XFile? xFile,
     int? bytesLength,
     Uint8List? bytes,
     Stream<Uint8List>? readStream,
-  }) : _xFile = xFile,
+  }) : _sourceFile = sourceFile,
+       _explicitUri = uri,
+       _xFile = xFile,
        _bytesLength = bytesLength,
        _bytes = bytes,
        _readStream = readStream {
     if (name.isEmpty) {
       throw ArgumentError('name cannot be empty');
+    }
+    if (uri == null && sourceFile == null) {
+      throw ArgumentError('uri or sourceFile must be provided');
     }
   }
 
@@ -36,9 +46,32 @@ base class WebPlatformFile extends PlatformFile {
   @override
   final String name;
 
+  final File? _sourceFile;
+  final Uri? _explicitUri;
+  Uri? _createdObjectUrl;
+
   /// The web URI representing this file (typically a `blob:` or `data:` URL).
+  ///
+  /// A browser file does not need a global object URL merely to read its bytes
+  /// or name. Create one lazily only when a caller actually requests [uri].
   @override
-  final Uri uri;
+  Uri get uri =>
+      _explicitUri ??
+      (_createdObjectUrl ??= Uri.parse(URL.createObjectURL(_sourceFile!)));
+
+  /// Whether this instance created a browser object URL on demand.
+  @visibleForTesting
+  bool get hasCreatedObjectUrl => _createdObjectUrl != null;
+
+  /// Revokes an object URL created by this instance. Files can still be read
+  /// directly from the browser [File]. A future [uri] access creates a new URL.
+  /// This does not revoke a URI supplied by the caller.
+  void releaseObjectUrl() {
+    final created = _createdObjectUrl;
+    if (created == null) return;
+    URL.revokeObjectURL(created.toString());
+    _createdObjectUrl = null;
+  }
 
   @override
   String? get path => null;
@@ -80,14 +113,20 @@ base class WebPlatformFile extends PlatformFile {
 
   /// Asynchronously reads the file content as a byte array (`Uint8List`).
   ///
-  /// If bytes are cached or readable from a `blob:`/`data:` URL, they will be
-  /// retrieved directly; otherwise falls back to [xFile].
+  /// Returns cached bytes first, then reads directly from the browser [File]
+  /// when available, and otherwise uses a `blob:` or `data:` URL.
   @override
   Future<Uint8List> readAsBytes() async {
     final bytes = _bytes;
     if (bytes != null) return bytes;
 
-    // Try fetching from blob or data URL
+    final sourceFile = _sourceFile;
+    if (sourceFile != null) {
+      final buffer = await sourceFile.arrayBuffer().toDart;
+      return buffer.toDart.asUint8List();
+    }
+
+    // Fallback for WebPlatformFile instances created with a blob/data URI.
     final fetched = await fetchBytesFromWebPath(uri.toString());
     if (fetched != null) return fetched;
 
@@ -109,6 +148,12 @@ base class WebPlatformFile extends PlatformFile {
       return;
     }
 
+    final sourceFile = _sourceFile;
+    if (sourceFile != null) {
+      yield* streamBlobInChunks(sourceFile);
+      return;
+    }
+
     final webStream = fetchStreamFromWebPath(uri.toString());
     if (webStream != null) {
       yield* webStream;
@@ -121,11 +166,14 @@ base class WebPlatformFile extends PlatformFile {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is WebPlatformFile && other.name == name && other.uri == uri;
+    return other is WebPlatformFile &&
+        other.name == name &&
+        (other._explicitUri ?? other._sourceFile) ==
+            (_explicitUri ?? _sourceFile);
   }
 
   @override
-  int get hashCode => Object.hash(name, uri);
+  int get hashCode => Object.hash(name, _explicitUri ?? _sourceFile);
 
   @override
   String toString() {
