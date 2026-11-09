@@ -53,6 +53,25 @@ class PickerPathsTest {
         assertEquals("unamed", file.name)
     }
 
+    @Test
+    fun identicallyNamedDocumentsNeverShareACachedDestination() {
+        val paths = (0 until 100).map {
+            PickerPaths.uniqueCachedFile(cacheDir, "book.pdf")
+        }
+        assertEquals(100, paths.map { it.path }.toSet().size)
+        paths.forEach { file ->
+            assertEquals("book.pdf", file.name)
+            assertEquals("file_picker", file.parentFile?.parentFile?.name)
+        }
+    }
+
+    @Test
+    fun cacheDirectoryCannotBeEscapedByProviderFilename() {
+        assertThrows(SecurityException::class.java) {
+            PickerPaths.uniqueCachedFile(cacheDir, "../another.pdf")
+        }
+    }
+
     // The name comes from the document provider, which an app does not
     // control.
     @Test

@@ -1,6 +1,7 @@
 package com.mr.flutter.plugin.filepicker
 
 import java.io.File
+import java.util.UUID
 
 /**
  * Builds the file system paths the plugin returns or writes to.
@@ -39,12 +40,21 @@ internal object PickerPaths {
      * Throws a [SecurityException] if [fileName], which comes from the
      * document provider, would place the file outside that directory.
      */
-    fun cachedFile(cacheDir: File, stamp: Long, fileName: String?): File {
-        val path = cacheDir.absolutePath + "/file_picker/" + stamp + "/" + (fileName ?: "unamed")
-        val file = File(path)
+    fun cachedFile(cacheDir: File, stamp: Long, fileName: String?): File =
+        cachedFileWithKey(cacheDir, stamp.toString(), fileName)
 
-        val safeDir = File(cacheDir.absolutePath + "/file_picker/").canonicalPath
-        return file.takeIf { it.canonicalPath.startsWith(safeDir) }
+    /**
+     * Gives every picked document a distinct cache destination, even when two
+     * providers return the same name within the same millisecond.
+     */
+    fun uniqueCachedFile(cacheDir: File, fileName: String?): File =
+        cachedFileWithKey(cacheDir, UUID.randomUUID().toString(), fileName)
+
+    private fun cachedFileWithKey(cacheDir: File, key: String, fileName: String?): File {
+        val root = File(cacheDir, "file_picker").canonicalFile
+        val directory = File(root, key).canonicalFile
+        val file = File(directory, fileName ?: "unamed").canonicalFile
+        return file.takeIf { directory.parentFile == root && it.parentFile == directory }
             ?: throw SecurityException("Path traversal detected. Escaping the intended cache directory is not allowed.")
     }
 
