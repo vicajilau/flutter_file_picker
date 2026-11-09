@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
@@ -498,6 +499,122 @@ void main() {
       });
 
       expect(await picker.pickFiles(onFileLoading: (_) {}), isEmpty);
+    });
+
+    test('pickFile reports done on cancellation and platform errors', () async {
+      var shouldFail = false;
+      messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+        if (shouldFail) {
+          throw PlatformException(code: 'pick_failed');
+        }
+        return null;
+      });
+
+      final statuses = <FilePickerStatus>[];
+      expect(await picker.pickFiles(onFileLoading: statuses.add), isEmpty);
+      expect(statuses.last, FilePickerStatus.done);
+
+      shouldFail = true;
+      await expectLater(
+        picker.pickFile(onFileLoading: statuses.add),
+        throwsA(isA<PlatformException>()),
+      );
+      expect(statuses.last, FilePickerStatus.done);
+    });
+
+    test('independent picker requests finish their own callbacks', () async {
+      final firstResponse = Completer<List<Map<Object?, Object?>>?>();
+      final secondResponse = Completer<List<Map<Object?, Object?>>?>();
+      var nextCall = 0;
+      messenger.setMockMethodCallHandler(picker.methodChannel, (call) {
+        return nextCall++ == 0 ? firstResponse.future : secondResponse.future;
+      });
+
+      final firstStatuses = <FilePickerStatus>[];
+      final secondStatuses = <FilePickerStatus>[];
+      final first = FilePickerDarwin(
+        viewId: 1,
+      ).pickFiles(onFileLoading: firstStatuses.add);
+      final second = FilePickerDarwin(
+        viewId: 2,
+      ).pickFiles(onFileLoading: secondStatuses.add);
+
+      firstResponse.complete(null);
+      expect(await first, isEmpty);
+      expect(firstStatuses.last, FilePickerStatus.done);
+      expect(secondStatuses, isEmpty);
+
+      secondResponse.complete(null);
+      expect(await second, isEmpty);
+      expect(secondStatuses.last, FilePickerStatus.done);
+    });
+
+    test('finishing one picker keeps events flowing to the other', () async {
+      final responses = [Completer<Object?>(), Completer<Object?>()];
+      var nextCall = 0;
+      var listenCount = 0;
+      void Function(bool)? emit;
+      messenger.setMockStreamHandler(
+        picker.eventChannel,
+        MockStreamHandler.inline(
+          onListen: (_, events) {
+            listenCount++;
+            emit = (value) => events.success(value);
+          },
+        ),
+      );
+      messenger.setMockMethodCallHandler(
+        picker.methodChannel,
+        (_) => responses[nextCall++].future,
+      );
+      final firstStatuses = <FilePickerStatus>[];
+      final secondStatuses = <FilePickerStatus>[];
+      final first = picker.pickFiles(onFileLoading: firstStatuses.add);
+      final second = FilePickerDarwin(
+        viewId: 2,
+      ).pickFiles(onFileLoading: secondStatuses.add);
+      await pumpEventQueue();
+      expect(listenCount, 1);
+      emit!(true);
+      await pumpEventQueue();
+      expect(firstStatuses, [FilePickerStatus.picking]);
+      expect(secondStatuses, [FilePickerStatus.picking]);
+      responses[0].complete(null);
+      await first;
+      emit!(false);
+      await pumpEventQueue();
+      expect(secondStatuses.last, FilePickerStatus.done);
+      expect(firstStatuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+      responses[1].complete(null);
+      await second;
+    });
+
+    test('save cancels its listener before a throwing done callback', () async {
+      var cancellations = 0;
+      messenger.setMockStreamHandler(
+        picker.eventChannel,
+        MockStreamHandler.inline(
+          onListen: (_, _) {},
+          onCancel: (_) => cancellations++,
+        ),
+      );
+      messenger.setMockMethodCallHandler(
+        picker.methodChannel,
+        (_) async => null,
+      );
+
+      await expectLater(
+        picker.saveFile(
+          fileName: 'a.txt',
+          bytes: Uint8List(0),
+          mimeType: 'text/plain',
+          onFileSaving: (status) {
+            if (status == FilePickerStatus.done) throw StateError('callback');
+          },
+        ),
+        throwsStateError,
+      );
+      expect(cancellations, 1);
     });
 
     test('saveFile reports done when saving fails', () async {
