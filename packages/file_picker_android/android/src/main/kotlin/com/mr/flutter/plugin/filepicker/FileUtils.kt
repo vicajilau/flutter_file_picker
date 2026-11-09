@@ -591,7 +591,7 @@ object FileUtils {
 
     private fun getCompressFormat(context: Context, uri: Uri): Bitmap.CompressFormat {
         val format = getFileExtension(context, uri)
-        return when (format!!.uppercase(Locale.ROOT)) {
+        return when (format?.uppercase(Locale.ROOT)) {
             "PNG" -> Bitmap.CompressFormat.PNG
             "WEBP" -> Bitmap.CompressFormat.WEBP
             else -> Bitmap.CompressFormat.JPEG
