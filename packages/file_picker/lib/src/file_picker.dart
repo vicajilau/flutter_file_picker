@@ -14,6 +14,7 @@ abstract final class FilePicker {
   /// The [type] parameter defines the type of files that can be selected (e.g. [FileType.image], [FileType.video], etc.).
   /// The [allowedExtensions] parameter can be used to filter by specific file extensions when [type] is set to [FileType.custom].
   /// The [onFileLoading] callback can be used to track picker status changes.
+  /// Only Android, iOS, macOS and web report it. Linux and Windows never call it.
   /// The [compressionQuality] parameter allows compressing picked images/videos on supported platforms (0-100).
   /// The [darwinOptions] parameter configures iOS photo-library asset representation.
   ///
@@ -57,6 +58,7 @@ abstract final class FilePicker {
   /// The [type] parameter defines the type of file that can be selected (e.g. [FileType.image], [FileType.video], etc.).
   /// The [allowedExtensions] parameter can be used to filter by specific file extensions when [type] is set to [FileType.custom].
   /// The [onFileLoading] callback can be used to track picker status changes.
+  /// Only Android, iOS, macOS and web report it. Linux and Windows never call it.
   /// The [compressionQuality] parameter allows compressing picked images/videos on supported platforms (0-100).
   /// The [darwinOptions] parameter configures iOS photo-library asset representation.
   ///
@@ -160,6 +162,7 @@ abstract final class FilePicker {
   /// The [dialogTitle], if provided, will be used as the title for the save file dialog.
   /// The [initialDirectory], if provided, will be used as the initial directory path for the save file dialog.
   /// The [onFileSaving] callback, if provided, is triggered when the save dialog changes status.
+  /// Only Android, iOS and macOS report it. Linux, Windows and web never call it.
   ///
   /// The [windowsOptions], [linuxOptions], and [webOptions] parameters
   /// allow for platform-specific configurations when configuring the save file dialog.

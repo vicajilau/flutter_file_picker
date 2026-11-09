@@ -36,6 +36,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// The [allowedExtensions] parameter, if provided, restricts selection to specified file extensions
   /// when [type] is set to [FileType.custom].
   /// The [onFileLoading] callback, if provided, is triggered when the picker changes status.
+  /// Only Android, iOS, macOS and web report it. Linux and Windows never call it.
   /// The [compressionQuality] parameter specifies image/video compression quality (0-100) on supported platforms.
   /// The [darwinOptions] parameter configures iOS photo-library asset representation.
   ///
@@ -67,6 +68,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// The [allowedExtensions] parameter, if provided, restricts selection to specified file extensions
   /// when [type] is set to [FileType.custom].
   /// The [onFileLoading] callback, if provided, is triggered when the picker changes status.
+  /// Only Android, iOS, macOS and web report it. Linux and Windows never call it.
   /// The [compressionQuality] parameter specifies image/video compression quality (0-100) on supported platforms.
   /// The [darwinOptions] parameter configures iOS photo-library asset representation.
   ///
@@ -150,6 +152,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// The [dialogTitle], if provided, will be used as the title for the save file dialog.
   /// The [initialDirectory], if provided, will be used as the initial directory path for the save file dialog.
   /// The [onFileSaving] callback, if provided, is triggered when the save dialog changes status.
+  /// Only Android, iOS and macOS report it. Linux, Windows and web never call it.
   ///
   /// The [windowsOptions], [linuxOptions], and [webOptions] parameters
   /// allow platform-specific configurations for the save file dialog.
