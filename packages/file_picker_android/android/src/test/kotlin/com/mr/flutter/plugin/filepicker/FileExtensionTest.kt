@@ -25,6 +25,8 @@ class FileExtensionTest {
         assertEquals("csv", FileExtension.normalize("Csv"))
     }
 
+    // Lowering with the default locale turned "ZIP" into "zıp" on Turkish
+    // devices, with a dotless i, so no MIME type was found for it.
     @Test
     fun aTurkishDeviceKeepsTheDottedI() {
         Locale.setDefault(Locale.forLanguageTag("tr"))
