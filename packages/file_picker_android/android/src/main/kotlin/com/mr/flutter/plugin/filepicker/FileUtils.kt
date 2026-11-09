@@ -37,11 +37,7 @@ import java.util.Locale
 object FileUtils {
     private const val TAG = "FilePickerUtils"
     private const val MAX_RENAME_ATTEMPTS = 20
-    // On Android, the CSV mime type from getMimeTypeFromExtension() returns
-    // "text/comma-separated-values" which is non-standard and doesn't filter
-    // CSV files in Google Drive.
-    // (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types)
-    // (see https://android.googlesource.com/platform/frameworks/base/+/61ae88e/core/java/android/webkit/MimeTypeMap.java#439)
+    // Google Drive needs text/csv rather than Android's text/comma-separated-values.
     private const val CSV_EXTENSION = "csv"
     private const val CSV_MIME_TYPE = "text/csv"
     // Fallback MIME type used when neither the file name extension nor
@@ -503,42 +499,16 @@ object FileUtils {
     }
 
     fun getMimeTypes(allowedExtensions: ArrayList<String>?): ArrayList<String> {
-        if (allowedExtensions.isNullOrEmpty()) {
-            return ArrayList(listOf("*/*"))
+        val mimes = MimeFilterPolicy.resolve(allowedExtensions) { extension ->
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
         }
-
-        val mimes = ArrayList<String>()
-
-        for (allowedExtension in allowedExtensions) {
-            val extension = FileExtension.normalize(allowedExtension)
-            val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
-            if (mime == null) {
-                Log.w(
-                    TAG,
-                    "Custom file type '$allowedExtension' has no known mime type and will not be filtered by the system picker."
-                )
-                continue
-            }
-
-            mimes.add(mime)
-            if (extension == CSV_EXTENSION) {
-                // Add the standard CSV mime type.
-                mimes.add(CSV_MIME_TYPE)
-            }
-        }
-
-        if (mimes.isEmpty()) {
+        if (!allowedExtensions.isNullOrEmpty() && mimes.size == 1 && mimes[0] == "*/*") {
             Log.w(
                 TAG,
-                "None of the custom file types $allowedExtensions have a known mime type, falling back to */*."
+                "Some custom file extensions cannot be mapped to MIME types. " +
+                    "Showing all files rather than hiding a supported extension: $allowedExtensions"
             )
-            return ArrayList(listOf("*/*"))
         }
-
-        Log.d(
-            TAG,
-            "Custom file types are $allowedExtensions. The mime types were detected as $mimes."
-        )
         return mimes
     }
 
