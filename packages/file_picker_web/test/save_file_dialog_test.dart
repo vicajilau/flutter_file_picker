@@ -177,6 +177,34 @@ void main() {
     expect(supportsShowSaveFileDialog, isTrue);
   });
 
+  test('allows downloading an empty file', () async {
+    final uri = await picker.saveFile(
+      fileName: 'empty.txt',
+      bytes: Uint8List(0),
+      mimeType: 'text/plain',
+    );
+
+    expect(uri, isNull);
+    expect(downloads, ['empty.txt']);
+  });
+
+  test('writes an empty file through the native browser dialog', () async {
+    final handle = _FakeFileHandle('empty.txt');
+    stubPicker(() => Future.value(createJSInteropWrapper(handle)).toJS);
+
+    final uri = await picker.saveFile(
+      fileName: 'empty.txt',
+      bytes: Uint8List(0),
+      mimeType: 'text/plain',
+      webOptions: const FilePickerWebOptions(saveMode: WebSaveFileMode.dialog),
+    );
+
+    expect(uri, Uri(path: 'empty.txt'));
+    expect(handle.writable.written, hasLength(1));
+    expect(handle.writable.written.single, isEmpty);
+    expect(handle.writable.closed, isTrue);
+  });
+
   test('downloads without opening the dialog by default', () async {
     stubPickerError('NotAllowedError');
 

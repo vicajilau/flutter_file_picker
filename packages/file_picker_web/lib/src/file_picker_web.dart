@@ -249,12 +249,6 @@ class FilePickerWeb extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    if (bytes.isEmpty) {
-      throw ArgumentError(
-        'The bytes are required when saving a file on the web.',
-      );
-    }
-
     if (fileName.isEmpty) {
       throw ArgumentError(
         'A file name is required when saving a file on the web.',
