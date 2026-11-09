@@ -105,26 +105,21 @@ class FilePickerLinux extends FilePickerPlatform {
     int compressionQuality = 0,
     LinuxOptions linuxOptions = const FilePickerLinuxOptions(),
   }) async {
-    onFileLoading?.call(FilePickerStatus.picking);
-    try {
-      final options = resolveOptions(linuxOptions);
+    final options = resolveOptions(linuxOptions);
 
-      final replyPath = await xdpChooser.callOpenFile(
-        formatParentWindow(options.parentWindow),
-        dialogTitle ?? "flutter picker",
-        openFileOptions(
-          options,
-          allowMultiple: allowMultiple,
-          filter: Filter(type, allowedExtensions),
-          initialDirectory: initialDirectory,
-        ),
-      );
+    final replyPath = await xdpChooser.callOpenFile(
+      formatParentWindow(options.parentWindow),
+      dialogTitle ?? "flutter picker",
+      openFileOptions(
+        options,
+        allowMultiple: allowMultiple,
+        filter: Filter(type, allowedExtensions),
+        initialDirectory: initialDirectory,
+      ),
+    );
 
-      final paths = await _awaitPaths(replyPath) ?? [];
-      return [for (final path in paths) LinuxPlatformFile.fromPath(path)];
-    } finally {
-      onFileLoading?.call(FilePickerStatus.done);
-    }
+    final paths = await _awaitPaths(replyPath) ?? [];
+    return [for (final path in paths) LinuxPlatformFile.fromPath(path)];
   }
 
   @override
@@ -175,32 +170,27 @@ class FilePickerLinux extends FilePickerPlatform {
     LinuxOptions linuxOptions = const FilePickerLinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    onFileSaving?.call(FilePickerStatus.picking);
-    try {
-      final options = resolveOptions(linuxOptions);
+    final options = resolveOptions(linuxOptions);
 
-      final replyPath = await xdpChooser.callSaveFile(
-        formatParentWindow(options.parentWindow),
-        dialogTitle ?? "flutter picker",
-        saveFileOptions(
-          options,
-          fileName: fileName,
-          initialDirectory: initialDirectory,
-        ),
-      );
+    final replyPath = await xdpChooser.callSaveFile(
+      formatParentWindow(options.parentWindow),
+      dialogTitle ?? "flutter picker",
+      saveFileOptions(
+        options,
+        fileName: fileName,
+        initialDirectory: initialDirectory,
+      ),
+    );
 
-      final savedFilePath = (await _awaitPaths(replyPath))?.firstOrNull;
+    final savedFilePath = (await _awaitPaths(replyPath))?.firstOrNull;
 
-      if (savedFilePath != null) {
-        final file = File(savedFilePath);
-        await file.writeAsBytes(bytes);
-        return Uri.file(savedFilePath);
-      }
-
-      return null;
-    } finally {
-      onFileSaving?.call(FilePickerStatus.done);
+    if (savedFilePath != null) {
+      final file = File(savedFilePath);
+      await file.writeAsBytes(bytes);
+      return Uri.file(savedFilePath);
     }
+
+    return null;
   }
 
   /// Waits for the portal's response to the request at [replyPath] and

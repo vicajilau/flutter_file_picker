@@ -32,21 +32,24 @@ class _FailingChooser extends OrgFreedesktopPortalFileChooser {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('multiple pick reports done and preserves a portal error', () async {
-    final client = DBusClient(DBusAddress('unix:path=/unused'));
-    addTearDown(client.close);
-    final picker = FilePickerLinux(
-      client: client,
-      xdpChooser: _FailingChooser(client),
-    );
-    final statuses = <FilePickerStatus>[];
+  test(
+    'multiple pick preserves a portal error without status callbacks',
+    () async {
+      final client = DBusClient(DBusAddress('unix:path=/unused'));
+      addTearDown(client.close);
+      final picker = FilePickerLinux(
+        client: client,
+        xdpChooser: _FailingChooser(client),
+      );
+      final statuses = <FilePickerStatus>[];
 
-    await expectLater(
-      picker.pickFiles(onFileLoading: statuses.add),
-      throwsStateError,
-    );
-    expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
-  });
+      await expectLater(
+        picker.pickFiles(onFileLoading: statuses.add),
+        throwsStateError,
+      );
+      expect(statuses, isEmpty);
+    },
+  );
 
   test('directory preserves a portal error', () async {
     final client = DBusClient(DBusAddress('unix:path=/unused'));
@@ -59,7 +62,7 @@ void main() {
     await expectLater(picker.getDirectoryPath(), throwsStateError);
   });
 
-  test('pick reports done and preserves a portal error', () async {
+  test('pick preserves a portal error without status callbacks', () async {
     final client = DBusClient(DBusAddress('unix:path=/unused'));
     addTearDown(client.close);
     final picker = FilePickerLinux(
@@ -72,10 +75,10 @@ void main() {
       picker.pickFile(onFileLoading: statuses.add),
       throwsStateError,
     );
-    expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+    expect(statuses, isEmpty);
   });
 
-  test('save reports done and preserves a portal error', () async {
+  test('save preserves a portal error without status callbacks', () async {
     final client = DBusClient(DBusAddress('unix:path=/unused'));
     addTearDown(client.close);
     final picker = FilePickerLinux(
@@ -93,7 +96,7 @@ void main() {
       ),
       throwsStateError,
     );
-    expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+    expect(statuses, isEmpty);
   });
 
   test('open, directory and save requests use different handles', () {
