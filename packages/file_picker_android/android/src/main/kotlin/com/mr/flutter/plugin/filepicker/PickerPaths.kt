@@ -3,8 +3,17 @@ package com.mr.flutter.plugin.filepicker
 import java.io.File
 import java.util.UUID
 
+/**
+ * Builds the file system paths the plugin returns or writes to.
+ *
+ * Kept free of Android APIs so it can be unit tested on the JVM.
+ */
 internal object PickerPaths {
-    /** Resolves a storage tree document ID to its directory path. */
+    /**
+     * The path of the directory behind a tree document id, such as
+     * `primary:Documents/Sub` or `1234-5678:Music`, given the primary
+     * [externalStorageDirectory].
+     */
     fun directoryPath(treeDocumentId: String, externalStorageDirectory: String): String {
         val volumePath = getVolumePath(treeDocumentId, externalStorageDirectory)
         val documentPath = getDocumentPath(treeDocumentId)
@@ -24,7 +33,15 @@ internal object PickerPaths {
         }
     }
 
-    // Each pick owns a UUID directory, even when provider names and timestamps match.
+    /**
+     * Where a picked file is cached: its own directory, named after a random
+     * UUID, under `file_picker` in [cacheDir]. The UUID keeps two documents
+     * with the same name, picked in the same millisecond, apart.
+     *
+     * [fileName] may contain subdirectories, but throws a [SecurityException]
+     * if [fileName], which comes from the document provider, would place the
+     * file outside that directory.
+     */
     fun uniqueCachedFile(cacheDir: File, fileName: String?): File {
         val root = File(cacheDir, "file_picker").canonicalFile
         val directory = File(root, UUID.randomUUID().toString()).canonicalFile
