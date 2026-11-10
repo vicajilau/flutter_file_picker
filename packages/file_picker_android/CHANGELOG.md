@@ -5,6 +5,8 @@
 - Fixed `saveFile()` reporting success when the document provider gave nothing to write to, leaving the file empty. [#2320](https://github.com/vicajilau/flutter_file_picker/pull/2320)
 - Fixed `lengthSync()` returning `null` for an empty file, and `length()` reading it again to find its size. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
 - The bytes of a saved file are released when the save ends, instead of staying in memory until the next one. [#2319](https://github.com/vicajilau/flutter_file_picker/pull/2319)
+- Fixed a compressed image being reported as picked when the encoder failed, leaving a broken or partial file. The partial file is now removed, and the decoded image is released from memory as soon as it is written. [#2328](https://github.com/vicajilau/flutter_file_picker/pull/2328)
+- Fixed compressing an image whose provider reports no type crashing instead of falling back to JPEG. [#2329](https://github.com/vicajilau/flutter_file_picker/pull/2329)
 
 ## 2.1.4
 

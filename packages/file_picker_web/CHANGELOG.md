@@ -4,6 +4,7 @@
 - `onFileLoading` now also gets `done` when the user cancels the picker. [#2324](https://github.com/vicajilau/flutter_file_picker/pull/2324)
 - Fixed `FileType.media` not filtering anything, since its `accept` filter separated the types with `|` instead of a comma. [#2323](https://github.com/vicajilau/flutter_file_picker/pull/2323)
 - Fixed `lengthSync()` and `length()` treating an empty file as one of unknown size. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
+- Fixed `saveFile()` rejecting an empty file. [#2331](https://github.com/vicajilau/flutter_file_picker/pull/2331)
 
 ## 4.2.0
 
