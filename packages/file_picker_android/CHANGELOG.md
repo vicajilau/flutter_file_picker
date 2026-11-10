@@ -1,5 +1,6 @@
 ## 2.1.5
 
+- Fixed two documents with the same name, picked in the same millisecond, sharing one cached copy, and a copy that failed halfway staying in the cache. [#2318](https://github.com/vicajilau/flutter_file_picker/pull/2318)
 - Fixed `onFileLoading` losing its status updates when a second pick started while one was still open. It now also gets `done` when a pick is cancelled or fails. [#2317](https://github.com/vicajilau/flutter_file_picker/pull/2317)
 - Fixed `saveFile()` reporting success when the document provider gave nothing to write to, leaving the file empty. [#2320](https://github.com/vicajilau/flutter_file_picker/pull/2320)
 - Fixed `lengthSync()` returning `null` for an empty file, and `length()` reading it again to find its size. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
