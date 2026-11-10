@@ -23,7 +23,6 @@ import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.BufferedOutputStream
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -160,12 +159,8 @@ object FileUtils {
         uri: Uri,
         bytes: ByteArray?
     ): Uri {
-        context.contentResolver.openOutputStream(uri)?.use { output ->
-            bytes?.let {
-                output.write(it)
-            }
-        }
-
+        val data = bytes ?: throw IOException("No file bytes were provided to the save operation.")
+        SaveFileWriter.write(context.contentResolver.openOutputStream(uri), data)
         return uri
     }
 
@@ -702,40 +697,27 @@ object FileUtils {
         hasSafOptions: Boolean = false,
         isReadWrite: Boolean = false
     ): FileInfo? {
-        var fileInputStream: InputStream? = null
-        var fileOutputStream: FileOutputStream? = null
         val fileInfo = FileInfo.Builder()
         val fileName = getFileName(uri, context)
-        val file = PickerPaths.cachedFile(context.cacheDir, System.currentTimeMillis(), fileName)
+        val file = PickerPaths.uniqueCachedFile(context.cacheDir, fileName)
         val path = file.path
 
-        if (!file.exists()) {
-            try {
-                file.parentFile?.mkdirs()
-
-                fileInputStream = context.contentResolver.openInputStream(uri)
-                fileOutputStream = FileOutputStream(file)
-
-                val out = BufferedOutputStream(fileOutputStream)
-                val buffer = ByteArray(8192)
-                var len: Int
-
-                while ((fileInputStream!!.read(buffer).also { len = it }) >= 0) {
-                    out.write(buffer, 0, len)
-                }
-                out.flush()
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to retrieve and cache file: " + e.message, e)
-                return null
-            } finally {
-                try {
-                    fileOutputStream?.fd?.sync()
-                    fileOutputStream?.close()
-                    fileInputStream?.close()
-                } catch (ex: IOException) {
-                    Log.e(TAG, "Failed to close file streams: " + ex.message, ex)
+        try {
+            file.parentFile?.mkdirs()
+            val input = context.contentResolver.openInputStream(uri)
+                ?: throw IOException("The selected document cannot be opened: $uri")
+            input.use { source ->
+                FileOutputStream(file).use { output ->
+                    source.copyTo(output, bufferSize = 64 * 1024)
+                    output.fd.sync()
                 }
             }
+        } catch (e: Exception) {
+            // A failed copy must never be reused as a valid cached document.
+            file.delete()
+            file.parentFile?.delete()
+            Log.e(TAG, "Failed to retrieve and cache file: " + e.message, e)
+            return null
         }
 
         fileInfo

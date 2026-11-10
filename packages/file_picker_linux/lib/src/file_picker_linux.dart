@@ -20,6 +20,8 @@ class FilePickerLinux extends FilePickerPlatform {
   }
 
   static const String destination = 'org.freedesktop.portal.Desktop';
+  static int _nextRequestToken = 0;
+
   DBusClient? _client;
   OrgFreedesktopPortalFileChooser? _xdpChooser;
 
@@ -212,7 +214,7 @@ class FilePickerLinux extends FilePickerPlatform {
     String? initialDirectory,
   ) {
     return {
-      'handle_token': DBusString('flutter_picker'),
+      'handle_token': DBusString('flutter_picker_${_nextRequestToken++}'),
       'modal': DBusBoolean(options.lockParentWindow),
       if (initialDirectory != null)
         // The portal expects a null terminated byte string.
