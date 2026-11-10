@@ -609,7 +609,8 @@ object FileUtils {
     @JvmStatic
     fun compressImage(originalImageUri: Uri, compressionQuality: Int, context: Context): Uri {
         try {
-            // Read dimensions without decoding the pixels into a bitmap.
+            // First pass: decode only the image bounds so a subsampling factor
+            // can be computed without loading the full bitmap into memory.
             val boundsOptions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             val boundsStream = context.contentResolver.openInputStream(originalImageUri)
                 ?: throw IOException("Cannot open selected image: $originalImageUri")
