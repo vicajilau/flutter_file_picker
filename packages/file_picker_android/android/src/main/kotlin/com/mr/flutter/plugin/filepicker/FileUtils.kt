@@ -603,14 +603,14 @@ object FileUtils {
 
     @JvmStatic
     fun compressImage(originalImageUri: Uri, compressionQuality: Int, context: Context): Uri {
-        val compressedUri: Uri
         try {
             // First pass: decode only the image bounds so a subsampling factor
             // can be computed without loading the full bitmap into memory.
             val boundsOptions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            context.contentResolver.openInputStream(originalImageUri).use { imageStream ->
-                BitmapFactory.decodeStream(imageStream, null, boundsOptions)
-            }
+            val boundsStream = context.contentResolver.openInputStream(originalImageUri)
+                ?: throw IOException("Cannot open selected image: $originalImageUri")
+            boundsStream.use { BitmapFactory.decodeStream(it, null, boundsOptions) }
+
             val decodeOptions = BitmapFactory.Options().apply {
                 inSampleSize = calculateInSampleSize(
                     boundsOptions,
@@ -618,22 +618,28 @@ object FileUtils {
                     MAX_COMPRESSED_IMAGE_DIMENSION
                 )
             }
-            context.contentResolver.openInputStream(originalImageUri).use { imageStream ->
-                val compressFormat = getCompressFormat(context, originalImageUri)
-                val compressedFile = createImageFile(context, compressFormat)
-                val originalBitmap = BitmapFactory.decodeStream(imageStream, null, decodeOptions)
+
+            val imageStream = context.contentResolver.openInputStream(originalImageUri)
+                ?: throw IOException("Cannot reopen selected image: $originalImageUri")
+            return imageStream.use { input ->
+                val bitmap = BitmapFactory.decodeStream(input, null, decodeOptions)
                     ?: throw IOException("Failed to decode image: $originalImageUri")
-                // Compress and save the image
-                val fileOutputStream = FileOutputStream(compressedFile)
-                originalBitmap.compress(compressFormat, compressionQuality, fileOutputStream)
-                fileOutputStream.flush()
-                fileOutputStream.close()
-                compressedUri = Uri.fromFile(compressedFile)
+                try {
+                    val format = getCompressFormat(context, originalImageUri)
+                    val compressedFile = createImageFile(context, format)
+                    CompressedBitmapWriter.write(compressedFile) { output ->
+                        bitmap.compress(format, compressionQuality, output)
+                    }
+                    Uri.fromFile(compressedFile)
+                } finally {
+                    // Bitmap pixel storage can be many tens of MB; release it
+                    // promptly rather than retaining it until a later GC.
+                    bitmap.recycle()
+                }
             }
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-        return compressedUri
     }
 
     /**
