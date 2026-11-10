@@ -6,6 +6,7 @@
 
 ## 2.0.2
 
+- Fixed `pickFiles()`, `pickFile()` and `saveFile()` never completing when the dialog failed, such as with an `initialDirectory` that does not exist. They now throw the error. [#2314](https://github.com/vicajilau/flutter_file_picker/pull/2314)
 - Fixed `lengthSync()` returning `null` for a file made from empty bytes, and `length()` reading it from disk instead. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
 
 ## 2.0.1

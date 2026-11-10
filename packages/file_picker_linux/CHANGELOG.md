@@ -7,6 +7,7 @@
 
 ## 2.0.4
 
+- Fixed every portal request using the same `handle_token`, so two requests open at the same time could get mixed up. [#2315](https://github.com/vicajilau/flutter_file_picker/pull/2315)
 - Fixed `lengthSync()` returning `null` for a file made from empty bytes, and `length()` reading it from disk instead. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
 
 ## 2.0.3

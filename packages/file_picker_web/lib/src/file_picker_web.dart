@@ -21,6 +21,7 @@ class FilePickerWeb extends FilePickerPlatform {
   static const String _kFilePickerInputsDomId = '__file_picker_web-file-input';
 
   late Element _target;
+  WebFileInputSession? _activeSession;
 
   FilePickerWeb._() {
     _target = _ensureInitialized(_kFilePickerInputsDomId);
@@ -127,6 +128,7 @@ class FilePickerWeb extends FilePickerPlatform {
         ? webOptions
         : const FilePickerWebOptions();
 
+    final previous = _activeSession;
     final session = WebFileInputSession(
       target: _target,
       accept: _fileType(type, allowedExtensions),
@@ -136,8 +138,15 @@ class FilePickerWeb extends FilePickerPlatform {
       processFiles: _processSelectedFiles,
     );
 
-    final List<PlatformFile>? files = await session.start();
-    return files ?? <PlatformFile>[];
+    _activeSession = session;
+    try {
+      previous?.cancel();
+      if (!identical(_activeSession, session)) return [];
+      final List<PlatformFile>? files = await session.start();
+      return files ?? <PlatformFile>[];
+    } finally {
+      if (identical(_activeSession, session)) _activeSession = null;
+    }
   }
 
   /// Wraps each selected [File] in a [WebPlatformFile] without reading it.

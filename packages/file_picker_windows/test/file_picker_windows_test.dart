@@ -1,4 +1,6 @@
-import 'dart:isolate';
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:windows_file_picker/src/open_save_file_args.dart';
@@ -70,6 +72,66 @@ void main() {
     });
   });
 
+  group('native dialog failures', () {
+    late Directory directory;
+    late String missingDirectory;
+
+    setUp(() async {
+      directory = await Directory.systemTemp.createTemp('picker_failure_');
+      missingDirectory = '${directory.path}\\missing';
+    });
+    tearDown(() => directory.delete(recursive: true));
+
+    for (final multiple in [false, true]) {
+      test(
+        'pickFiles multiple=$multiple propagates failure without status callbacks',
+        () async {
+          final statuses = <FilePickerStatus>[];
+          final picker = FilePickerWindows();
+          final result = multiple
+              ? picker.pickFiles(
+                  initialDirectory: missingDirectory,
+                  onFileLoading: statuses.add,
+                )
+              : picker.pickFile(
+                  initialDirectory: missingDirectory,
+                  onFileLoading: statuses.add,
+                );
+          await expectLater(
+            result.timeout(const Duration(seconds: 5)),
+            throwsA(isNot(isA<TimeoutException>())),
+          );
+          expect(statuses, isEmpty);
+        },
+      );
+    }
+
+    test('saveFile propagates failure without status callbacks', () async {
+      final statuses = <FilePickerStatus>[];
+      await expectLater(
+        FilePickerWindows()
+            .saveFile(
+              fileName: 'a.txt',
+              bytes: Uint8List(0),
+              mimeType: 'text/plain',
+              initialDirectory: missingDirectory,
+              onFileSaving: statuses.add,
+            )
+            .timeout(const Duration(seconds: 5)),
+        throwsA(isNot(isA<TimeoutException>())),
+      );
+      expect(statuses, isEmpty);
+    });
+    test('directory propagates native failure', () async {
+      await expectLater(
+        FilePickerWindows()
+            .getDirectoryPath(initialDirectory: missingDirectory)
+            .timeout(const Duration(seconds: 5)),
+        throwsA(isNot(isA<TimeoutException>())),
+      );
+    });
+  }, skip: !Platform.isWindows);
+
   group('validateFileName', () {
     final picker = FilePickerWindows();
 
@@ -92,15 +154,12 @@ void main() {
 
   group('resolveDefaultExtension', () {
     final picker = FilePickerWindows();
-    final port = ReceivePort();
-    tearDownAll(port.close);
 
     OpenSaveFileArgs args({
       List<String>? allowedExtensions,
       String? defaultFileName,
     }) {
       return OpenSaveFileArgs(
-        port: port.sendPort,
         allowedExtensions: allowedExtensions,
         defaultFileName: defaultFileName,
       );

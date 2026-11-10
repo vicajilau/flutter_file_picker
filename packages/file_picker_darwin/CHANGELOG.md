@@ -7,6 +7,8 @@
 
 ## 2.5.1
 
+- Fixed `clearTemporaryFiles()` on iOS deleting everything in the app's temporary directory, including the files of the app and of other plugins. It now only removes the plugin's own `flutter_file_picker` folder. Copies made by earlier versions sit outside it, so they are left for iOS to clean up. [#2322](https://github.com/vicajilau/flutter_file_picker/pull/2322)
+- Fixed two saves with the same file name on iOS sharing one temporary file. [#2322](https://github.com/vicajilau/flutter_file_picker/pull/2322)
 - Fixed a pick losing its `onFileLoading` updates when another pick ended first, such as one from a second macOS window. It now also gets `done` when a pick is cancelled or fails. [#2321](https://github.com/vicajilau/flutter_file_picker/pull/2321)
 - Fixed `lengthSync()` returning `null` for an empty file, and `length()` reading it again to find its size. A size that cannot be read is now left out instead of reported as 0. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
 

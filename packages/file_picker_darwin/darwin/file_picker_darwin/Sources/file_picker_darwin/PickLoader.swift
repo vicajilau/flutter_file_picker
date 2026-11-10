@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 @available(iOS 14.0, macOS 11.0, *)
 struct PickLoader {
     /// Where picked files are stored, each one in its own subdirectory.
-    var temporaryDirectory = URL(fileURLWithPath: NSTemporaryDirectory())
+    var temporaryDirectory = PickerTemporaryFiles.root()
 
     /// Loads and copies each of `items`, then calls `completion` on `queue`
     /// with the ones that loaded, in the order of `items`, and why the others
@@ -145,7 +145,10 @@ struct PickLoader {
     ///
     /// Giving each item its own directory removes the shared destination, so
     /// the copies can no longer observe or delete each other. The existence
-    /// check is gone with it, the directory is new every time.
+    /// check is gone with it, the directory is new every time. The
+    /// directories live under `PickerTemporaryFiles.root()`, so
+    /// `clearTemporaryFiles()` removes them without touching the app's own
+    /// temporary files.
     ///
     /// Throws the file system error, such as a full disk, so the pick can
     /// report why the item could not be loaded.
