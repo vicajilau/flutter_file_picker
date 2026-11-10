@@ -310,7 +310,7 @@ class FilePickerWeb extends FilePickerPlatform {
       FileType.audio => 'audio/*',
       FileType.image => 'image/*',
       FileType.video => 'video/*',
-      FileType.media => 'video/*|image/*',
+      FileType.media => 'video/*,image/*',
       FileType.custom => allowedExtensions!.fold(
         '',
         (prev, next) => '${prev.isEmpty ? '' : '$prev,'} .$next',

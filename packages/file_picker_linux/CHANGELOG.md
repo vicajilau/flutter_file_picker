@@ -1,3 +1,7 @@
+## 2.0.4
+
+- Fixed `lengthSync()` returning `null` for a file made from empty bytes, and `length()` reading it from disk instead. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
+
 ## 2.0.3
 
 - Widened the `dbus` dependency to `>=0.7.13 <0.9.0`.

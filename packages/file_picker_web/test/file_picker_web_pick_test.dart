@@ -116,6 +116,16 @@ void main() {
     },
   );
 
+  test('media picks use a valid comma-separated accept filter', () async {
+    final result = FilePickerPlatform.instance.pickFiles(type: FileType.media);
+    final input =
+        document.querySelector('flt-file-picker-inputs input')!
+            as HTMLInputElement;
+    expect(input.accept, 'video/*,image/*');
+    input.dispatchEvent(Event('cancel'));
+    expect(await result, isEmpty);
+  });
+
   test('picked files point at a readable blob: URL', () async {
     final files = await pickFiles([fileWith(name: 'a.txt', content: 'hello')]);
 
