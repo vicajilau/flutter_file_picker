@@ -1,3 +1,8 @@
+## 4.2.1
+
+- Fixed `FileType.media` not filtering anything, since its `accept` filter separated the types with `|` instead of a comma. [#2323](https://github.com/vicajilau/flutter_file_picker/pull/2323)
+- Fixed `lengthSync()` and `length()` treating an empty file as one of unknown size. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
+
 ## 4.2.0
 
 - Added `FilePickerWebOptions.saveMode`. `WebSaveFileMode.dialog` saves through the browser's save dialog, and `supportsShowSaveFileDialog` tells whether the browser supports it. [#1732](https://github.com/vicajilau/flutter_file_picker/issues/1732)

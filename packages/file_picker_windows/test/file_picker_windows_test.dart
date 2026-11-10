@@ -43,6 +43,15 @@ void main() {
       },
     );
 
+    test('empty in-memory files have a known zero length', () async {
+      final file = WindowsPlatformFile.fromPath(
+        r'C:\Users\Test\empty.txt',
+        bytes: Uint8List(0),
+      );
+      expect(file.lengthSync(), 0);
+      expect(await file.length(), 0);
+    });
+
     test('FilePickerWindowsOptions contains expected properties', () {
       const options = FilePickerWindowsOptions(
         parentWindowHandle: 12345,

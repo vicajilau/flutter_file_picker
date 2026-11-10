@@ -129,12 +129,10 @@ final class MacOSFilePickerHandler: NSObject, FlutterStreamHandler {
                 let fileMaps = dialog.urls.compactMap { url -> [String: Any]? in
                     let path = url.path
                     let name = url.lastPathComponent
-                    let size = (try? FileManager.default.attributesOfItem(atPath: path)[.size] as? Int64) ?? 0
-                    return [
-                        "path": path,
-                        "name": name,
-                        "size": size
-                    ]
+                    let size = try? FileManager.default.attributesOfItem(atPath: path)[.size] as? Int64
+                    var info: [String: Any] = ["path": path, "name": name]
+                    if let size { info["size"] = size }
+                    return info
                 }
 
                 if fileMaps.isEmpty {
