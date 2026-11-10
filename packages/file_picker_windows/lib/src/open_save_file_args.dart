@@ -1,5 +1,3 @@
-import 'dart:isolate';
-
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:meta/meta.dart';
 
@@ -7,7 +5,6 @@ import 'package:meta/meta.dart';
 @internal
 class OpenSaveFileArgs {
   OpenSaveFileArgs({
-    required this.port,
     this.defaultFileName,
     this.dialogTitle,
     this.initialDirectory,
@@ -19,9 +16,6 @@ class OpenSaveFileArgs {
     this.parentWindowHandle,
     this.acceptLabel,
   });
-
-  /// SendPort used to reply to the main isolate.
-  final SendPort port;
 
   /// Default file name suggested in the save dialog.
   final String? defaultFileName;
