@@ -1,8 +1,10 @@
 @TestOn('browser')
 library;
 
+import 'dart:async';
 import 'dart:js_interop';
 
+import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:file_picker_web/file_picker_web.dart';
 import 'package:file_picker_web/src/web_file_input_session.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,13 +22,14 @@ void main() {
 
   WebFileInputSession createSession({
     FilePickerWebOptions webOptions = const FilePickerWebOptions(),
+    Function(FilePickerStatus)? onFileLoading,
   }) {
     return WebFileInputSession(
       target: target,
       accept: '',
       allowMultiple: false,
       webOptions: webOptions,
-      onFileLoading: null,
+      onFileLoading: onFileLoading,
       processFiles: (files, _) async => [
         for (var i = 0; i < files.length; i++)
           WebPlatformFile(
@@ -96,6 +99,16 @@ void main() {
     },
   );
 
+  test('notifies status completion even when the user cancels', () async {
+    final statuses = <FilePickerStatus>[];
+    final result = createSession(onFileLoading: statuses.add).start();
+
+    attachedInput().dispatchEvent(Event('cancel'));
+
+    expect(await result, isNull);
+    expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+  });
+
   test('completes with null on the input cancel event', () async {
     final result = createSession(
       webOptions: const FilePickerWebOptions(cancelUploadOnWindowBlur: false),
@@ -123,4 +136,45 @@ void main() {
 
     await expectLater(result, throwsStateError);
   });
+
+  for (final fail in [false, true]) {
+    test(
+      'superseded session ignores a late ${fail ? "error" : "result"}',
+      () async {
+        final processing = Completer<List<PlatformFile>>();
+        final statuses = <FilePickerStatus>[];
+        final session = WebFileInputSession(
+          target: target,
+          accept: '',
+          allowMultiple: false,
+          webOptions: const FilePickerWebOptions(
+            cancelUploadOnWindowBlur: false,
+          ),
+          onFileLoading: statuses.add,
+          processFiles: (_, _) => processing.future,
+        );
+        final result = session.start();
+        final oldInput = attachedInput();
+        selectFile(oldInput, 'old.txt');
+        oldInput.dispatchEvent(Event('change'));
+        session.cancel();
+        session.cancel();
+        expect(await result, isNull);
+        final next = createSession();
+        final nextResult = next.start();
+        final nextInput = attachedInput();
+        if (fail) {
+          processing.completeError(StateError('late failure'));
+        } else {
+          processing.complete([]);
+        }
+        await pumpEventQueue();
+        expect(attachedInput(), nextInput);
+        expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+        next.cancel();
+        expect(await nextResult, isNull);
+        expect(target.childNodes.length, 0);
+      },
+    );
+  }
 }

@@ -6,6 +6,13 @@
 - **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41, Dart 3.11 and macOS 10.15. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: Requires Flutter 3.41 and Dart 3.11, which provide `FlutterFramework` to plugins. `Package.swift` now depends on it, which Swift Package Manager builds warn about and future Flutter versions will require. [#2308](https://github.com/vicajilau/flutter_file_picker/issues/2308)
 
+## 2.5.1
+
+- Fixed `clearTemporaryFiles()` on iOS deleting everything in the app's temporary directory, including the files of the app and of other plugins. It now only removes the plugin's own `flutter_file_picker` folder. Copies made by earlier versions sit outside it, so they are left for iOS to clean up. [#2322](https://github.com/vicajilau/flutter_file_picker/pull/2322)
+- Fixed two saves with the same file name on iOS sharing one temporary file. [#2322](https://github.com/vicajilau/flutter_file_picker/pull/2322)
+- Fixed a pick losing its `onFileLoading` updates when another pick ended first, such as one from a second macOS window. It now also gets `done` when a pick is cancelled or fails. [#2321](https://github.com/vicajilau/flutter_file_picker/pull/2321)
+- Fixed `lengthSync()` returning `null` for an empty file, and `length()` reading it again to find its size. A size that cannot be read is now left out instead of reported as 0. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
+
 ## 2.5.0
 
 - Added the `FlutterFramework` dependency to `Package.swift`, which Swift Package Manager builds warn about and future Flutter versions will require. It was lost when the Darwin code moved into this package. [#2308](https://github.com/vicajilau/flutter_file_picker/issues/2308)

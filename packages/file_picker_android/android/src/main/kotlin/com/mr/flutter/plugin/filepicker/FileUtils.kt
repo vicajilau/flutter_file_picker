@@ -23,7 +23,6 @@ import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.BufferedOutputStream
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -160,12 +159,8 @@ object FileUtils {
         uri: Uri,
         bytes: ByteArray?
     ): Uri {
-        context.contentResolver.openOutputStream(uri)?.use { output ->
-            bytes?.let {
-                output.write(it)
-            }
-        }
-
+        val data = bytes ?: throw IOException("No file bytes were provided to the save operation.")
+        SaveFileWriter.write(context.contentResolver.openOutputStream(uri), data)
         return uri
     }
 
@@ -591,7 +586,7 @@ object FileUtils {
 
     private fun getCompressFormat(context: Context, uri: Uri): Bitmap.CompressFormat {
         val format = getFileExtension(context, uri)
-        return when (format!!.uppercase(Locale.ROOT)) {
+        return when (format?.uppercase(Locale.ROOT)) {
             "PNG" -> Bitmap.CompressFormat.PNG
             "WEBP" -> Bitmap.CompressFormat.WEBP
             else -> Bitmap.CompressFormat.JPEG
@@ -608,14 +603,14 @@ object FileUtils {
 
     @JvmStatic
     fun compressImage(originalImageUri: Uri, compressionQuality: Int, context: Context): Uri {
-        val compressedUri: Uri
         try {
             // First pass: decode only the image bounds so a subsampling factor
             // can be computed without loading the full bitmap into memory.
             val boundsOptions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            context.contentResolver.openInputStream(originalImageUri).use { imageStream ->
-                BitmapFactory.decodeStream(imageStream, null, boundsOptions)
-            }
+            val boundsStream = context.contentResolver.openInputStream(originalImageUri)
+                ?: throw IOException("Cannot open selected image: $originalImageUri")
+            boundsStream.use { BitmapFactory.decodeStream(it, null, boundsOptions) }
+
             val decodeOptions = BitmapFactory.Options().apply {
                 inSampleSize = calculateInSampleSize(
                     boundsOptions,
@@ -623,22 +618,28 @@ object FileUtils {
                     MAX_COMPRESSED_IMAGE_DIMENSION
                 )
             }
-            context.contentResolver.openInputStream(originalImageUri).use { imageStream ->
-                val compressFormat = getCompressFormat(context, originalImageUri)
-                val compressedFile = createImageFile(context, compressFormat)
-                val originalBitmap = BitmapFactory.decodeStream(imageStream, null, decodeOptions)
+
+            val imageStream = context.contentResolver.openInputStream(originalImageUri)
+                ?: throw IOException("Cannot reopen selected image: $originalImageUri")
+            return imageStream.use { input ->
+                val bitmap = BitmapFactory.decodeStream(input, null, decodeOptions)
                     ?: throw IOException("Failed to decode image: $originalImageUri")
-                // Compress and save the image
-                val fileOutputStream = FileOutputStream(compressedFile)
-                originalBitmap.compress(compressFormat, compressionQuality, fileOutputStream)
-                fileOutputStream.flush()
-                fileOutputStream.close()
-                compressedUri = Uri.fromFile(compressedFile)
+                try {
+                    val format = getCompressFormat(context, originalImageUri)
+                    val compressedFile = createImageFile(context, format)
+                    CompressedBitmapWriter.write(compressedFile) { output ->
+                        bitmap.compress(format, compressionQuality, output)
+                    }
+                    Uri.fromFile(compressedFile)
+                } finally {
+                    // Bitmap pixel storage can be many tens of MB; release it
+                    // promptly rather than retaining it until a later GC.
+                    bitmap.recycle()
+                }
             }
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-        return compressedUri
     }
 
     /**
@@ -702,40 +703,27 @@ object FileUtils {
         hasSafOptions: Boolean = false,
         isReadWrite: Boolean = false
     ): FileInfo? {
-        var fileInputStream: InputStream? = null
-        var fileOutputStream: FileOutputStream? = null
         val fileInfo = FileInfo.Builder()
         val fileName = getFileName(uri, context)
-        val file = PickerPaths.cachedFile(context.cacheDir, System.currentTimeMillis(), fileName)
+        val file = PickerPaths.uniqueCachedFile(context.cacheDir, fileName)
         val path = file.path
 
-        if (!file.exists()) {
-            try {
-                file.parentFile?.mkdirs()
-
-                fileInputStream = context.contentResolver.openInputStream(uri)
-                fileOutputStream = FileOutputStream(file)
-
-                val out = BufferedOutputStream(fileOutputStream)
-                val buffer = ByteArray(8192)
-                var len: Int
-
-                while ((fileInputStream!!.read(buffer).also { len = it }) >= 0) {
-                    out.write(buffer, 0, len)
-                }
-                out.flush()
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to retrieve and cache file: " + e.message, e)
-                return null
-            } finally {
-                try {
-                    fileOutputStream?.fd?.sync()
-                    fileOutputStream?.close()
-                    fileInputStream?.close()
-                } catch (ex: IOException) {
-                    Log.e(TAG, "Failed to close file streams: " + ex.message, ex)
+        try {
+            file.parentFile?.mkdirs()
+            val input = context.contentResolver.openInputStream(uri)
+                ?: throw IOException("The selected document cannot be opened: $uri")
+            input.use { source ->
+                FileOutputStream(file).use { output ->
+                    source.copyTo(output, bufferSize = 64 * 1024)
+                    output.fd.sync()
                 }
             }
+        } catch (e: Exception) {
+            // A failed copy must never be reused as a valid cached document.
+            file.delete()
+            file.parentFile?.delete()
+            Log.e(TAG, "Failed to retrieve and cache file: " + e.message, e)
+            return null
         }
 
         fileInfo

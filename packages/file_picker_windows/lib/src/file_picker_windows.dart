@@ -1,6 +1,5 @@
 import 'dart:ffi';
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
@@ -84,23 +83,21 @@ class FilePickerWindows extends FilePickerPlatform {
   }) async {
     final resolved = _resolveWindowsOptions(windowsOptions);
 
-    final port = ReceivePort();
-    await Isolate.spawn(
-      _callPickFiles,
-      OpenSaveFileArgs(
-        port: port.sendPort,
-        dialogTitle: dialogTitle,
-        initialDirectory: initialDirectory,
-        type: type,
-        allowedExtensions: allowedExtensions,
-        allowMultiple: allowMultiple,
-        lockParentWindow: resolved.lockParentWindow,
-        parentWindowHandle: resolved.parentWindowHandle,
-        acceptLabel: resolved.acceptLabel,
-      ),
-    );
-
-    final fileNames = (await port.first) as List<String>? ?? [];
+    final fileNames =
+        await compute(
+          _callPickFiles,
+          OpenSaveFileArgs(
+            dialogTitle: dialogTitle,
+            initialDirectory: initialDirectory,
+            type: type,
+            allowedExtensions: allowedExtensions,
+            allowMultiple: allowMultiple,
+            lockParentWindow: resolved.lockParentWindow,
+            parentWindowHandle: resolved.parentWindowHandle,
+            acceptLabel: resolved.acceptLabel,
+          ),
+        ) ??
+        <String>[];
     if (fileNames.isEmpty) {
       return [];
     }
@@ -235,11 +232,9 @@ class FilePickerWindows extends FilePickerPlatform {
   }) async {
     final resolved = _resolveWindowsOptions(windowsOptions);
 
-    final port = ReceivePort();
-    await Isolate.spawn(
+    final savedFilePath = await compute(
       _callSaveFile,
       OpenSaveFileArgs(
-        port: port.sendPort,
         defaultFileName: fileName,
         dialogTitle: dialogTitle,
         initialDirectory: initialDirectory,
@@ -249,8 +244,6 @@ class FilePickerWindows extends FilePickerPlatform {
         acceptLabel: resolved.acceptLabel,
       ),
     );
-
-    final savedFilePath = (await port.first) as String?;
     if (savedFilePath != null) {
       final file = File(savedFilePath);
       await file.writeAsBytes(bytes);
@@ -525,14 +518,14 @@ class FilePickerWindows extends FilePickerPlatform {
           pattern: '*.bmp;*.gif;*.jpeg;*.jpg;*.png;*.webp',
         ),
       ],
+      // Windows displays only the active filter, so separate image/video
+      // filters cannot show both kinds together.
       FileType.media => const [
         (
-          name: 'Videos (*.avi,*.flv,*.mkv,*.mov,*.mp4,*.mpeg,*.webm,*.wmv)',
-          pattern: '*.avi;*.flv;*.mkv;*.mov;*.mp4;*.mpeg;*.webm;*.wmv',
-        ),
-        (
-          name: 'Images (*.bmp,*.gif,*.jpeg,*.jpg,*.png)',
-          pattern: '*.bmp;*.gif;*.jpeg;*.jpg;*.png',
+          name: 'Images and videos',
+          pattern:
+              '*.avi;*.bmp;*.flv;*.gif;*.jpeg;*.jpg;*.mkv;*.mov;'
+              '*.mp4;*.mpeg;*.png;*.webm;*.webp;*.wmv',
         ),
       ],
       FileType.video => const [
@@ -545,14 +538,12 @@ class FilePickerWindows extends FilePickerPlatform {
   }
 
   /// Top-level isolate callback to invoke [_pickFiles].
-  static void _callPickFiles(OpenSaveFileArgs args) {
-    final impl = FilePickerWindows();
-    args.port.send(impl._pickFiles(args));
+  static List<String>? _callPickFiles(OpenSaveFileArgs args) {
+    return FilePickerWindows()._pickFiles(args);
   }
 
   /// Top-level isolate callback to invoke [_saveFile].
-  static void _callSaveFile(OpenSaveFileArgs args) {
-    final impl = FilePickerWindows();
-    args.port.send(impl._saveFile(args));
+  static String? _callSaveFile(OpenSaveFileArgs args) {
+    return FilePickerWindows()._saveFile(args);
   }
 }

@@ -23,6 +23,7 @@ class FilePickerWeb extends FilePickerPlatform {
   static const String _kFilePickerInputsDomId = '__file_picker_web-file-input';
 
   late Element _target;
+  WebFileInputSession? _activeSession;
 
   FilePickerWeb._() {
     _target = _ensureInitialized(_kFilePickerInputsDomId);
@@ -129,6 +130,7 @@ class FilePickerWeb extends FilePickerPlatform {
         ? webOptions
         : const FilePickerWebOptions();
 
+    final previous = _activeSession;
     final session = WebFileInputSession(
       target: _target,
       accept: _fileType(type, allowedExtensions),
@@ -138,8 +140,15 @@ class FilePickerWeb extends FilePickerPlatform {
       processFiles: _processSelectedFiles,
     );
 
-    final List<PlatformFile>? files = await session.start();
-    return files ?? <PlatformFile>[];
+    _activeSession = session;
+    try {
+      previous?.cancel();
+      if (!identical(_activeSession, session)) return [];
+      final List<PlatformFile>? files = await session.start();
+      return files ?? <PlatformFile>[];
+    } finally {
+      if (identical(_activeSession, session)) _activeSession = null;
+    }
   }
 
   /// Wraps each selected [File] in a [WebPlatformFile] without reading it.
@@ -201,12 +210,6 @@ class FilePickerWeb extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    if (bytes.isEmpty) {
-      throw ArgumentError(
-        'The bytes are required when saving a file on the web.',
-      );
-    }
-
     if (fileName.isEmpty) {
       throw ArgumentError(
         'A file name is required when saving a file on the web.',
@@ -253,7 +256,7 @@ class FilePickerWeb extends FilePickerPlatform {
       FileType.audio => 'audio/*',
       FileType.image => 'image/*',
       FileType.video => 'video/*',
-      FileType.media => 'video/*|image/*',
+      FileType.media => 'video/*,image/*',
       FileType.custom => allowedExtensions!.fold(
         '',
         (prev, next) => '${prev.isEmpty ? '' : '$prev,'} .$next',
