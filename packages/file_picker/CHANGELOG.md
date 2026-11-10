@@ -1,3 +1,8 @@
+## 13.3.3
+
+- Requires `android_file_picker` 2.1.5, `file_picker_linux` 2.0.4, `windows_file_picker` 2.0.2 and `file_picker_web` 4.2.1, with fixes for status callbacks, saving, cached and compressed files on Android, `FileType.media` on Windows and web, and empty files on every platform. See their changelogs for the details.
+- `file_picker_darwin` stays at 2.4.2 or newer, since 2.5.0 requires Flutter 3.41. Apps on Flutter 3.41 or newer get 2.5.1, which stops `clearTemporaryFiles()` on iOS from deleting the app's own temporary files, with `flutter pub upgrade`.
+
 ## 13.3.2
 
 - Requires `android_file_picker` 2.1.3 and `file_picker_darwin` 2.4.2, with fixes for Android picks that could never complete and for `onFileSaving` when saving fails.
