@@ -14,7 +14,10 @@ typedef ProcessFilesCallback =
       FilePickerWebOptions options,
     );
 
-/// Manages one attached file input and its selection/cancellation completion.
+/// Internal helper class managing the life cycle of an HTML file input session on the web.
+///
+/// Encapsulates DOM element creation, event listening (`change`, `cancel`, `focus`),
+/// cancel timeout handling, and conversion of selected files.
 @internal
 class WebFileInputSession {
   /// Creates a new [WebFileInputSession] instance.
@@ -48,12 +51,15 @@ class WebFileInputSession {
   final Completer<List<PlatformFile>?> _completer = Completer();
   bool _eventTriggered = false;
 
-  // WebKit requires the input to remain attached while the picker is open
-  // or its change event may never arrive.
+  // Kept attached to [target] (and referenced here) for the whole session.
+  // WebKit does not deliver the `change` event to a file input that is not in
+  // the document, which left the returned future hanging on Safari.
   HTMLInputElement? _input;
 
-  // Cache JS function identities so removeEventListener can match the
-  // exact listeners registered earlier.
+  // Cached once and reused for both addEventListener and removeEventListener.
+  // Function.toJS creates a new JS function object on every call, so passing
+  // freshly-created ones to removeEventListener would never actually match
+  // the listener added earlier, silently leaving it attached forever.
   late final JSFunction _onFileSelectionListener = _onFileSelection.toJS;
   late final JSFunction _onCancelListener = _onCancel.toJS;
 
@@ -105,8 +111,9 @@ class WebFileInputSession {
       if (_eventTriggered) return;
       _eventTriggered = true;
 
-      // Safari may send focus before change; keep an existing selection
-      // instead of reporting cancellation.
+      // Safari can fire the window `focus` event well before `change` once
+      // the dialog closes. If the input already holds a selection, use it
+      // instead of reporting a cancellation.
       final input = _input;
       final files = input?.files;
       _cleanupListeners(input);
