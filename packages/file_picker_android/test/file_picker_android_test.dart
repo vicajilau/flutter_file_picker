@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:android_file_picker/android_file_picker.dart';
 import 'package:android_file_picker/src/messages.g.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
@@ -57,6 +58,15 @@ void main() {
         'path': '/tmp/test_file.txt',
       });
       expect(withoutSize.lengthSync(), isNull);
+    });
+
+    test('a reported empty file needs no size lookup', () async {
+      final file = AndroidPlatformFile.fromMap({
+        'path': '/tmp/empty.txt',
+        'size': 0,
+      });
+      expect(file.lengthSync(), 0);
+      expect(await file.length(), 0);
     });
 
     test(
@@ -188,6 +198,61 @@ void main() {
 
         expect(await picker.pickFiles(onFileLoading: (_) {}), isEmpty);
       });
+
+      test(
+        'pickFile reports done after cancellation or a channel error',
+        () async {
+          var fail = false;
+          final picker = FilePickerAndroid(
+            api: FakeFilePickerApi((method, arguments) async {
+              if (fail) throw PlatformException(code: 'pick_failed');
+              return null;
+            }),
+          );
+
+          final statuses = <FilePickerStatus>[];
+          expect(await picker.pickFiles(onFileLoading: statuses.add), isEmpty);
+          expect(statuses.last, FilePickerStatus.done);
+
+          fail = true;
+          await expectLater(
+            picker.pickFile(onFileLoading: statuses.add),
+            throwsA(isA<PlatformException>()),
+          );
+          expect(statuses.last, FilePickerStatus.done);
+        },
+      );
+
+      test(
+        'a rejected overlapping pick keeps the first listener alive',
+        () async {
+          final pending = Completer<Object?>();
+          MockStreamHandlerEventSink? sink;
+          var calls = 0;
+          messenger.setMockStreamHandler(
+            eventChannel,
+            MockStreamHandler.inline(onListen: (_, events) => sink = events),
+          );
+          final api = FakeFilePickerApi((method, arguments) async {
+            if (calls++ == 0) return pending.future;
+            throw PlatformException(code: 'already_active');
+          });
+          final picker = FilePickerAndroid(api: api);
+          final statuses = <FilePickerStatus>[];
+          final first = picker.pickFiles(onFileLoading: statuses.add);
+          await pumpEventQueue();
+          await expectLater(
+            FilePickerAndroid(api: api).pickFiles(onFileLoading: (_) {}),
+            throwsA(isA<PlatformException>()),
+          );
+          sink!.success(true);
+          await pumpEventQueue();
+          expect(statuses, contains(FilePickerStatus.picking));
+          pending.complete(null);
+          await first;
+          expect(statuses.last, FilePickerStatus.done);
+        },
+      );
 
       test('saveFile reports done when saving fails', () async {
         final picker = FilePickerAndroid(

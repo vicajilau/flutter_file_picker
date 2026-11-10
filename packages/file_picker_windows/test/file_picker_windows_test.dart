@@ -1,4 +1,6 @@
-import 'dart:isolate';
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:windows_file_picker/src/open_save_file_args.dart';
@@ -43,6 +45,16 @@ void main() {
       },
     );
 
+    test('a known zero length is kept', () async {
+      final file = WindowsPlatformFile(
+        name: 'empty.txt',
+        uri: Uri.file(r'C:\Users\Test\empty.txt', windows: true),
+        bytesLength: 0,
+      );
+      expect(file.lengthSync(), 0);
+      expect(await file.length(), 0);
+    });
+
     test('FilePickerWindowsOptions contains expected properties', () {
       const options = FilePickerWindowsOptions(
         parentWindowHandle: 12345,
@@ -59,6 +71,66 @@ void main() {
       expect(options.acceptLabel, isNull);
     });
   });
+
+  group('native dialog failures', () {
+    late Directory directory;
+    late String missingDirectory;
+
+    setUp(() async {
+      directory = await Directory.systemTemp.createTemp('picker_failure_');
+      missingDirectory = '${directory.path}\\missing';
+    });
+    tearDown(() => directory.delete(recursive: true));
+
+    for (final multiple in [false, true]) {
+      test(
+        'pickFiles multiple=$multiple propagates failure without status callbacks',
+        () async {
+          final statuses = <FilePickerStatus>[];
+          final picker = FilePickerWindows();
+          final result = multiple
+              ? picker.pickFiles(
+                  initialDirectory: missingDirectory,
+                  onFileLoading: statuses.add,
+                )
+              : picker.pickFile(
+                  initialDirectory: missingDirectory,
+                  onFileLoading: statuses.add,
+                );
+          await expectLater(
+            result.timeout(const Duration(seconds: 5)),
+            throwsA(isNot(isA<TimeoutException>())),
+          );
+          expect(statuses, isEmpty);
+        },
+      );
+    }
+
+    test('saveFile propagates failure without status callbacks', () async {
+      final statuses = <FilePickerStatus>[];
+      await expectLater(
+        FilePickerWindows()
+            .saveFile(
+              fileName: 'a.txt',
+              bytes: Uint8List(0),
+              mimeType: 'text/plain',
+              initialDirectory: missingDirectory,
+              onFileSaving: statuses.add,
+            )
+            .timeout(const Duration(seconds: 5)),
+        throwsA(isNot(isA<TimeoutException>())),
+      );
+      expect(statuses, isEmpty);
+    });
+    test('directory propagates native failure', () async {
+      await expectLater(
+        FilePickerWindows()
+            .getDirectoryPath(initialDirectory: missingDirectory)
+            .timeout(const Duration(seconds: 5)),
+        throwsA(isNot(isA<TimeoutException>())),
+      );
+    });
+  }, skip: !Platform.isWindows);
 
   group('validateFileName', () {
     final picker = FilePickerWindows();
@@ -82,15 +154,12 @@ void main() {
 
   group('resolveDefaultExtension', () {
     final picker = FilePickerWindows();
-    final port = ReceivePort();
-    tearDownAll(port.close);
 
     OpenSaveFileArgs args({
       List<String>? allowedExtensions,
       String? defaultFileName,
     }) {
       return OpenSaveFileArgs(
-        port: port.sendPort,
         allowedExtensions: allowedExtensions,
         defaultFileName: defaultFileName,
       );
@@ -169,17 +238,43 @@ void main() {
       ]);
     });
 
-    test('media type produces separate video and image specs', () {
-      final specs = FilePickerWindows.fileTypeFilterSpecs(FileType.media, null);
-      expect(specs, [
+    test('media type combines all image and video extensions', () {
+      final media = FilePickerWindows.fileTypeFilterSpecs(FileType.media, null);
+      final images = FilePickerWindows.fileTypeFilterSpecs(
+        FileType.image,
+        null,
+      );
+      final videos = FilePickerWindows.fileTypeFilterSpecs(
+        FileType.video,
+        null,
+      );
+
+      expect(media, hasLength(1));
+      expect(media.single.name, 'Images and videos');
+      final patterns = media.single.pattern.split(';');
+      expect(patterns, hasLength(patterns.toSet().length));
+      expect(patterns.toSet(), {
+        ...images.single.pattern.split(';'),
+        ...videos.single.pattern.split(';'),
+      });
+    });
+
+    test('video type keeps its own label and excludes image extensions', () {
+      expect(FilePickerWindows.fileTypeFilterSpecs(FileType.video, null), [
         (
           name: 'Videos (*.avi,*.flv,*.mkv,*.mov,*.mp4,*.mpeg,*.webm,*.wmv)',
           pattern: '*.avi;*.flv;*.mkv;*.mov;*.mp4;*.mpeg;*.webm;*.wmv',
         ),
-        (
-          name: 'Images (*.bmp,*.gif,*.jpeg,*.jpg,*.png)',
-          pattern: '*.bmp;*.gif;*.jpeg;*.jpg;*.png',
-        ),
+      ]);
+    });
+
+    test('allowed extensions affect custom filters, not media presets', () {
+      expect(
+        FilePickerWindows.fileTypeFilterSpecs(FileType.media, ['pdf']),
+        FilePickerWindows.fileTypeFilterSpecs(FileType.media, null),
+      );
+      expect(FilePickerWindows.fileTypeFilterSpecs(FileType.custom, ['pdf']), [
+        (name: 'Files (*.pdf)', pattern: '*.pdf'),
       ]);
     });
   });

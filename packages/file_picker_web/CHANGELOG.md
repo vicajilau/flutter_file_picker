@@ -5,6 +5,14 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` take the new `darwinOptions` parameter of `file_picker_platform_interface` 5.0.0. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0, which no longer has `skipEntitlementsChecks()`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 
+## 4.2.1
+
+- Fixed a pick started while another one was open leaving the first one waiting forever. The first one now completes with an empty list. [#2324](https://github.com/vicajilau/flutter_file_picker/pull/2324)
+- `onFileLoading` now also gets `done` when the user cancels the picker. [#2324](https://github.com/vicajilau/flutter_file_picker/pull/2324)
+- Fixed `FileType.media` not filtering anything, since its `accept` filter separated the types with `|` instead of a comma. [#2323](https://github.com/vicajilau/flutter_file_picker/pull/2323)
+- Fixed `lengthSync()` and `length()` treating an empty file as one of unknown size. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
+- Fixed `saveFile()` rejecting an empty file. [#2331](https://github.com/vicajilau/flutter_file_picker/pull/2331)
+
 ## 4.2.0
 
 - Added `FilePickerWebOptions.saveMode`. `WebSaveFileMode.dialog` saves through the browser's save dialog, and `supportsShowSaveFileDialog` tells whether the browser supports it. [#1732](https://github.com/vicajilau/flutter_file_picker/issues/1732)

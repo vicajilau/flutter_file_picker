@@ -40,6 +40,16 @@ void main() {
       expect(withLength.lengthSync(), equals(3));
     });
 
+    test('a known zero length is kept', () async {
+      final file = LinuxPlatformFile(
+        name: 'empty.txt',
+        uri: Uri.file('/tmp/empty.txt'),
+        bytesLength: 0,
+      );
+      expect(file.lengthSync(), 0);
+      expect(await file.length(), 0);
+    });
+
     test('Filter constructs filters correctly', () {
       final filter = Filter(FileType.custom, ['png', 'jpg']);
       expect(filter.info.containsKey('Custom'), isTrue);
@@ -116,6 +126,17 @@ void main() {
         initialDirectory: initialDirectory,
       );
     }
+
+    test('each request has a distinct portal-safe handle token', () {
+      final first = open(const FilePickerLinuxOptions());
+      final second = open(const FilePickerLinuxOptions());
+      final firstToken = first['handle_token']!.asString();
+      final secondToken = second['handle_token']!.asString();
+
+      expect(firstToken, isNot(secondToken));
+      expect(RegExp(r'^[A-Za-z0-9_]+$').hasMatch(firstToken), isTrue);
+      expect(RegExp(r'^[A-Za-z0-9_]+$').hasMatch(secondToken), isTrue);
+    });
 
     test('sends lockParentWindow as modal', () {
       final locked = open(const FilePickerLinuxOptions(lockParentWindow: true));

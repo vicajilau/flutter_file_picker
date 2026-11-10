@@ -6,6 +6,16 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` throws a `PlatformException` when the pick fails, such as an `unknown_path` for a folder that cannot be resolved, or an `already_active` for a second pick while one is open. It used to return `null`, the same as a cancel. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0, which no longer has `skipEntitlementsChecks()`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 
+## 2.1.5
+
+- Fixed two documents with the same name, picked in the same millisecond, sharing one cached copy, and a copy that failed halfway staying in the cache. [#2318](https://github.com/vicajilau/flutter_file_picker/pull/2318)
+- Fixed `onFileLoading` losing its status updates when a second pick started while one was still open. It now also gets `done` when a pick is cancelled or fails. [#2317](https://github.com/vicajilau/flutter_file_picker/pull/2317)
+- Fixed `saveFile()` reporting success when the document provider gave nothing to write to, leaving the file empty. [#2320](https://github.com/vicajilau/flutter_file_picker/pull/2320)
+- Fixed `lengthSync()` returning `null` for an empty file, and `length()` reading it again to find its size. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
+- The bytes of a saved file are released when the save ends, instead of staying in memory until the next one. [#2319](https://github.com/vicajilau/flutter_file_picker/pull/2319)
+- Fixed a compressed image being reported as picked when the encoder failed, leaving a broken or partial file. The partial file is now removed, and the decoded image is released from memory as soon as it is written. [#2328](https://github.com/vicajilau/flutter_file_picker/pull/2328)
+- Fixed compressing an image whose provider reports no type crashing instead of falling back to JPEG. [#2329](https://github.com/vicajilau/flutter_file_picker/pull/2329)
+
 ## 2.1.4
 
 - Fixed `allowedExtensions` in upper case, such as `CSV`, missing the `text/csv` filter that Google Drive needs.
