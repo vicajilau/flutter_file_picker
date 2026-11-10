@@ -89,6 +89,12 @@ class WebFileInputSession {
     return _completer.future;
   }
 
+  /// Completes a picker superseded by a newer request without a browser event.
+  void cancel() {
+    _eventTriggered = true;
+    _finish(null);
+  }
+
   void _onFileSelection(Event e) async {
     if (_eventTriggered) return;
     _eventTriggered = true;
@@ -117,11 +123,10 @@ class WebFileInputSession {
 
   Future<void> _complete(FileList? files) async {
     _removeInput();
+    if (_completer.isCompleted) return;
 
     if (files == null) {
-      if (!_completer.isCompleted) {
-        _completer.complete(null);
-      }
+      _finish(null);
       return;
     }
 
@@ -131,17 +136,27 @@ class WebFileInputSession {
     } catch (error, stackTrace) {
       // Without this the error escapes the event listener uncaught and the
       // returned future never completes.
-      onFileLoading?.call(FilePickerStatus.done);
-      if (!_completer.isCompleted) {
-        _completer.completeError(error, stackTrace);
-      }
+      _finish(null, error: error, stackTrace: stackTrace);
       return;
     }
 
-    onFileLoading?.call(FilePickerStatus.done);
-    if (!_completer.isCompleted) {
-      _completer.complete(pickedFiles);
+    _finish(pickedFiles);
+  }
+
+  void _finish(
+    List<PlatformFile>? files, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    if (_completer.isCompleted) return;
+    _cleanupListeners(_input);
+    _removeInput();
+    if (error == null) {
+      _completer.complete(files);
+    } else {
+      _completer.completeError(error, stackTrace);
     }
+    onFileLoading?.call(FilePickerStatus.done);
   }
 
   void _removeInput() {
