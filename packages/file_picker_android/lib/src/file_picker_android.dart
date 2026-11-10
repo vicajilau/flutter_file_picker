@@ -25,12 +25,16 @@ class FilePickerAndroid extends FilePickerPlatform {
   );
 
   /// The event channel used to receive real-time updates from the native platform.
-  @visibleForTesting
-  final eventChannel = const EventChannel(
+  static const EventChannel _sharedEventChannel = EventChannel(
     'miguelruivo.flutter.plugins.filepickerevent',
   );
 
-  static StreamSubscription? _eventSubscription;
+  // Share the messenger handler so overlapping calls cannot remove it.
+  static final Stream<dynamic> _statusEvents = _sharedEventChannel
+      .receiveBroadcastStream();
+
+  @visibleForTesting
+  final eventChannel = _sharedEventChannel;
 
   @override
   Future<PlatformFile?> pickFile({
@@ -96,10 +100,11 @@ class FilePickerAndroid extends FilePickerPlatform {
     AndroidOptions androidOptions = const FilePickerAndroidOptions(),
   }) async {
     final String typeName = type.name;
+    StreamSubscription<Object?>? eventSubscription;
 
     try {
       if (onFileLoading != null) {
-        _eventSubscription = eventChannel.receiveBroadcastStream().listen(
+        eventSubscription = _statusEvents.listen(
           (data) {
             if (data is! bool) return;
             onFileLoading(
@@ -135,8 +140,8 @@ class FilePickerAndroid extends FilePickerPlatform {
 
       return platformFiles;
     } finally {
-      await _eventSubscription?.cancel();
-      _eventSubscription = null;
+      await eventSubscription?.cancel();
+      onFileLoading?.call(FilePickerStatus.done);
     }
   }
 
@@ -238,10 +243,11 @@ class FilePickerAndroid extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
+    StreamSubscription<Object?>? eventSubscription;
     try {
       if (onFileSaving != null) {
         onFileSaving(FilePickerStatus.picking);
-        _eventSubscription = eventChannel.receiveBroadcastStream().listen(
+        eventSubscription = _statusEvents.listen(
           (data) {
             if (data is! bool) return;
             onFileSaving(
@@ -266,9 +272,8 @@ class FilePickerAndroid extends FilePickerPlatform {
       return Uri.tryParse(savedPath) ?? Uri.file(savedPath);
     } finally {
       // Also when saving fails, so the app does not stay in the picking state.
+      await eventSubscription?.cancel();
       onFileSaving?.call(FilePickerStatus.done);
-      await _eventSubscription?.cancel();
-      _eventSubscription = null;
     }
   }
 

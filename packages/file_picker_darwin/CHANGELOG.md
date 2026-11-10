@@ -1,3 +1,8 @@
+## 2.5.1
+
+- Fixed a pick losing its `onFileLoading` updates when another pick ended first, such as one from a second macOS window. It now also gets `done` when a pick is cancelled or fails. [#2321](https://github.com/vicajilau/flutter_file_picker/pull/2321)
+- Fixed `lengthSync()` returning `null` for an empty file, and `length()` reading it again to find its size. A size that cannot be read is now left out instead of reported as 0. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
+
 ## 2.5.0
 
 - Added the `FlutterFramework` dependency to `Package.swift`, which Swift Package Manager builds warn about and future Flutter versions will require. It was lost when the Darwin code moved into this package. [#2308](https://github.com/vicajilau/flutter_file_picker/issues/2308)

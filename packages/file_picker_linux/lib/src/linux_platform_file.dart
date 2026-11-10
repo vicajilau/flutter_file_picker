@@ -56,14 +56,13 @@ base class LinuxPlatformFile extends PlatformFile {
   /// `null` here and [length] has to read the file to answer.
   @override
   int? lengthSync() {
-    final len = _bytesLength;
-    return (len != null && len > 0) ? len : null;
+    return _bytesLength;
   }
 
   @override
   Future<int?> length() async {
     final len = _bytesLength;
-    if (len != null && len > 0) return len;
+    if (len != null) return len;
     try {
       return await xFile.length();
     } catch (_) {

@@ -177,5 +177,9 @@ class FilePickerDelegate(
 
     private fun clearPendingResult() {
         pendingResult = null
+        // The delegate outlives each export; release the complete byte payload.
+        bytes = null
+        saveFileName = null
+        saveMimeType = null
     }
 }

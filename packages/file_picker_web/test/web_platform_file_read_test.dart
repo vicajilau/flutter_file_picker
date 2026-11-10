@@ -17,6 +17,16 @@ void main() {
   WebPlatformFile fileAt(String url) =>
       WebPlatformFile(name: 'a.txt', uri: Uri.parse(url));
 
+  test('known zero-length file avoids fetching a missing blob', () async {
+    final file = WebPlatformFile(
+      name: 'empty.txt',
+      uri: Uri.parse('blob:https://example.com/nonexistent'),
+      bytesLength: 0,
+    );
+    expect(file.lengthSync(), 0);
+    expect(await file.length(), 0);
+  });
+
   test('readAsBytes() reads a blob URL', () async {
     final url = createBlobUrl();
     addTearDown(() => URL.revokeObjectURL(url));
