@@ -238,17 +238,43 @@ void main() {
       ]);
     });
 
-    test('media type produces separate video and image specs', () {
-      final specs = FilePickerWindows.fileTypeFilterSpecs(FileType.media, null);
-      expect(specs, [
+    test('media type combines all image and video extensions', () {
+      final media = FilePickerWindows.fileTypeFilterSpecs(FileType.media, null);
+      final images = FilePickerWindows.fileTypeFilterSpecs(
+        FileType.image,
+        null,
+      );
+      final videos = FilePickerWindows.fileTypeFilterSpecs(
+        FileType.video,
+        null,
+      );
+
+      expect(media, hasLength(1));
+      expect(media.single.name, 'Images and videos');
+      final patterns = media.single.pattern.split(';');
+      expect(patterns, hasLength(patterns.toSet().length));
+      expect(patterns.toSet(), {
+        ...images.single.pattern.split(';'),
+        ...videos.single.pattern.split(';'),
+      });
+    });
+
+    test('video type keeps its own label and excludes image extensions', () {
+      expect(FilePickerWindows.fileTypeFilterSpecs(FileType.video, null), [
         (
           name: 'Videos (*.avi,*.flv,*.mkv,*.mov,*.mp4,*.mpeg,*.webm,*.wmv)',
           pattern: '*.avi;*.flv;*.mkv;*.mov;*.mp4;*.mpeg;*.webm;*.wmv',
         ),
-        (
-          name: 'Images (*.bmp,*.gif,*.jpeg,*.jpg,*.png)',
-          pattern: '*.bmp;*.gif;*.jpeg;*.jpg;*.png',
-        ),
+      ]);
+    });
+
+    test('allowed extensions affect custom filters, not media presets', () {
+      expect(
+        FilePickerWindows.fileTypeFilterSpecs(FileType.media, ['pdf']),
+        FilePickerWindows.fileTypeFilterSpecs(FileType.media, null),
+      );
+      expect(FilePickerWindows.fileTypeFilterSpecs(FileType.custom, ['pdf']), [
+        (name: 'Files (*.pdf)', pattern: '*.pdf'),
       ]);
     });
   });

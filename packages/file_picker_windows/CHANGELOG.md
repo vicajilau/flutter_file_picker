@@ -8,6 +8,7 @@
 
 - Fixed `pickFiles()`, `pickFile()` and `saveFile()` never completing when the dialog failed, such as with an `initialDirectory` that does not exist. They now throw the error. [#2314](https://github.com/vicajilau/flutter_file_picker/pull/2314)
 - Fixed `lengthSync()` returning `null` for a file made from empty bytes, and `length()` reading it from disk instead. [#2313](https://github.com/vicajilau/flutter_file_picker/pull/2313)
+- Fixed `FileType.media` offering images and videos as two separate filters, so only one kind showed at a time. They are now one filter, which also includes `webp`. [#2330](https://github.com/vicajilau/flutter_file_picker/pull/2330)
 
 ## 2.0.1
 
