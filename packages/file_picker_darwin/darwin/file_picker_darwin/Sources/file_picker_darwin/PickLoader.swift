@@ -121,8 +121,37 @@ struct PickLoader {
         ]
     }
 
-    /// Same-name Photos files can delete another item's in-flight copy target.
-    /// UUID directories under the picker root and propagated errors prevent false cancellation.
+    /// Moves a picked item into its own freshly created subdirectory of
+    /// `temporaryDirectory`, or copies it when `copying` is set, for sources
+    /// the app does not own.
+    ///
+    /// The destination used to be `NSTemporaryDirectory()` plus the source's
+    /// `lastPathComponent`, which is not unique: two picked assets can share a
+    /// file name. Photos edited in the Photos app are exported under a fixed
+    /// name, and Live Photos arrive as `.pvt` packages. These copies also run
+    /// concurrently, because `loadFileRepresentation` calls its completion
+    /// handler on an arbitrary queue, once per selected item. Colliding names
+    /// therefore raced:
+    ///
+    ///     A: fileExists? no  -> starts copying to /tmp/NAME
+    ///     B: fileExists? yes -> removes /tmp/NAME, deleting A's in-flight copy
+    ///     A: copyItem throws -> returns nil
+    ///     B: copyItem throws -> returns nil
+    ///
+    /// Both items are then dropped by the `compactMap` over `resolved`, and
+    /// when every item loses the race the picker calls back with `nil`, which
+    /// reaches Dart as an empty list. That is indistinguishable from the user
+    /// cancelling, so the failure is silent.
+    ///
+    /// Giving each item its own directory removes the shared destination, so
+    /// the copies can no longer observe or delete each other. The existence
+    /// check is gone with it, the directory is new every time. The
+    /// directories live under `PickerTemporaryFiles.root()`, so
+    /// `clearTemporaryFiles()` removes them without touching the app's own
+    /// temporary files.
+    ///
+    /// Throws the file system error, such as a full disk, so the pick can
+    /// report why the item could not be loaded.
     func store(_ sourceURL: URL, copying: Bool) throws -> URL {
         let directoryURL = temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
