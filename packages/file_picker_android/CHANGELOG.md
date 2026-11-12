@@ -1,3 +1,7 @@
+## 2.1.6
+
+- Fixed the Android build failing with `Extension of type 'LibraryExtension' does not exist` when the app sets `android.newDsl=true` with Android Gradle Plugin 9. The plugin now configures the public `com.android.build.api.dsl.LibraryExtension`, which works with both the old and the new DSL. [#2336](https://github.com/vicajilau/flutter_file_picker/issues/2336)
+
 ## 2.1.5
 
 - Fixed two documents with the same name, picked in the same millisecond, sharing one cached copy, and a copy that failed halfway staying in the cache. [#2318](https://github.com/vicajilau/flutter_file_picker/pull/2318)
