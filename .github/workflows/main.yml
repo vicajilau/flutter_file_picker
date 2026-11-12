@@ -184,15 +184,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Last release of the AGP 8.x line. Flutter enforces a minimum AGP
-          # version and raises it over time, so pinning near the top of the
-          # line keeps this lane alive until Flutter drops AGP 8 altogether.
+          # Last release of the AGP 8.x line. Flutter 3.50 dropped AGP 8
+          # (minimum AGP 9.1.1, Gradle 9.3.1, KGP 2.4.10), so this lane is
+          # pinned to 3.47.9, the last stable that still accepts it (minimum
+          # AGP 8.11.1, Gradle 8.14.0, KGP 2.2.20). It covers apps on the
+          # Flutter versions the plugin still supports that predate 3.50.
           - lane: agp-8.x
+            flutter_version: 3.47.9
             agp_version: 8.13.2
             gradle_version: 8.14.3
             kotlin_version: 2.2.20
             built_in_kotlin: ""
+          # Empty flutter_version means the latest stable.
           - lane: agp-9.x
+            flutter_version: ""
             agp_version: 9.2.1
             gradle_version: 9.5.0
             kotlin_version: 2.3.21
@@ -209,6 +214,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ matrix.flutter_version }}
           cache: true
 
       - name: Show toolchain versions
