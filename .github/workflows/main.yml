@@ -115,6 +115,16 @@ jobs:
         working-directory: packages/file_picker_web
         run: flutter test --platform chrome
 
+      # The example collects streamed bytes with a JavaScript buffer on the web
+      # (see example/lib/src/byte_accumulator_web.dart). The VM run above only
+      # covers the native BytesBuilder version, so run it under dart2js and dart2wasm.
+      - name: Run example web tests in Chrome (JS and Wasm)
+        if: matrix.flutter == 'stable'
+        working-directory: example
+        run: |
+          flutter test --platform chrome test/byte_accumulator_test.dart
+          flutter test --platform chrome --wasm test/byte_accumulator_test.dart
+
       # tool/ is not a melos package, so `melos run test` never reaches it.
       - name: Run CI tooling tests
         if: matrix.flutter == 'stable'
@@ -184,19 +194,36 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Last release of the AGP 8.x line. Flutter enforces a minimum AGP
-          # version and raises it over time, so pinning near the top of the
-          # line keeps this lane alive until Flutter drops AGP 8 altogether.
+          # Last release of the AGP 8.x line. Flutter 3.50 dropped AGP 8
+          # (minimum AGP 9.1.1, Gradle 9.3.1, KGP 2.4.10), so this lane is
+          # pinned to 3.47.9, the last stable that still accepts it (minimum
+          # AGP 8.11.1, Gradle 8.14.0, KGP 2.2.20). It covers apps on the
+          # Flutter versions the plugin still supports that predate 3.50.
           - lane: agp-8.x
+            flutter_version: 3.47.9
             agp_version: 8.13.2
             gradle_version: 8.14.3
             kotlin_version: 2.2.20
             built_in_kotlin: ""
+            new_dsl: ""
+          # Empty flutter_version means the latest stable.
           - lane: agp-9.x
+            flutter_version: ""
             agp_version: 9.2.1
             gradle_version: 9.5.0
             kotlin_version: 2.3.21
             built_in_kotlin: "false"
+            new_dsl: ""
+          # AGP 9's new DSL, which apps can opt into once every plugin supports
+          # built-in Kotlin and which AGP 10 makes mandatory. Catches plugin
+          # build scripts that still configure the legacy DSL types (#2336).
+          - lane: agp-9.x-new-dsl
+            flutter_version: ""
+            agp_version: 9.2.1
+            gradle_version: 9.5.0
+            kotlin_version: 2.3.21
+            built_in_kotlin: "true"
+            new_dsl: "true"
     name: Build Android (example app, ${{ matrix.lane }})
     steps:
       - uses: actions/checkout@v7
@@ -209,6 +236,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ matrix.flutter_version }}
           cache: true
 
       - name: Show toolchain versions
@@ -224,6 +252,7 @@ jobs:
           --gradle ${{ matrix.gradle_version }}
           --kotlin ${{ matrix.kotlin_version }}
           --built-in-kotlin "${{ matrix.built_in_kotlin }}"
+          ${{ matrix.new_dsl && format('--new-dsl {0}', matrix.new_dsl) || '' }}
 
       - name: Show Android diff under test
         run: git --no-pager diff -- example/android | cat

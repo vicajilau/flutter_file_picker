@@ -5,6 +5,10 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` throws a `PlatformException` when the pick fails, such as an `unknown_path` for a folder that cannot be resolved, or an `already_active` for a second pick while one is open. It used to return `null`, the same as a cancel. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0, which no longer has `skipEntitlementsChecks()`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 
+## 2.1.6
+
+- Fixed the Android build failing with `Extension of type 'LibraryExtension' does not exist` when the app sets `android.newDsl=true` with Android Gradle Plugin 9. The plugin now configures the public `com.android.build.api.dsl.LibraryExtension`, which works with both the old and the new DSL. [#2336](https://github.com/vicajilau/flutter_file_picker/issues/2336)
+
 ## 2.1.5
 
 - Fixed two documents with the same name, picked in the same millisecond, sharing one cached copy, and a copy that failed halfway staying in the cache. [#2318](https://github.com/vicajilau/flutter_file_picker/pull/2318)

@@ -1,4 +1,4 @@
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.LibraryExtension
 import groovy.lang.GroovyObject
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withGroovyBuilder
