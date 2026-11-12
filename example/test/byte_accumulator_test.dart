@@ -54,6 +54,11 @@ void main() {
       );
     });
 
+    test('grows past its initial capacity without a known length', () {
+      final chunks = [for (var i = 0; i < 40; i++) List<int>.filled(4096, i)];
+      expect(collect(chunks), [for (final chunk in chunks) ...chunk]);
+    });
+
     test('returns no bytes for an empty stream', () {
       expect(collect([], length: 0), isEmpty);
     });

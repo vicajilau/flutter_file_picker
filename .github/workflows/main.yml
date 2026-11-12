@@ -115,6 +115,16 @@ jobs:
         working-directory: packages/file_picker_web
         run: flutter test --platform chrome
 
+      # The example collects streamed bytes with a JavaScript buffer on the web
+      # (see example/lib/src/byte_accumulator_web.dart). The VM run above only
+      # covers the native BytesBuilder version, so run it under dart2js and dart2wasm.
+      - name: Run example web tests in Chrome (JS and Wasm)
+        if: matrix.flutter == 'stable'
+        working-directory: example
+        run: |
+          flutter test --platform chrome test/byte_accumulator_test.dart
+          flutter test --platform chrome --wasm test/byte_accumulator_test.dart
+
       # tool/ is not a melos package, so `melos run test` never reaches it.
       - name: Run CI tooling tests
         if: matrix.flutter == 'stable'
