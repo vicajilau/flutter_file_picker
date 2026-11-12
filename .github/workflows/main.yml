@@ -205,6 +205,7 @@ jobs:
             gradle_version: 8.14.3
             kotlin_version: 2.2.20
             built_in_kotlin: ""
+            new_dsl: ""
           # Empty flutter_version means the latest stable.
           - lane: agp-9.x
             flutter_version: ""
@@ -212,6 +213,17 @@ jobs:
             gradle_version: 9.5.0
             kotlin_version: 2.3.21
             built_in_kotlin: "false"
+            new_dsl: ""
+          # AGP 9's new DSL, which apps can opt into once every plugin supports
+          # built-in Kotlin and which AGP 10 makes mandatory. Catches plugin
+          # build scripts that still configure the legacy DSL types (#2336).
+          - lane: agp-9.x-new-dsl
+            flutter_version: ""
+            agp_version: 9.2.1
+            gradle_version: 9.5.0
+            kotlin_version: 2.3.21
+            built_in_kotlin: "true"
+            new_dsl: "true"
     name: Build Android (example app, ${{ matrix.lane }})
     steps:
       - uses: actions/checkout@v7
@@ -240,6 +252,7 @@ jobs:
           --gradle ${{ matrix.gradle_version }}
           --kotlin ${{ matrix.kotlin_version }}
           --built-in-kotlin "${{ matrix.built_in_kotlin }}"
+          ${{ matrix.new_dsl && format('--new-dsl {0}', matrix.new_dsl) || '' }}
 
       - name: Show Android diff under test
         run: git --no-pager diff -- example/android | cat

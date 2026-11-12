@@ -26,6 +26,8 @@ Usage: dart tool/patch_android_example.dart [options]
   --kotlin <version>            Kotlin plugin version to apply (required).
   --built-in-kotlin <value>     Value for android.builtInKotlin. Pass an empty
                                 string to remove the flag entirely (default).
+  --new-dsl <value>             Value for android.newDsl. Pass an empty string
+                                to remove the flag. Left untouched if omitted.
   --root <path>                 Android host app directory
                                 (default: example/android).
 ''';
@@ -94,6 +96,7 @@ Future<void> main(List<String> args) async {
       patchGradleProperties(
         gradlePropertiesFile.readAsStringSync(),
         builtInKotlin: options['built-in-kotlin'] ?? '',
+        newDsl: options['new-dsl'],
       ),
     );
   } on PatchException catch (e) {
@@ -189,12 +192,22 @@ String patchGradleWrapper(String source, {required String gradleVersion}) {
   );
 }
 
-/// Rewrites `android.builtInKotlin` in a `gradle.properties` source.
+/// Rewrites `android.builtInKotlin`, and optionally `android.newDsl`, in a
+/// `gradle.properties` source.
 ///
-/// Any existing declaration and the comment Flutter's migrator writes above it
-/// are dropped first, so lanes never inherit the previous lane's value. An
-/// empty [builtInKotlin] removes the flag instead of setting it.
-String patchGradleProperties(String source, {required String builtInKotlin}) {
+/// Any existing `android.builtInKotlin` declaration and the comment Flutter's
+/// migrator writes above it are dropped first, so lanes never inherit the
+/// previous lane's value. An empty [builtInKotlin] removes the flag instead of
+/// setting it.
+///
+/// A null [newDsl] leaves `android.newDsl` as the example declares it. Any
+/// other value replaces the declaration, and an empty one removes it, which
+/// on AGP 9 means the new DSL is on.
+String patchGradleProperties(
+  String source, {
+  required String builtInKotlin,
+  String? newDsl,
+}) {
   const migratorComment =
       '# This builtInKotlin flag was added automatically by Flutter migrator';
 
@@ -202,8 +215,12 @@ String patchGradleProperties(String source, {required String builtInKotlin}) {
       .convert(source)
       .where((line) => !line.startsWith('android.builtInKotlin='))
       .where((line) => line.trim() != migratorComment)
+      .where((line) => newDsl == null || !line.startsWith('android.newDsl='))
       .toList();
 
+  if (newDsl != null && newDsl.isNotEmpty) {
+    lines.add('android.newDsl=$newDsl');
+  }
   if (builtInKotlin.isNotEmpty) {
     lines.add('android.builtInKotlin=$builtInKotlin');
   }
