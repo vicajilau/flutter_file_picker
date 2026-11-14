@@ -120,19 +120,20 @@ class FilePickerAndroid extends FilePickerPlatform {
         _ => null,
       };
 
-      final List<Map>? result = await methodChannel.invokeListMethod(typeName, {
-        'allowMultipleSelection': allowMultiple,
-        'allowedExtensions': allowedExtensions,
-        'compressionQuality': compressionQuality,
-        'androidSafOptions': safOptionsMap,
-      });
+      final result = await methodChannel
+          .invokeListMethod<Map<Object?, Object?>>(typeName, {
+            'allowMultipleSelection': allowMultiple,
+            'allowedExtensions': allowedExtensions,
+            'compressionQuality': compressionQuality,
+            'androidSafOptions': safOptionsMap,
+          });
 
       if (result == null) {
         return [];
       }
 
       final platformFiles = <PlatformFile>[];
-      for (final Map platformFileMap in result) {
+      for (final platformFileMap in result) {
         platformFiles.add(AndroidPlatformFile.fromMap(platformFileMap));
       }
 

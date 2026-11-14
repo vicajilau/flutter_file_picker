@@ -107,7 +107,7 @@ class WebFileInputSession {
   void _onCancel(Event _) {
     _cleanupListeners(null);
 
-    Future.delayed(const Duration(milliseconds: 500)).then((_) async {
+    Future<void>.delayed(const Duration(milliseconds: 500)).then((_) async {
       if (_eventTriggered) return;
       _eventTriggered = true;
 
