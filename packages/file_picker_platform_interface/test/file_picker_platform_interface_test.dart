@@ -51,6 +51,7 @@ void main() {
       );
       expect(instance.clearTemporaryFiles(), completes);
       expect(() => instance.getDirectoryPath(), throwsUnimplementedError);
+      expect(() => instance.pickDirectory(), throwsUnimplementedError);
       expect(
         () => instance.saveFile(
           fileName: 'test.txt',

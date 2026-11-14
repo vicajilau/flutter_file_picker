@@ -294,8 +294,8 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
     _resetState();
 
     try {
-      pickedDirectoryPath = await FilePickerViewScope.of(context)
-          .getDirectoryPath(
+      final pickedDirectory = await FilePickerViewScope.of(context)
+          .pickDirectory(
             dialogTitle: _dialogTitleController.text,
             initialDirectory: _initialDirectoryController.text,
             windowsOptions: WindowsOptions(lockParentWindow: _lockParentWindow),
@@ -304,7 +304,14 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
             androidOptions:
                 _androidSafOptionsFromFlags() ?? const AndroidOptions(),
           );
-      hasUserAborted = pickedDirectoryPath == null;
+      // A file URI is shown as a path. On Android the result is a content://
+      // URI, which is shown as it is.
+      pickedDirectoryPath = switch (pickedDirectory) {
+        null => null,
+        Uri(scheme: 'file') => pickedDirectory.toFilePath(),
+        _ => pickedDirectory.toString(),
+      };
+      hasUserAborted = pickedDirectory == null;
     } on PlatformException catch (e) {
       _logException('Picking a folder failed: $e');
     } catch (e) {

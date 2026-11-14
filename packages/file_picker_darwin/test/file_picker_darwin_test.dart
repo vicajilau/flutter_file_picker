@@ -394,6 +394,35 @@ void main() {
       },
     );
 
+    test('pickDirectory returns a file URI, or null on cancel', () async {
+      final picker = FilePickerDarwin();
+      String? answer = '/Users/me/My Documents';
+      Map<Object?, Object?>? receivedArguments;
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(picker.methodChannel, (call) async {
+            receivedArguments = call.arguments as Map<Object?, Object?>;
+            return answer;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(picker.methodChannel, null);
+      });
+
+      final uri = await picker.pickDirectory(
+        dialogTitle: 'Pick a folder',
+        darwinOptions: const DarwinOptions(acceptLabel: 'Choose'),
+      );
+
+      expect(uri?.scheme, 'file');
+      expect(uri?.toFilePath(), '/Users/me/My Documents/');
+      expect(receivedArguments?['dialogTitle'], 'Pick a folder');
+      expect(receivedArguments?['acceptLabel'], 'Choose');
+
+      answer = null;
+      expect(await picker.pickDirectory(), isNull);
+    });
+
     test('getDirectoryPath sends dialogTitle and initialDirectory', () async {
       final picker = FilePickerDarwin();
       Map<Object?, Object?>? receivedArguments;

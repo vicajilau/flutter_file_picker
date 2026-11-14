@@ -187,6 +187,28 @@ class FilePickerDarwin extends FilePickerPlatform {
   }
 
   @override
+  Future<Uri?> pickDirectory({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    final path = await getDirectoryPath(
+      dialogTitle: dialogTitle,
+      initialDirectory: initialDirectory,
+      androidOptions: androidOptions,
+      darwinOptions: darwinOptions,
+      windowsOptions: windowsOptions,
+      linuxOptions: linuxOptions,
+      webOptions: webOptions,
+    );
+    return path == null ? null : Uri.directory(path);
+  }
+
+  @override
   Future<String?> getDirectoryPath({
     String? dialogTitle,
     String? initialDirectory,

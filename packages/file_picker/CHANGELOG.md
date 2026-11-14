@@ -15,6 +15,7 @@
 - **BREAKING CHANGE**: Removed `MethodChannelFilePicker`, `FilePickerSaveUtils` and `IllegalCharacterInFileNameException`, which nothing in the plugin used. See the migration guide. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - `onFileLoading` and `onFileSaving` are now typed as `void Function(FilePickerStatus status)?`. They had no return type before. Existing callers keep compiling. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: `compressionQuality` now recompresses the picked images on iOS, as it does on Android. It was ignored there, so apps that pass it now get smaller images on iOS. See the migration guide. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- Added `FilePicker.pickDirectory()`, which returns the `Uri` of the picked directory: the `content://` tree URI on Android and a `file` URI elsewhere. `getDirectoryPath()` is deprecated in favor of it and will be removed in the next major version. See the migration guide. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 13.3.3
 

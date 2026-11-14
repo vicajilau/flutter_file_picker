@@ -48,6 +48,20 @@ class FilePickerWeb extends FilePickerPlatform {
     return target;
   }
 
+  /// Always throws an [UnsupportedError].
+  @override
+  Future<Uri?> pickDirectory({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    throw UnsupportedError('pickDirectory() is not supported on Web.');
+  }
+
   /// Directory picking is not supported on web platforms.
   ///
   /// Always throws an [UnsupportedError].

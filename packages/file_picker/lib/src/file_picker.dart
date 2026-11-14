@@ -130,6 +130,41 @@ abstract final class FilePicker {
     await FilePickerPlatform.instance.clearTemporaryFiles();
   }
 
+  /// Opens a native directory picker and lets the user select a directory.
+  ///
+  /// The [dialogTitle], if provided, will be used as the title for the directory picker dialog.
+  /// The [initialDirectory], if provided, will be used as the initial directory path for the directory picker.
+  ///
+  /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
+  /// allow for platform-specific configurations when configuring the directory picker.
+  ///
+  /// Returns the [Uri] of the selected directory, or `null` if canceled.
+  /// On Android it is the `content://` tree URI the Storage Access Framework
+  /// grants access through, which is what the app can actually read. On the
+  /// other platforms it is a `file` URI, so `uri.toFilePath()` gives the path.
+  ///
+  /// Throws a `PlatformException` if the pick fails, so a failure is never
+  /// mistaken for a cancel. Not supported on web.
+  static Future<Uri?> pickDirectory({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) {
+    return FilePickerPlatform.instance.pickDirectory(
+      dialogTitle: dialogTitle,
+      initialDirectory: initialDirectory,
+      androidOptions: androidOptions,
+      darwinOptions: darwinOptions,
+      windowsOptions: windowsOptions,
+      linuxOptions: linuxOptions,
+      webOptions: webOptions,
+    );
+  }
+
   /// Selects a directory and returns its absolute path.
   ///
   /// The [dialogTitle], if provided, will be used as the title for the directory picker dialog.
@@ -141,6 +176,11 @@ abstract final class FilePicker {
   /// Returns a [String] containing the selected directory path, or `null` if canceled.
   /// Throws a `PlatformException` if the pick fails, so a failure is never
   /// mistaken for a cancel.
+  @Deprecated(
+    'Use pickDirectory() instead, which returns a Uri. '
+    'On Android a path is often not readable by the app. '
+    'This will be removed in the next major version.',
+  )
   static Future<String?> getDirectoryPath({
     String? dialogTitle,
     String? initialDirectory,

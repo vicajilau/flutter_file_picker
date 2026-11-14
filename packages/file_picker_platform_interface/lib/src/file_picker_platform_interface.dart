@@ -127,7 +127,33 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
   /// allow platform-specific configurations for the directory picker.
   ///
+  /// Returns the [Uri] of the selected directory, or `null` if the user canceled the operation.
+  /// On Android it is the `content://` tree URI the Storage Access Framework
+  /// grants access through. On the other platforms it is a `file` URI.
+  Future<Uri?> pickDirectory({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    throw UnimplementedError('pickDirectory() has not been implemented.');
+  }
+
+  /// Pick a single directory using the native file picker.
+  ///
+  /// The [dialogTitle], if provided, will be used as the title for the directory picker dialog.
+  /// The [initialDirectory], if provided, will be used as the initial directory path for the directory picker.
+  ///
+  /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
+  /// allow platform-specific configurations for the directory picker.
+  ///
   /// Returns the absolute path of the selected directory, or `null` if the user canceled the operation.
+  ///
+  /// Prefer [pickDirectory], which returns a [Uri]. On Android a path is
+  /// often not readable by the app, while the `content://` URI is.
   Future<String?> getDirectoryPath({
     String? dialogTitle,
     String? initialDirectory,

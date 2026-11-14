@@ -160,6 +160,35 @@ class FilePickerAndroid extends FilePickerPlatform {
     return files.map((e) => e.path).nonNulls.toList();
   }
 
+  /// Returns the `content://` tree URI of the picked directory, which is
+  /// what the Storage Access Framework grants access through.
+  ///
+  /// Without [FilePickerAndroidOptions], the grant is transient and read
+  /// only, the defaults of [AndroidSAFOptions].
+  @override
+  Future<Uri?> pickDirectory({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const FilePickerAndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    final safOptions = switch (androidOptions) {
+      FilePickerAndroidOptions opts => opts.safOptions,
+      _ => const AndroidSAFOptions(),
+    };
+
+    // Sending the SAF options makes the native side answer with the tree
+    // URI instead of a file system path. A failure is thrown as a
+    // PlatformException, and a cancel completes with null (#2286).
+    final uri = await methodChannel.invokeMethod<String>('dir', {
+      'androidSafOptions': safOptions.toMap(),
+    });
+    return uri == null ? null : Uri.parse(uri);
+  }
+
   @override
   Future<String?> getDirectoryPath({
     String? dialogTitle,
