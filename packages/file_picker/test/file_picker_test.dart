@@ -81,6 +81,20 @@ class MockFilePickerPlatform extends FilePickerPlatform
   }
 
   @override
+  Future<Uri?> pickDirectory({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    lastDarwinOptions = darwinOptions;
+    return Uri.directory('/picked');
+  }
+
+  @override
   Future<String?> getDirectoryPath({
     String? dialogTitle,
     String? initialDirectory,
@@ -158,9 +172,19 @@ void main() {
       }
     });
 
+    test('pickDirectory forwards darwinOptions and returns the URI', () async {
+      const options = DarwinOptions(acceptLabel: 'Choose');
+
+      final uri = await FilePicker.pickDirectory(darwinOptions: options);
+      expect(mockPlatform.lastDarwinOptions, same(options));
+      expect(uri, Uri.directory('/picked'));
+    });
+
     test('getDirectoryPath forwards darwinOptions', () async {
       const options = DarwinOptions(acceptLabel: 'Choose');
 
+      // Deprecated in favor of pickDirectory(), still covered until removed.
+      // ignore: deprecated_member_use_from_same_package
       await FilePicker.getDirectoryPath(darwinOptions: options);
       expect(mockPlatform.lastDarwinOptions, same(options));
     });

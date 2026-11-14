@@ -44,6 +44,7 @@ If you have any feature that you want to see in this package, please feel free t
 |-------------------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
 | `clearTemporaryFiles()`       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                | :x:                |
 | `getDirectoryPath()`          | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
+| `pickDirectory()`             | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
 | `pickFileAndDirectoryPaths()` | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
 | `pickFile()`                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | `pickFiles()`                 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -107,6 +108,19 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * They never had any effect on `saveFile()`, so just drop them.
    * **v13**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes, type: FileType.custom, allowedExtensions: ['pdf']);`
    * **v14**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes);`
+
+8. **`getDirectoryPath()` Deprecated in Favor of `pickDirectory()`**:
+   * `pickDirectory()` returns a `Uri` instead of a path. On Android it is the `content://` tree URI, which is what the app can read through the Storage Access Framework. A path there is often not readable. On the other platforms it is a `file` URI.
+   * `getDirectoryPath()` keeps working in v14 and will be removed in the next major version.
+
+     ```dart
+     // v13
+     final path = await FilePicker.getDirectoryPath();
+
+     // v14
+     final uri = await FilePicker.pickDirectory();
+     final path = uri?.scheme == 'file' ? uri!.toFilePath() : null;
+     ```
 
 ## Migrating to v13
 
@@ -328,7 +342,7 @@ and only the most recent lost pick is kept. To reproduce it, enable
 #### Pick a directory
 
 ```dart
-String? selectedDirectory = await FilePicker.getDirectoryPath();
+Uri? selectedDirectory = await FilePicker.pickDirectory();
 
 if (selectedDirectory == null) {
   // User canceled the picker

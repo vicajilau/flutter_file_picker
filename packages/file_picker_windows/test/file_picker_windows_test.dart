@@ -122,6 +122,15 @@ void main() {
       );
       expect(statuses, isEmpty);
     });
+    test('pickDirectory propagates native failure', () async {
+      await expectLater(
+        FilePickerWindows()
+            .pickDirectory(initialDirectory: missingDirectory)
+            .timeout(const Duration(seconds: 5)),
+        throwsA(isNot(isA<TimeoutException>())),
+      );
+    });
+
     test('directory propagates native failure', () async {
       await expectLater(
         FilePickerWindows()

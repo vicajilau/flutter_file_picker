@@ -157,6 +157,101 @@ void main() {
       );
     });
 
+    group('pickDirectory', () {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      const treeUri =
+          'content://com.android.externalstorage.documents/tree/primary%3ADocuments';
+      late FilePickerAndroid picker;
+      late List<MethodCall> calls;
+
+      setUp(() {
+        picker = FilePickerAndroid();
+        calls = [];
+      });
+
+      tearDown(
+        () => messenger.setMockMethodCallHandler(picker.methodChannel, null),
+      );
+
+      test('returns the content URI of the tree', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          calls.add(call);
+          return treeUri;
+        });
+
+        final uri = await picker.pickDirectory();
+
+        expect(uri?.scheme, 'content');
+        expect(uri.toString(), treeUri);
+        expect(calls.single.method, 'dir');
+      });
+
+      // The native side only answers with the tree URI when it gets SAF
+      // options, so they are sent even when the app passes none.
+      test('sends the default SAF options when the app passes none', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          calls.add(call);
+          return treeUri;
+        });
+
+        await picker.pickDirectory(androidOptions: const AndroidOptions());
+
+        expect(
+          (calls.single.arguments as Map)['androidSafOptions'],
+          const AndroidSAFOptions().toMap(),
+        );
+      });
+
+      test('sends the SAF options of the app', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          calls.add(call);
+          return treeUri;
+        });
+        const safOptions = AndroidSAFOptions(
+          grant: AndroidSAFGrant.lifetime,
+          accessMode: AndroidSAFAccessMode.readWrite,
+        );
+
+        await picker.pickDirectory(
+          androidOptions: const FilePickerAndroidOptions(
+            safOptions: safOptions,
+          ),
+        );
+
+        expect(
+          (calls.single.arguments as Map)['androidSafOptions'],
+          safOptions.toMap(),
+        );
+      });
+
+      test('returns null when the user cancels', () async {
+        messenger.setMockMethodCallHandler(
+          picker.methodChannel,
+          (call) async => null,
+        );
+
+        expect(await picker.pickDirectory(), isNull);
+      });
+
+      test('throws when the pick fails', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          throw PlatformException(code: 'already_active');
+        });
+
+        await expectLater(
+          picker.pickDirectory(),
+          throwsA(
+            isA<PlatformException>().having(
+              (e) => e.code,
+              'code',
+              'already_active',
+            ),
+          ),
+        );
+      });
+    });
+
     // A failure must not look like a cancel (#2286).
     test('getDirectoryPath throws the failures it used to swallow', () async {
       final picker = FilePickerAndroid();
