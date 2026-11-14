@@ -1,5 +1,6 @@
 ## 3.0.0
 
+- **BREAKING CHANGE**: `FileType.custom` throws a `PlatformException` with code `unsupported_extension` before opening the picker if any requested extension has no MIME type in Android's mapping. This includes lists where none are known, which used to allow every file. Use `FileType.any` without `allowedExtensions` and validate the returned files in your app. [#2307](https://github.com/vicajilau/flutter_file_picker/issues/2307)
 - **BREAKING CHANGE**: `saveFile()` returns the `content://` URI of the saved document. It used to return a `Uri` with only the path of that URI, such as `/document/primary:Download/report.pdf`, which could not open the file again.
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` take the new `darwinOptions` parameter of `file_picker_platform_interface` 5.0.0. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: `getDirectoryPath()` throws a `PlatformException` when the pick fails, such as an `unknown_path` for a folder that cannot be resolved, or an `already_active` for a second pick while one is open. It used to return `null`, the same as a cancel. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)

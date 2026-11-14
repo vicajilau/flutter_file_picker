@@ -1,5 +1,6 @@
 ## 14.0.0
 
+- **BREAKING CHANGE**: On Android, a custom filter with any extension that has no known MIME type throws `PlatformException` (`unsupported_extension`) before the picker opens. Use `FileType.any` without `allowedExtensions` and validate the returned files in your app. See the migration guide. [#2307](https://github.com/vicajilau/flutter_file_picker/issues/2307)
 - **BREAKING CHANGE**: On Android, `saveFile()` returns the `content://` URI of the saved document instead of a `Uri` with only its path. See the migration guide.
 - **BREAKING CHANGE**: On Linux, a pick throws a `PlatformException` with the `portal_error` code when the file chooser portal fails, instead of returning as if it was cancelled. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 - **BREAKING CHANGE**: Removed `withData`, `withReadStream` and `readSequential` from `FilePickerWebOptions`, deprecated since `file_picker_web` 4.1.0. Picked files are no longer read at pick time, use `PlatformFile.readAsBytes()` or `readAsByteStream()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
