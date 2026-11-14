@@ -105,8 +105,10 @@ abstract final class FilePicker {
   ///
   /// Returns the list of absolute paths to the selected files and directories, or an empty list if the operation was canceled.
   ///
-  /// **Platform Support:** As of right now, this functionality is only
-  /// supported on macOS.
+  /// **Platform Support:** Only iOS and macOS can select files and
+  /// directories in the same dialog. On Android, Linux and Windows the system
+  /// picker selects either files or a directory, so only files can be
+  /// selected, as with [pickFiles]. Not supported on web.
   static Future<List<String>> pickFileAndDirectoryPaths({
     String? dialogTitle,
     String? initialDirectory,
