@@ -37,7 +37,9 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// when [type] is set to [FileType.custom].
   /// The [onFileLoading] callback, if provided, is triggered when the picker changes status.
   /// Only Android, iOS, macOS and web report it. Linux and Windows never call it.
-  /// The [compressionQuality] parameter specifies image/video compression quality (0-100) on supported platforms.
+  /// The [compressionQuality] parameter, from 1 to 100, recompresses the picked images on Android and iOS.
+  /// Videos and other files are never changed, and macOS, Linux, Windows and web ignore it.
+  /// With 0, the default, images are returned as they are.
   /// The [darwinOptions] parameter configures iOS photo-library asset representation.
   ///
   /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
@@ -69,7 +71,9 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// when [type] is set to [FileType.custom].
   /// The [onFileLoading] callback, if provided, is triggered when the picker changes status.
   /// Only Android, iOS, macOS and web report it. Linux and Windows never call it.
-  /// The [compressionQuality] parameter specifies image/video compression quality (0-100) on supported platforms.
+  /// The [compressionQuality] parameter, from 1 to 100, recompresses the picked images on Android and iOS.
+  /// Videos and other files are never changed, and macOS, Linux, Windows and web ignore it.
+  /// With 0, the default, images are returned as they are.
   /// The [darwinOptions] parameter configures iOS photo-library asset representation.
   ///
   /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters

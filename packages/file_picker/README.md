@@ -108,6 +108,11 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * **v13**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes, type: FileType.custom, allowedExtensions: ['pdf']);`
    * **v14**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes);`
 
+8. **`compressionQuality` Now Works on iOS**:
+   * It was ignored on iOS. From v14, a value from 1 to 100 recompresses the picked JPEG and HEIC images there, keeping their format, name and metadata, as it already recompressed images on Android.
+   * If you pass it and want the original images on iOS, pass `compressionQuality: 0`, the default, on that platform.
+   * Videos are never compressed, and macOS, Linux, Windows and web ignore it.
+
 ## Migrating to v13
 
 1. **`PlatformFile.length()` Returns `Future<int?>`**:
