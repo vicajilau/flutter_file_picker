@@ -113,6 +113,10 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * `MethodChannelFilePicker`, `FilePickerSaveUtils` and `IllegalCharacterInFileNameException` are removed. Nothing in the plugin used them.
    * If you caught `IllegalCharacterInFileNameException`, remove that `catch`: no platform threw it. Windows reports a file name with reserved characters with an `ArgumentError`.
    * If you used `FilePickerSaveUtils.saveBytesToFile()`, write the file with `File(path).writeAsBytes(bytes)` from `dart:io`.
+9. **`compressionQuality` Now Works on iOS**:
+   * It was ignored on iOS. From v14, a value from 1 to 100 recompresses the picked JPEG and HEIC images there, keeping their format, name and metadata, as it already recompressed images on Android.
+   * If you pass it and want the original images on iOS, pass `compressionQuality: 0`, the default, on that platform.
+   * Videos are never compressed, and macOS, Linux, Windows and web ignore it.
 
 ## Migrating to v13
 
