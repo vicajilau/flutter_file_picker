@@ -10,6 +10,7 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` throws a `PlatformException` when the pick fails on Android, iOS or macOS, instead of returning `null` as if it was cancelled. See the migration guide. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 - **BREAKING CHANGE**: Removed `FilePicker.skipEntitlementsChecks()`. Platform specific APIs now only live in their platform package, so call `FilePickerDarwin.skipEntitlementsChecks()` from `package:file_picker_darwin` instead. See the migration guide. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 - **BREAKING CHANGE**: Removed the `type` and `allowedExtensions` parameters of `FilePicker.saveFile()`, deprecated since 13.2.0. They never had any effect. [#2278](https://github.com/vicajilau/flutter_file_picker/pull/2278)
+- **BREAKING CHANGE**: Removed `FilePicker.pickFileAndDirectoryPaths()`. Only iOS and macOS can pick files and directories in one dialog, so it now only lives on `FilePickerDarwin`, from `package:file_picker_darwin`. On Android, Linux and Windows it only picked files, use `pickFiles()` there. See the migration guide. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 13.3.3
 

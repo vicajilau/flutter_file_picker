@@ -2,6 +2,7 @@ import 'package:file/local.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_picker/file_picker_view_scope.dart';
 import 'package:android_file_picker/android_file_picker.dart';
+import 'package:file_picker_darwin/file_picker_darwin.dart';
 import 'package:flutter/foundation.dart';
 // Deprecated in favor of package:material_ui, which needs a newer Flutter than
 // CI's oldest one. Migrating is tracked in #2210.
@@ -226,14 +227,17 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
     bool hasUserAborted = true;
     _resetState();
 
+    // Only iOS and macOS can pick files and directories in one dialog, so
+    // this is not part of FilePicker. It lives on FilePickerDarwin.
+    final picker = FilePickerViewScope.of(context);
+    if (picker is! FilePickerDarwin) return;
+
     try {
-      pickedFilesAndDirectories = await FilePickerViewScope.of(context)
-          .pickFileAndDirectoryPaths(
-            dialogTitle: _dialogTitleController.text,
-            type: _pickingType,
-            allowedExtensions: _allowedExtensionsFromInput(),
-            initialDirectory: _initialDirectoryController.text,
-          );
+      pickedFilesAndDirectories = await picker.pickFileAndDirectoryPaths(
+        dialogTitle: _dialogTitleController.text,
+        allowedExtensions: _allowedExtensionsFromInput(),
+        initialDirectory: _initialDirectoryController.text,
+      );
       hasUserAborted = pickedFilesAndDirectories.isEmpty;
     } on PlatformException catch (e) {
       _logException('Pick failed: $e');
@@ -768,14 +772,15 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
           icon: const Icon(Icons.folder),
         ),
       ),
-      SizedBox(
-        width: 250,
-        child: FloatingActionButton.extended(
-          onPressed: _pickFileAndDirectoryPaths,
-          label: const Text('Pick files and directories'),
-          icon: const Icon(Icons.folder_open),
+      if (FilePickerPlatform.instance is FilePickerDarwin)
+        SizedBox(
+          width: 250,
+          child: FloatingActionButton.extended(
+            onPressed: _pickFileAndDirectoryPaths,
+            label: const Text('Pick files and directories'),
+            icon: const Icon(Icons.folder_open),
+          ),
         ),
-      ),
       SizedBox(
         width: 120,
         child: FloatingActionButton.extended(

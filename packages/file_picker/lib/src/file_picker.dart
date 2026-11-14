@@ -95,32 +95,6 @@ abstract final class FilePicker {
     );
   }
 
-  /// Displays a dialog that allows the user to select both files and
-  /// directories simultaneously, returning their absolute paths.
-  ///
-  /// The [dialogTitle], if provided, will be used as the title for the picker dialog.
-  /// The [initialDirectory], if provided, will be used as the initial directory path for the picker.
-  /// The [type] parameter specifies the type of files to be picked and defaults to [FileType.any].
-  /// The [allowedExtensions] parameter can be used to filter by specific file extensions when [type] is set to [FileType.custom].
-  ///
-  /// Returns the list of absolute paths to the selected files and directories, or an empty list if the operation was canceled.
-  ///
-  /// **Platform Support:** As of right now, this functionality is only
-  /// supported on macOS.
-  static Future<List<String>> pickFileAndDirectoryPaths({
-    String? dialogTitle,
-    String? initialDirectory,
-    FileType type = FileType.any,
-    List<String>? allowedExtensions,
-  }) {
-    return FilePickerPlatform.instance.pickFileAndDirectoryPaths(
-      dialogTitle: dialogTitle,
-      initialDirectory: initialDirectory,
-      type: type,
-      allowedExtensions: allowedExtensions,
-    );
-  }
-
   /// Asks the underlying platform to remove any temporary files created by this plugin.
   static Future<void> clearTemporaryFiles() async {
     await FilePickerPlatform.instance.clearTemporaryFiles();

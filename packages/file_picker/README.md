@@ -44,7 +44,6 @@ If you have any feature that you want to see in this package, please feel free t
 |-------------------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
 | `clearTemporaryFiles()`       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                | :x:                |
 | `getDirectoryPath()`          | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
-| `pickFileAndDirectoryPaths()` | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
 | `pickFile()`                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | `pickFiles()`                 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | `saveFile()`                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -107,6 +106,20 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * They never had any effect on `saveFile()`, so just drop them.
    * **v13**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes, type: FileType.custom, allowedExtensions: ['pdf']);`
    * **v14**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes);`
+
+8. **`FilePicker.pickFileAndDirectoryPaths()` Removed**:
+   * Only iOS and macOS can pick files and directories in the same dialog, so it now only lives in their platform package. Add `file_picker_darwin` as a direct dependency and call it on `FilePickerDarwin`. Its `type` parameter never had any effect and is removed.
+
+     ```dart
+     // v13
+     final paths = await FilePicker.pickFileAndDirectoryPaths();
+
+     // v14
+     if (FilePickerPlatform.instance case final FilePickerDarwin darwin) {
+       final paths = await darwin.pickFileAndDirectoryPaths();
+     }
+     ```
+   * On Android, Linux and Windows it only picked files. Use `pickFiles()` there, and read `path` from each result.
 
 ## Migrating to v13
 

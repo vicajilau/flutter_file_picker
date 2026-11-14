@@ -67,7 +67,7 @@ void main() {
     });
 
     test(
-      'pickFileAndDirectoryPaths returns decoded paths that match the cached files',
+      'pickFiles returns decoded paths that match the cached files',
       () async {
         final picker = FilePickerAndroid();
         const cachedPath =
@@ -85,7 +85,7 @@ void main() {
               .setMockMethodCallHandler(picker.methodChannel, null),
         );
 
-        expect(await picker.pickFileAndDirectoryPaths(), [cachedPath]);
+        expect((await picker.pickFiles()).single.path, cachedPath);
       },
     );
 
