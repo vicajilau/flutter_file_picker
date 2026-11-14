@@ -1,7 +1,8 @@
 ## 14.0.0
 
 - **BREAKING CHANGE**: On Android, `saveFile()` returns the `content://` URI of the saved document instead of a `Uri` with only its path. See the migration guide.
-- **BREAKING CHANGE**: On Linux, a pick throws a `PlatformException` with the `portal_error` code when the file chooser portal fails, instead of returning as if it was cancelled. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
+- **BREAKING CHANGE**: On Linux, a pick throws a `PlatformException` with the `portal_error` code when the file chooser portal fails, instead of returning as if it was cancelled.
+  See the migration guide. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 - **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. See the migration guide. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: Requires Flutter 3.41, Dart 3.11, Android SDK 24 and macOS 10.15, as `cross_file` 0.4.0 does.
 - **BREAKING CHANGE**: Removed `withData`, `withReadStream` and `readSequential` from `FilePickerWebOptions`, deprecated since `file_picker_web` 4.1.0. Picked files are no longer read at pick time, use `PlatformFile.readAsBytes()` or `readAsByteStream()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
@@ -10,6 +11,8 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` throws a `PlatformException` when the pick fails on Android, iOS or macOS, instead of returning `null` as if it was cancelled. See the migration guide. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 - **BREAKING CHANGE**: Removed `FilePicker.skipEntitlementsChecks()`. Platform specific APIs now only live in their platform package, so call `FilePickerDarwin.skipEntitlementsChecks()` from `package:file_picker_darwin` instead. See the migration guide. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 - **BREAKING CHANGE**: Removed the `type` and `allowedExtensions` parameters of `FilePicker.saveFile()`, deprecated since 13.2.0. They never had any effect. [#2278](https://github.com/vicajilau/flutter_file_picker/pull/2278)
+- **BREAKING CHANGE**: Removed `MethodChannelFilePicker`, `FilePickerSaveUtils` and `IllegalCharacterInFileNameException`, which nothing in the plugin used. See the migration guide. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- `onFileLoading` and `onFileSaving` are now typed as `void Function(FilePickerStatus status)?`. They had no return type before. Existing callers keep compiling. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: `compressionQuality` now recompresses the picked images on iOS, as it does on Android. It was ignored there, so apps that pass it now get smaller images on iOS. See the migration guide. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 13.3.3

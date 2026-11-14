@@ -49,7 +49,7 @@ class FilePickerLinux extends FilePickerPlatform {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -76,7 +76,7 @@ class FilePickerLinux extends FilePickerPlatform {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -102,7 +102,7 @@ class FilePickerLinux extends FilePickerPlatform {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     LinuxOptions linuxOptions = const FilePickerLinuxOptions(),
   }) async {
@@ -167,7 +167,7 @@ class FilePickerLinux extends FilePickerPlatform {
     required String mimeType,
     String? dialogTitle,
     String? initialDirectory,
-    Function(FilePickerStatus)? onFileSaving,
+    void Function(FilePickerStatus status)? onFileSaving,
     DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const FilePickerLinuxOptions(),
@@ -272,8 +272,7 @@ class FilePickerLinux extends FilePickerPlatform {
 
   /// Get the file paths from a DBus response.
   ///
-  /// Returns null if the user cancelled the operation.
-  /// Throws a [PlatformException] with the `portal_error` code for any other [status] value.
+  /// Returns the paths when the user made a choice (0), or null when the
   /// user cancelled (1).
   ///
   /// Throws a [PlatformException] with the `portal_error` code for any other

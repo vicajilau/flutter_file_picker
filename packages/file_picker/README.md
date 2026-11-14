@@ -82,8 +82,9 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * It used to return a `Uri` with only the path of the saved document, such as `/document/primary:Download/report.pdf`, which no API can open. It now returns the whole `content://` URI, which `ContentResolver` and the Storage Access Framework accept.
    * If you only showed the result, nothing changes. If you used `uri.path` as a file system path, it never pointed to a real file, so use the URI itself.
 
-5. **`getDirectoryPath()` Throws on Failure**:
-   * On Android, iOS and macOS a failed directory pick used to return `null`, the same as a cancel. It now throws a `PlatformException`, and `null` only means the user cancelled.
+5. **Failed Picks Throw Instead of Looking Cancelled**:
+   * On Android, iOS and macOS a failed `getDirectoryPath()` used to return `null`, the same as a cancel. It now throws a `PlatformException`, and `null` only means the user cancelled.
+   * On Linux, when the file chooser portal ends a request in some other way than a choice or a cancel, `pickFiles()`, `getDirectoryPath()` and `saveFile()` used to return `null` or an empty list, the same as a cancel. They now throw a `PlatformException` with the `portal_error` code.
 
      ```dart
      // v13
@@ -108,7 +109,11 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * **v13**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes, type: FileType.custom, allowedExtensions: ['pdf']);`
    * **v14**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes);`
 
-8. **`compressionQuality` Now Works on iOS**:
+8. **Unused Classes Removed**:
+   * `MethodChannelFilePicker`, `FilePickerSaveUtils` and `IllegalCharacterInFileNameException` are removed. Nothing in the plugin used them.
+   * If you caught `IllegalCharacterInFileNameException`, remove that `catch`: no platform threw it. Windows reports a file name with reserved characters with an `ArgumentError`.
+   * If you used `FilePickerSaveUtils.saveBytesToFile()`, write the file with `File(path).writeAsBytes(bytes)` from `dart:io`.
+9. **`compressionQuality` Now Works on iOS**:
    * It was ignored on iOS. From v14, a value from 1 to 100 recompresses the picked JPEG and HEIC images there, keeping their format, name and metadata, as it already recompressed images on Android.
    * If you pass it and want the original images on iOS, pass `compressionQuality: 0`, the default, on that platform.
    * Videos are never compressed, and macOS, Linux, Windows and web ignore it.
