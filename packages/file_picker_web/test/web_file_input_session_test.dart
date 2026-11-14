@@ -22,7 +22,7 @@ void main() {
 
   WebFileInputSession createSession({
     FilePickerWebOptions webOptions = const FilePickerWebOptions(),
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
   }) {
     return WebFileInputSession(
       target: target,

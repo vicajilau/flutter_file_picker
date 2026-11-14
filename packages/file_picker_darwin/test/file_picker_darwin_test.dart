@@ -397,11 +397,11 @@ void main() {
     test('pickDirectory returns a file URI, or null on cancel', () async {
       final picker = FilePickerDarwin();
       String? answer = '/Users/me/My Documents';
-      Map? receivedArguments;
+      Map<Object?, Object?>? receivedArguments;
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(picker.methodChannel, (call) async {
-            receivedArguments = call.arguments as Map;
+            receivedArguments = call.arguments as Map<Object?, Object?>;
             return answer;
           });
       addTearDown(() {
@@ -425,11 +425,11 @@ void main() {
 
     test('getDirectoryPath sends dialogTitle and initialDirectory', () async {
       final picker = FilePickerDarwin();
-      Map? receivedArguments;
+      Map<Object?, Object?>? receivedArguments;
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(picker.methodChannel, (call) async {
-            receivedArguments = call.arguments as Map;
+            receivedArguments = call.arguments as Map<Object?, Object?>;
             return null;
           });
       addTearDown(() {

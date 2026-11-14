@@ -10,7 +10,6 @@ import 'file_picker_options/darwin_options.dart';
 import 'file_picker_options/linux_options.dart';
 import 'file_picker_options/web_options.dart';
 import 'file_picker_options/windows_options.dart';
-import 'method_channel_file_picker.dart';
 import 'platform_file.dart';
 
 /// The interface that implementations of file_picker must implement.
@@ -19,8 +18,12 @@ abstract class FilePickerPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static FilePickerPlatform _instance = MethodChannelFilePicker();
+  static FilePickerPlatform _instance = _UnsupportedFilePicker();
 
+  /// The implementation in use.
+  ///
+  /// Each platform package registers its own. Where none is registered,
+  /// every method throws an [UnimplementedError].
   static FilePickerPlatform get instance => _instance;
 
   static set instance(FilePickerPlatform instance) {
@@ -37,7 +40,9 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// when [type] is set to [FileType.custom].
   /// The [onFileLoading] callback, if provided, is triggered when the picker changes status.
   /// Only Android, iOS, macOS and web report it. Linux and Windows never call it.
-  /// The [compressionQuality] parameter specifies image/video compression quality (0-100) on supported platforms.
+  /// The [compressionQuality] parameter, from 1 to 100, recompresses the picked images on Android and iOS.
+  /// Videos and other files are never changed, and macOS, Linux, Windows and web ignore it.
+  /// With 0, the default, images are returned as they are.
   /// The [darwinOptions] parameter configures iOS photo-library asset representation.
   ///
   /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
@@ -49,7 +54,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -69,7 +74,9 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// when [type] is set to [FileType.custom].
   /// The [onFileLoading] callback, if provided, is triggered when the picker changes status.
   /// Only Android, iOS, macOS and web report it. Linux and Windows never call it.
-  /// The [compressionQuality] parameter specifies image/video compression quality (0-100) on supported platforms.
+  /// The [compressionQuality] parameter, from 1 to 100, recompresses the picked images on Android and iOS.
+  /// Videos and other files are never changed, and macOS, Linux, Windows and web ignore it.
+  /// With 0, the default, images are returned as they are.
   /// The [darwinOptions] parameter configures iOS photo-library asset representation.
   ///
   /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
@@ -81,7 +88,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -185,7 +192,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
     required String mimeType,
     String? dialogTitle,
     String? initialDirectory,
-    Function(FilePickerStatus)? onFileSaving,
+    void Function(FilePickerStatus status)? onFileSaving,
     DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
@@ -194,3 +201,8 @@ abstract class FilePickerPlatform extends PlatformInterface {
     throw UnimplementedError('saveFile() has not been implemented.');
   }
 }
+
+/// The instance used where no platform package registered an
+/// implementation. It overrides nothing, so every method throws an
+/// [UnimplementedError].
+class _UnsupportedFilePicker extends FilePickerPlatform {}

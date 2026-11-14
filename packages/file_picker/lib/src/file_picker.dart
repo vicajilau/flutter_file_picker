@@ -15,7 +15,9 @@ abstract final class FilePicker {
   /// The [allowedExtensions] parameter can be used to filter by specific file extensions when [type] is set to [FileType.custom].
   /// The [onFileLoading] callback can be used to track picker status changes.
   /// Only Android, iOS, macOS and web report it. Linux and Windows never call it.
-  /// The [compressionQuality] parameter allows compressing picked images/videos on supported platforms (0-100).
+  /// The [compressionQuality] parameter, from 1 to 100, recompresses the picked images on Android and iOS.
+  /// Videos and other files are never changed, and macOS, Linux, Windows and web ignore it.
+  /// With 0, the default, images are returned as they are.
   /// The [darwinOptions] parameter configures iOS photo-library asset representation.
   ///
   /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
@@ -27,7 +29,7 @@ abstract final class FilePicker {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -59,7 +61,9 @@ abstract final class FilePicker {
   /// The [allowedExtensions] parameter can be used to filter by specific file extensions when [type] is set to [FileType.custom].
   /// The [onFileLoading] callback can be used to track picker status changes.
   /// Only Android, iOS, macOS and web report it. Linux and Windows never call it.
-  /// The [compressionQuality] parameter allows compressing picked images/videos on supported platforms (0-100).
+  /// The [compressionQuality] parameter, from 1 to 100, recompresses the picked images on Android and iOS.
+  /// Videos and other files are never changed, and macOS, Linux, Windows and web ignore it.
+  /// With 0, the default, images are returned as they are.
   /// The [darwinOptions] parameter configures iOS photo-library asset representation.
   ///
   /// The [androidOptions], [darwinOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
@@ -71,7 +75,7 @@ abstract final class FilePicker {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -219,7 +223,7 @@ abstract final class FilePicker {
     String mimeType = 'application/octet-stream',
     String? dialogTitle,
     String? initialDirectory,
-    Function(FilePickerStatus)? onFileSaving,
+    void Function(FilePickerStatus status)? onFileSaving,
     DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),

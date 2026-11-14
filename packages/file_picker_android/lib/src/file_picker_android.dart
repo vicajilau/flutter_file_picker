@@ -40,7 +40,7 @@ class FilePickerAndroid extends FilePickerPlatform {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const FilePickerAndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -67,7 +67,7 @@ class FilePickerAndroid extends FilePickerPlatform {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const FilePickerAndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -93,7 +93,7 @@ class FilePickerAndroid extends FilePickerPlatform {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const FilePickerAndroidOptions(),
   }) async {
@@ -120,19 +120,20 @@ class FilePickerAndroid extends FilePickerPlatform {
         _ => null,
       };
 
-      final List<Map>? result = await methodChannel.invokeListMethod(typeName, {
-        'allowMultipleSelection': allowMultiple,
-        'allowedExtensions': allowedExtensions,
-        'compressionQuality': compressionQuality,
-        'androidSafOptions': safOptionsMap,
-      });
+      final result = await methodChannel
+          .invokeListMethod<Map<Object?, Object?>>(typeName, {
+            'allowMultipleSelection': allowMultiple,
+            'allowedExtensions': allowedExtensions,
+            'compressionQuality': compressionQuality,
+            'androidSafOptions': safOptionsMap,
+          });
 
       if (result == null) {
         return [];
       }
 
       final platformFiles = <PlatformFile>[];
-      for (final Map platformFileMap in result) {
+      for (final platformFileMap in result) {
         platformFiles.add(AndroidPlatformFile.fromMap(platformFileMap));
       }
 
@@ -259,7 +260,7 @@ class FilePickerAndroid extends FilePickerPlatform {
     required String mimeType,
     String? dialogTitle,
     String? initialDirectory,
-    Function(FilePickerStatus)? onFileSaving,
+    void Function(FilePickerStatus status)? onFileSaving,
     DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
