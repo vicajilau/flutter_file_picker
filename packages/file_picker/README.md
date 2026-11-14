@@ -109,6 +109,11 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * **v13**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes, type: FileType.custom, allowedExtensions: ['pdf']);`
    * **v14**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes);`
 
+8. **Unused Classes Removed**:
+   * `MethodChannelFilePicker`, `FilePickerSaveUtils` and `IllegalCharacterInFileNameException` are removed. Nothing in the plugin used them.
+   * If you caught `IllegalCharacterInFileNameException`, remove that `catch`: no platform threw it. Windows reports a file name with reserved characters with an `ArgumentError`.
+   * If you used `FilePickerSaveUtils.saveBytesToFile()`, write the file with `File(path).writeAsBytes(bytes)` from `dart:io`.
+
 ## Migrating to v13
 
 1. **`PlatformFile.length()` Returns `Future<int?>`**:
