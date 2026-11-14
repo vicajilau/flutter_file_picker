@@ -8,8 +8,8 @@ import 'package:flutter/foundation.dart';
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:typed_data';
 
+import 'byte_accumulator.dart';
 import 'file_picker_results.dart';
 import 'picked_directory_result.dart';
 import 'picked_files_results.dart';
@@ -426,7 +426,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
 
     int total = 0;
     int chunks = 0;
-    final bytes = BytesBuilder(copy: false);
+    final bytes = ByteAccumulator(length: file.lengthSync());
 
     try {
       await for (final chunk in file.readAsByteStream()) {

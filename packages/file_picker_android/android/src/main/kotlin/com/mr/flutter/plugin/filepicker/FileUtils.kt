@@ -497,7 +497,10 @@ object FileUtils {
         return bundle.getParcelableArrayList("selectedItems")
     }
 
-    fun getMimeTypes(allowedExtensions: ArrayList<String>?): ArrayList<String> {
+    fun getMimeTypes(
+        allowedExtensions: ArrayList<String>?,
+        lookup: (String) -> String? = { MimeTypeMap.getSingleton().getMimeTypeFromExtension(it) }
+    ): ArrayList<String> {
         if (allowedExtensions.isNullOrEmpty()) {
             return ArrayList(listOf("*/*"))
         }
@@ -506,13 +509,12 @@ object FileUtils {
 
         for (allowedExtension in allowedExtensions) {
             val extension = FileExtension.normalize(allowedExtension)
-            val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+            val mime = lookup(extension)
             if (mime == null) {
-                Log.w(
-                    TAG,
-                    "Custom file type '$allowedExtension' has no known mime type and will not be filtered by the system picker."
+                throw IllegalArgumentException(
+                    "Android has no MIME type for extension '$allowedExtension'. " +
+                            "Use FileType.any without allowedExtensions and validate the selected files in your app."
                 )
-                continue
             }
 
             mimes.add(mime)
@@ -522,18 +524,6 @@ object FileUtils {
             }
         }
 
-        if (mimes.isEmpty()) {
-            Log.w(
-                TAG,
-                "None of the custom file types $allowedExtensions have a known mime type, falling back to */*."
-            )
-            return ArrayList(listOf("*/*"))
-        }
-
-        Log.d(
-            TAG,
-            "Custom file types are $allowedExtensions. The mime types were detected as $mimes."
-        )
         return mimes
     }
 

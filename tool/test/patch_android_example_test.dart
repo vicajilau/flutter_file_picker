@@ -226,6 +226,51 @@ void main() {
 
       expect(twice, once);
     });
+
+    test('leaves the newDsl flag untouched when it is not given', () {
+      final result = patchGradleProperties(
+        gradlePropertiesSource,
+        builtInKotlin: 'true',
+      );
+
+      expect(result, contains('android.newDsl=false'));
+    });
+
+    test('replaces an existing newDsl flag', () {
+      final result = patchGradleProperties(
+        gradlePropertiesSource,
+        builtInKotlin: 'true',
+        newDsl: 'true',
+      );
+
+      expect(result, contains('android.newDsl=true'));
+      expect(result, isNot(contains('android.newDsl=false')));
+    });
+
+    test('removes the newDsl flag when the value is empty', () {
+      final result = patchGradleProperties(
+        gradlePropertiesSource,
+        builtInKotlin: 'true',
+        newDsl: '',
+      );
+
+      expect(result, isNot(contains('android.newDsl')));
+    });
+
+    test('is idempotent with a newDsl flag', () {
+      final once = patchGradleProperties(
+        gradlePropertiesSource,
+        builtInKotlin: 'true',
+        newDsl: 'true',
+      );
+      final twice = patchGradleProperties(
+        once,
+        builtInKotlin: 'true',
+        newDsl: 'true',
+      );
+
+      expect(twice, once);
+    });
   });
 
   group('parseArgs', () {
