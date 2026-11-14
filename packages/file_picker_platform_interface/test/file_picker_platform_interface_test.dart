@@ -14,8 +14,12 @@ void main() {
       expect(instance, isA<FilePickerPlatform>());
     });
 
-    test('Default instance is MethodChannelFilePicker', () {
-      expect(FilePickerPlatform.instance, isA<MethodChannelFilePicker>());
+    test('the default instance implements nothing', () {
+      expect(
+        () => FilePickerPlatform.instance.pickFiles(),
+        throwsUnimplementedError,
+      );
+      expect(FilePickerPlatform.instance.clearTemporaryFiles(), completes);
     });
 
     test('Can set instance', () {
