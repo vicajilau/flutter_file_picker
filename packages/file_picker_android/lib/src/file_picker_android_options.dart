@@ -24,6 +24,7 @@ final class AndroidSAFOptions {
     this.grant = AndroidSAFGrant.transient,
     this.accessMode = AndroidSAFAccessMode.readOnly,
     this.persistGrant = true,
+    this.copyToCache = true,
   });
 
   /// The grant to use with the Android Storage Access Framework.
@@ -41,11 +42,24 @@ final class AndroidSAFOptions {
   /// Defaults to `true`.
   final bool persistGrant;
 
+  /// Whether a picked document is copied into the app's cache directory.
+  ///
+  /// When `false` the document is not copied: the picked file reports its
+  /// `content://` URI as [PlatformFile.uri] (so [PlatformFile.path] is `null`)
+  /// and its size as reported by the document provider. Read it through the
+  /// content resolver. Use this for large files such as videos, where a second
+  /// copy costs storage and time, together with [AndroidSAFGrant.lifetime] when
+  /// the URI has to stay readable after the app restarts.
+  ///
+  /// Defaults to `true`.
+  final bool copyToCache;
+
   Map<String, Object?> toMap() {
     return {
       'grant': grant.name,
       'access': accessMode.name,
       'autoPersist': persistGrant,
+      'copyToCache': copyToCache,
     };
   }
 }

@@ -1,3 +1,7 @@
+## 2.2.0
+
+- Added `AndroidSAFOptions.copyToCache`. With `copyToCache: false` a picked document is not copied into the app cache: the file reports its `content://` URI and the size the document provider reports. Meant for large files such as videos, where a second copy costs storage and time. The default is `true`, so existing callers are unaffected. [#1839](https://github.com/vicajilau/flutter_file_picker/issues/1839)
+
 ## 2.1.6
 
 - Fixed the Android build failing with `Extension of type 'LibraryExtension' does not exist` when the app sets `android.newDsl=true` with Android Gradle Plugin 9. The plugin now configures the public `com.android.build.api.dsl.LibraryExtension`, which works with both the old and the new DSL. [#2336](https://github.com/vicajilau/flutter_file_picker/issues/2336)

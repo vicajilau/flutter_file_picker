@@ -72,6 +72,7 @@ object FileUtils {
             val safOptions = SafOptions.from(androidSafOptions)
             val isReadWrite = safOptions.readWrite
             val hasSafOptions = safOptions.requested
+            val copiesToCache = safOptions.copiesToCache
 
             fun maybeTakePersistableUriPermission(uri: Uri) {
                  if (safOptions.persistsGrant) {
@@ -97,7 +98,7 @@ object FileUtils {
                             var uri = data.clipData!!.getItemAt(i).uri
                             maybeTakePersistableUriPermission(uri)
                             uri = processUri(activity, uri, compressionQuality)
-                            addFile(activity, uri, files, hasSafOptions, isReadWrite)
+                            addFile(activity, uri, files, hasSafOptions, isReadWrite, copiesToCache)
                         }
                         handleFileResult(files)
                     }
@@ -123,7 +124,7 @@ object FileUtils {
                             }
                         } else {
                             maybeTakePersistableUriPermission(data.data!!)
-                            addFile(activity, uri, files, hasSafOptions, isReadWrite)
+                            addFile(activity, uri, files, hasSafOptions, isReadWrite, copiesToCache)
                             handleFileResult(files)
                         }
                     }
@@ -132,7 +133,7 @@ object FileUtils {
                         val fileUris = getSelectedItems(data.extras!!)
                         fileUris?.filterIsInstance<Uri>()?.forEach { uri ->
                             maybeTakePersistableUriPermission(uri)
-                            addFile(activity, uri, files, hasSafOptions, isReadWrite)
+                            addFile(activity, uri, files, hasSafOptions, isReadWrite, copiesToCache)
                         }
                         handleFileResult(files)
                     }
@@ -481,9 +482,10 @@ object FileUtils {
         uri: Uri,
         files: MutableList<FileInfo>,
         hasSafOptions: Boolean = false,
-        isReadWrite: Boolean = false
+        isReadWrite: Boolean = false,
+        copiesToCache: Boolean = true
     ) {
-        openFileStream(activity, uri, hasSafOptions, isReadWrite)?.let { file ->
+        openFileStream(activity, uri, hasSafOptions, isReadWrite, copiesToCache)?.let { file ->
             files.add(file)
         }
     }
@@ -535,6 +537,33 @@ object FileUtils {
             "Custom file types are $allowedExtensions. The mime types were detected as $mimes."
         )
         return mimes
+    }
+
+    /**
+     * The size the provider reports for [uri], or 0 when it reports none.
+     * Read as a `Long`: a video of 2 GB or more overflows an `Int`.
+     */
+    @JvmStatic
+    fun getFileSize(uri: Uri, context: Context): Long {
+        try {
+            context.contentResolver.query(
+                uri,
+                arrayOf(OpenableColumns.SIZE),
+                null,
+                null,
+                null
+            ).use { cursor ->
+                if (cursor != null && cursor.moveToFirst()) {
+                    val column = cursor.getColumnIndexOrThrow(OpenableColumns.SIZE)
+                    if (!cursor.isNull(column)) {
+                        return cursor.getLong(column)
+                    }
+                }
+            }
+        } catch (ex: Exception) {
+            Log.e(TAG, "Failed to read file size: $ex")
+        }
+        return 0
     }
 
     @JvmStatic
@@ -701,10 +730,30 @@ object FileUtils {
         context: Context,
         uri: Uri,
         hasSafOptions: Boolean = false,
-        isReadWrite: Boolean = false
+        isReadWrite: Boolean = false,
+        copiesToCache: Boolean = true
     ): FileInfo? {
         val fileInfo = FileInfo.Builder()
         val fileName = getFileName(uri, context)
+
+        // Only a content URI can be handed back as it is; anything else (a
+        // compressed image is a file URI already) keeps the cached copy.
+        if (!copiesToCache && uri.scheme == "content") {
+            fileInfo
+                .withPath(uri.toString())
+                .withName(fileName)
+                .withUri(uri)
+                .withSize(getFileSize(uri, context))
+
+            if (hasSafOptions) {
+                val safHandleMap = java.util.HashMap<String, Any>()
+                safHandleMap["uri"] = uri.toString()
+                safHandleMap["access"] = if (isReadWrite) "readWrite" else "readOnly"
+                fileInfo.withSafHandle(safHandleMap)
+            }
+
+            return fileInfo.build()
+        }
         val file = PickerPaths.uniqueCachedFile(context.cacheDir, fileName)
         val path = file.path
 
