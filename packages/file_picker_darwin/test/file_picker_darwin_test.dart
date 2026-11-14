@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
+import 'package:cross_file_io/cross_file_io.dart';
 import 'package:file_picker_darwin/file_picker_darwin.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter/foundation.dart';
@@ -226,6 +227,7 @@ void main() {
       });
 
       test('reads through its own XFile even with a ph URI', () async {
+        CrossFileIO.registerWith();
         final dir = Directory.systemTemp.createTempSync('file_picker_test');
         addTearDown(() => dir.deleteSync(recursive: true));
         final copy = File('${dir.path}/IMG_0001.HEIC')
@@ -235,7 +237,7 @@ void main() {
           name: 'IMG_0001.HEIC',
           uri: Uri.parse('ph:///ABC-123/L0/001'),
           assetIdentifier: 'ABC-123/L0/001',
-          xFile: XFile(copy.path),
+          xFile: XFile.fileSystem(path: copy.path),
         );
 
         expect(await file.readAsBytes(), [1, 2, 3]);
@@ -394,11 +396,11 @@ void main() {
 
     test('getDirectoryPath sends dialogTitle and initialDirectory', () async {
       final picker = FilePickerDarwin();
-      Map? receivedArguments;
+      Map<Object?, Object?>? receivedArguments;
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(picker.methodChannel, (call) async {
-            receivedArguments = call.arguments as Map;
+            receivedArguments = call.arguments as Map<Object?, Object?>;
             return null;
           });
       addTearDown(() {

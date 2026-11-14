@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
 
+import 'package:cross_file/cross_file.dart';
+import 'package:cross_file_web/cross_file_web.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:path/path.dart' as p;
@@ -68,7 +70,7 @@ class FilePickerWeb extends FilePickerPlatform {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -92,7 +94,7 @@ class FilePickerWeb extends FilePickerPlatform {
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -112,7 +114,7 @@ class FilePickerWeb extends FilePickerPlatform {
   Future<List<PlatformFile>> _pickFiles({
     required FileType type,
     required List<String>? allowedExtensions,
-    required Function(FilePickerStatus)? onFileLoading,
+    required void Function(FilePickerStatus status)? onFileLoading,
     required WebOptions webOptions,
     required bool allowMultiple,
   }) async {
@@ -163,13 +165,21 @@ class FilePickerWeb extends FilePickerPlatform {
     ];
   }
 
-  /// Creates a [WebPlatformFile] from an HTML [File], resolving its `blob:` URI.
+  /// Creates a [WebPlatformFile] backed by the picked [file] itself.
   ///
-  /// The URI always points at the picked [file] itself, which avoids creating a copy.
+  /// Its `blob:` URI is not revoked automatically, so it stays valid for as
+  /// long as the page is open.
   WebPlatformFile _createWebPlatformFile(File file) {
+    final xFile = ScopedStorageXFile.fromCreationParams(
+      WebScopedStorageXFileCreationParams.fromBlob(
+        file,
+        autoRevokeObjectUrl: false,
+      ),
+    );
     return WebPlatformFile(
       name: file.name,
-      uri: Uri.parse(URL.createObjectURL(file)),
+      uri: Uri.parse(xFile.uri),
+      xFile: xFile,
       bytesLength: file.size,
     );
   }
@@ -194,7 +204,7 @@ class FilePickerWeb extends FilePickerPlatform {
     required String mimeType,
     String? dialogTitle,
     String? initialDirectory,
-    Function(FilePickerStatus)? onFileSaving,
+    void Function(FilePickerStatus status)? onFileSaving,
     DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),

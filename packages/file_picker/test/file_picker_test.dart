@@ -20,7 +20,7 @@ base class TestPlatformFile extends PlatformFile {
   final Uri uri;
 
   @override
-  XFile get xFile => XFile(path ?? '');
+  XFile get xFile => XFile.fileSystem(path: path ?? '');
 
   @override
   int? lengthSync() => 100;
@@ -45,7 +45,7 @@ class MockFilePickerPlatform extends FilePickerPlatform
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus status)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -66,7 +66,7 @@ class MockFilePickerPlatform extends FilePickerPlatform
     String? initialDirectory,
     FileType type = FileType.any,
     List<String>? allowedExtensions,
-    Function(FilePickerStatus status)? onFileLoading,
+    void Function(FilePickerStatus status)? onFileLoading,
     int compressionQuality = 0,
     AndroidOptions androidOptions = const AndroidOptions(),
     DarwinOptions darwinOptions = const DarwinOptions(),
@@ -101,7 +101,7 @@ class MockFilePickerPlatform extends FilePickerPlatform
     required String mimeType,
     String? dialogTitle,
     String? initialDirectory,
-    Function(FilePickerStatus)? onFileSaving,
+    void Function(FilePickerStatus status)? onFileSaving,
     DarwinOptions darwinOptions = const DarwinOptions(),
     WindowsOptions windowsOptions = const WindowsOptions(),
     LinuxOptions linuxOptions = const LinuxOptions(),
