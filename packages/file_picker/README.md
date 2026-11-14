@@ -44,10 +44,12 @@ If you have any feature that you want to see in this package, please feel free t
 |-------------------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
 | `clearTemporaryFiles()`       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                | :x:                |
 | `getDirectoryPath()`          | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
-| `pickFileAndDirectoryPaths()` | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
+| `pickFileAndDirectoryPaths()` | Files only          | :white_check_mark: | Files only          | :white_check_mark: | Files only          | :x:                |
 | `pickFile()`                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | `pickFiles()`                 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | `saveFile()`                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+
+**Files only**: the system picker on Android, Linux and Windows selects either files or a directory, never both in the same dialog. There, `pickFileAndDirectoryPaths()` only lets the user select files, as `pickFiles()` does.
 
 See the [official API reference on pub.dev](https://pub.dev/documentation/file_picker/latest/file_picker/FilePicker-class.html) for further details.
 

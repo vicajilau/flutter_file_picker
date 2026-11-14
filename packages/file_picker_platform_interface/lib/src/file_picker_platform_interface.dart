@@ -101,6 +101,10 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// when [type] is set to [FileType.custom].
   ///
   /// Returns a list of absolute paths for the selected files and directories, or an empty list if canceled.
+  ///
+  /// Only iOS and macOS can select files and directories in the same dialog.
+  /// On Android, Linux and Windows the system picker selects either files or
+  /// a directory, so only files can be selected, as with [pickFiles].
   Future<List<String>> pickFileAndDirectoryPaths({
     String? dialogTitle,
     String? initialDirectory,
