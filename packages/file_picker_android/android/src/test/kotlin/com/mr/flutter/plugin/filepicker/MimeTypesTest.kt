@@ -3,7 +3,6 @@ package com.mr.flutter.plugin.filepicker
 import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MimeTypesTest {
@@ -93,10 +92,10 @@ class MimeTypesTest {
         val error = assertThrows(IllegalArgumentException::class.java) {
             FileUtils.getMimeTypes(extensions, knownTypes::get)
         }
-        val message = error.message.orEmpty()
-        assertTrue(message, message.contains("'$extension'"))
-        assertTrue(message, message.contains("MIME"))
-        assertTrue(message, message.contains("FileType.any"))
-        assertTrue(message, message.contains("validat"))
+        assertEquals(
+            "Android has no MIME type for extension '$extension'. " +
+                    "Use FileType.any without allowedExtensions and validate the selected files in your app.",
+            error.message
+        )
     }
 }

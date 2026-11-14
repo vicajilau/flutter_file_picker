@@ -6,20 +6,27 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  for (final multiple in [false, true]) {
-    test('unsupported extension reaches a ${multiple ? 'multi' : 'single'} pick '
-        'and releases the status listener', () async {
-      final picker = FilePickerAndroid();
-      final messenger =
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-      var listening = false;
-      var listenCount = 0;
-      var cancelCount = 0;
-      final calls = <MethodCall>[];
-      const message =
-          "Android has no MIME type for extension 'xyz'. "
-          'Use FileType.any without allowedExtensions and validate the selected '
-          'files in your app.';
+  group('unsupported extension', () {
+    const message =
+        "Android has no MIME type for extension 'xyz'. "
+        'Use FileType.any without allowedExtensions and validate the selected '
+        'files in your app.';
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    late FilePickerAndroid picker;
+    late bool listening;
+    late int listenCount;
+    late int cancelCount;
+    late List<MethodCall> calls;
+    late List<FilePickerStatus> statuses;
+
+    setUp(() {
+      picker = FilePickerAndroid();
+      listening = false;
+      listenCount = 0;
+      cancelCount = 0;
+      calls = [];
+      statuses = [];
       messenger.setMockStreamHandler(
         picker.eventChannel,
         MockStreamHandler.inline(
@@ -45,24 +52,19 @@ void main() {
           {'path': '/cache/report.xyz', 'name': 'report.xyz'},
         ];
       });
-      addTearDown(() {
-        messenger.setMockStreamHandler(picker.eventChannel, null);
-        messenger.setMockMethodCallHandler(picker.methodChannel, null);
-      });
+    });
 
-      final statuses = <FilePickerStatus>[];
+    tearDown(() {
+      messenger.setMockStreamHandler(picker.eventChannel, null);
+      messenger.setMockMethodCallHandler(picker.methodChannel, null);
+    });
+
+    Future<void> verifyUnsupportedPick(
+      Future<Object?> result, {
+      required bool multiple,
+    }) async {
       await expectLater(
-        multiple
-            ? picker.pickFiles(
-                type: FileType.custom,
-                allowedExtensions: ['zip', 'xyz'],
-                onFileLoading: statuses.add,
-              )
-            : picker.pickFile(
-                type: FileType.custom,
-                allowedExtensions: ['zip', 'xyz'],
-                onFileLoading: statuses.add,
-              ),
+        result,
         throwsA(
           isA<PlatformException>()
               .having((error) => error.code, 'code', 'unsupported_extension')
@@ -80,6 +82,28 @@ void main() {
       expect(file?.name, 'report.xyz');
       expect(calls.last.method, 'any');
       expect(calls.last.arguments['allowedExtensions'], isNull);
+    }
+
+    test('reaches a single pick and releases the status listener', () async {
+      await verifyUnsupportedPick(
+        picker.pickFile(
+          type: FileType.custom,
+          allowedExtensions: ['zip', 'xyz'],
+          onFileLoading: statuses.add,
+        ),
+        multiple: false,
+      );
     });
-  }
+
+    test('reaches a multi pick and releases the status listener', () async {
+      await verifyUnsupportedPick(
+        picker.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['zip', 'xyz'],
+          onFileLoading: statuses.add,
+        ),
+        multiple: true,
+      );
+    });
+  });
 }
