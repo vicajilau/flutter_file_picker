@@ -19,10 +19,6 @@ void main() {
 
       expect(() => instance.pickFile(), throwsUnimplementedError);
       expect(() => instance.pickFiles(), throwsUnimplementedError);
-      expect(
-        () => instance.pickFileAndDirectoryPaths(),
-        throwsUnimplementedError,
-      );
       expect(() => instance.getDirectoryPath(), throwsUnimplementedError);
       expect(
         () => instance.saveFile(
@@ -45,10 +41,6 @@ void main() {
       final ExtendsFilePickerPlatform instance = ExtendsFilePickerPlatform();
       expect(() => instance.pickFile(), throwsUnimplementedError);
       expect(() => instance.pickFiles(), throwsUnimplementedError);
-      expect(
-        () => instance.pickFileAndDirectoryPaths(),
-        throwsUnimplementedError,
-      );
       expect(instance.clearTemporaryFiles(), completes);
       expect(() => instance.getDirectoryPath(), throwsUnimplementedError);
       expect(

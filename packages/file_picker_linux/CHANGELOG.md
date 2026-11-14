@@ -5,6 +5,7 @@
 - **BREAKING CHANGE**: Removed the `bytes` parameter of `LinuxPlatformFile.fromPath()`. The plugin never passed it, and the file content is read on demand by `readAsBytes()` and `readAsByteStream()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` take the new `darwinOptions` parameter of `file_picker_platform_interface` 5.0.0. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0, which no longer has `skipEntitlementsChecks()`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
+- **BREAKING CHANGE**: Removed `pickFileAndDirectoryPaths()`, which only picked files here, as `pickFiles()` does. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 2.0.4
 

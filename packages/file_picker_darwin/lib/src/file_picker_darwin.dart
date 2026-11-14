@@ -169,11 +169,29 @@ class FilePickerDarwin extends FilePickerPlatform {
     }
   }
 
-  @override
+  /// Opens a dialog where the user can select files and directories at the
+  /// same time, and returns their absolute paths, or an empty list if the
+  /// user cancelled.
+  ///
+  /// The [dialogTitle], if provided, is used as the title of the dialog on
+  /// macOS. The [initialDirectory], if provided, is where the dialog opens.
+  /// The [allowedExtensions], if provided, restrict which files can be
+  /// selected. Directories can always be selected.
+  ///
+  /// Only the pickers of iOS and macOS can select both in one dialog, so
+  /// this lives here and not in `FilePicker`. Reach it through the platform
+  /// instance:
+  ///
+  /// ```dart
+  /// if (FilePickerPlatform.instance case final FilePickerDarwin darwin) {
+  ///   final paths = await darwin.pickFileAndDirectoryPaths();
+  /// }
+  /// ```
+  ///
+  /// Throws a `PlatformException` if the pick fails.
   Future<List<String>> pickFileAndDirectoryPaths({
     String? dialogTitle,
     String? initialDirectory,
-    FileType type = FileType.any,
     List<String>? allowedExtensions,
   }) async {
     final List<String>? result = await methodChannel

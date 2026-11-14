@@ -6,6 +6,7 @@
 - `onFileLoading` and `onFileSaving` are now typed as `void Function(FilePickerStatus status)?`. They had no return type before. Existing overrides and callers keep compiling. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: Migrated to `cross_file` 0.4.0. `PlatformFile.xFile` now returns the new `XFile` API. Requires Flutter 3.41 and Dart 3.11. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - Documented what `compressionQuality` does: it recompresses images on Android and iOS, never videos, and the other platforms ignore it. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: Removed `FilePickerPlatform.pickFileAndDirectoryPaths()`. It is now only on `FilePickerDarwin`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 4.2.0
 

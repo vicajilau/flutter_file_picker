@@ -14,6 +14,6 @@ If your app overrides `onActivityResult` in a custom `MainActivity`, make sure i
 
 ### `initialDirectory` is not supported for picking
 
-`initialDirectory` currently has no effect on `pickFile()`, `pickFiles()`, `pickFileAndDirectoryPaths()`, or `getDirectoryPath()` on Android. The native side launches `ACTION_OPEN_DOCUMENT`, `ACTION_OPEN_DOCUMENT_TREE`, and `ACTION_GET_CONTENT` intents, none of which are given a starting location. It only works for `saveFile()` today.
+`initialDirectory` currently has no effect on `pickFile()`, `pickFiles()`, or `getDirectoryPath()` on Android. The native side launches `ACTION_OPEN_DOCUMENT`, `ACTION_OPEN_DOCUMENT_TREE`, and `ACTION_GET_CONTENT` intents, none of which are given a starting location. It only works for `saveFile()` today.
 
 Supporting it for picking would need turning a plain file path into a `content://` document tree URI for `DocumentsContract.EXTRA_INITIAL_URI`, which Android's Storage Access Framework does not map to directly, so this is tracked as a future improvement rather than a quick fix.

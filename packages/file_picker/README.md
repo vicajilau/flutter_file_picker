@@ -44,7 +44,6 @@ If you have any feature that you want to see in this package, please feel free t
 |-------------------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
 | `clearTemporaryFiles()`       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                | :x:                |
 | `getDirectoryPath()`          | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
-| `pickFileAndDirectoryPaths()` | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
 | `pickFile()`                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | `pickFiles()`                 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | `saveFile()`                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -104,6 +103,7 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * Platform specific APIs now only live in their platform package. Add `file_picker_darwin` as a direct dependency and call it on `FilePickerDarwin`:
    * **v13**: `await FilePicker.skipEntitlementsChecks();`
    * **v14**: `if (FilePickerPlatform.instance case final FilePickerDarwin darwin) await darwin.skipEntitlementsChecks();`
+
 7. **`type` and `allowedExtensions` Removed from `saveFile()`**:
    * They never had any effect on `saveFile()`, so just drop them.
    * **v13**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes, type: FileType.custom, allowedExtensions: ['pdf']);`
@@ -113,6 +113,7 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * `MethodChannelFilePicker`, `FilePickerSaveUtils` and `IllegalCharacterInFileNameException` are removed. Nothing in the plugin used them.
    * If you caught `IllegalCharacterInFileNameException`, remove that `catch`: no platform threw it. Windows reports a file name with reserved characters with an `ArgumentError`.
    * If you used `FilePickerSaveUtils.saveBytesToFile()`, write the file with `File(path).writeAsBytes(bytes)` from `dart:io`.
+
 9. **`compressionQuality` Now Works on iOS**:
    * It was ignored on iOS. From v14, a value from 1 to 100 recompresses the picked JPEG and HEIC images there, keeping their format, name and metadata, as it already recompressed images on Android.
    * If you pass it and want the original images on iOS, pass `compressionQuality: 0`, the default, on that platform.
@@ -132,6 +133,20 @@ The iOS and macOS native implementations live under the shared Darwin source tre
       ```
 
     * This checks Android's extension-to-MIME mapping, not the installed picker apps. Installing a picker does not necessarily add a mapping. Known extensions still use the system MIME filter. Unrestricted `FileType.any` picks are unchanged.
+
+12. **`FilePicker.pickFileAndDirectoryPaths()` Removed**:
+    * Only iOS and macOS can pick files and directories in the same dialog, so it now only lives in their platform package. Add `file_picker_darwin` as a direct dependency and call it on `FilePickerDarwin`. Its `type` parameter never had any effect and is removed.
+
+      ```dart
+      // v13
+      final paths = await FilePicker.pickFileAndDirectoryPaths();
+
+      // v14
+      if (FilePickerPlatform.instance case final FilePickerDarwin darwin) {
+        final paths = await darwin.pickFileAndDirectoryPaths();
+      }
+      ```
+    * On Android, Linux and Windows it only picked files. Use `pickFiles()` there, and read `path` from each result.
 
 ## Migrating to v13
 

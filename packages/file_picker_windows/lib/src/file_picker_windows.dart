@@ -106,22 +106,6 @@ class FilePickerWindows extends FilePickerPlatform {
   }
 
   @override
-  Future<List<String>> pickFileAndDirectoryPaths({
-    String? dialogTitle,
-    String? initialDirectory,
-    FileType type = FileType.any,
-    List<String>? allowedExtensions,
-  }) async {
-    final files = await pickFiles(
-      dialogTitle: dialogTitle,
-      initialDirectory: initialDirectory,
-      type: type,
-      allowedExtensions: allowedExtensions,
-    );
-    return [for (final file in files) file.uri.toFilePath(windows: true)];
-  }
-
-  @override
   Future<String?> getDirectoryPath({
     String? dialogTitle,
     String? initialDirectory,
