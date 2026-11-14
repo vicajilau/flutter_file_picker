@@ -43,7 +43,7 @@ class WebFileInputSession {
   final FilePickerWebOptions webOptions;
 
   /// Optional callback triggered during file picking status transitions.
-  final Function(FilePickerStatus)? onFileLoading;
+  final void Function(FilePickerStatus status)? onFileLoading;
 
   /// Callback delegate used to process and convert the native [FileList] to [PlatformFile]s.
   final ProcessFilesCallback processFiles;
