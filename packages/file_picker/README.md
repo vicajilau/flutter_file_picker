@@ -82,8 +82,9 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * It used to return a `Uri` with only the path of the saved document, such as `/document/primary:Download/report.pdf`, which no API can open. It now returns the whole `content://` URI, which `ContentResolver` and the Storage Access Framework accept.
    * If you only showed the result, nothing changes. If you used `uri.path` as a file system path, it never pointed to a real file, so use the URI itself.
 
-5. **`getDirectoryPath()` Throws on Failure**:
-   * On Android, iOS and macOS a failed directory pick used to return `null`, the same as a cancel. It now throws a `PlatformException`, and `null` only means the user cancelled.
+5. **Failed Picks Throw Instead of Looking Cancelled**:
+   * On Android, iOS and macOS a failed `getDirectoryPath()` used to return `null`, the same as a cancel. It now throws a `PlatformException`, and `null` only means the user cancelled.
+   * On Linux, when the file chooser portal ends a request in some other way than a choice or a cancel, `pickFiles()`, `getDirectoryPath()` and `saveFile()` used to return `null` or an empty list, the same as a cancel. They now throw a `PlatformException` with the `portal_error` code.
 
      ```dart
      // v13
