@@ -15,11 +15,24 @@ void main() {
     });
 
     test('the default instance implements nothing', () {
+      final instance = FilePickerPlatform.instance;
+
+      expect(() => instance.pickFile(), throwsUnimplementedError);
+      expect(() => instance.pickFiles(), throwsUnimplementedError);
       expect(
-        () => FilePickerPlatform.instance.pickFiles(),
+        () => instance.pickFileAndDirectoryPaths(),
         throwsUnimplementedError,
       );
-      expect(FilePickerPlatform.instance.clearTemporaryFiles(), completes);
+      expect(() => instance.getDirectoryPath(), throwsUnimplementedError);
+      expect(
+        () => instance.saveFile(
+          fileName: 'test.txt',
+          bytes: Uint8List(0),
+          mimeType: 'text/plain',
+        ),
+        throwsUnimplementedError,
+      );
+      expect(instance.clearTemporaryFiles(), completes);
     });
 
     test('Can set instance', () {
