@@ -130,6 +130,21 @@ The iOS and macOS native implementations live under the shared Darwin source tre
       ```
     * On Android, Linux and Windows it only picked files. Use `pickFiles()` there, and read `path` from each result.
 
+10. **Android Custom Filters Reject Extensions Without a MIME Type**:
+    * With `FileType.custom`, any extension that Android cannot map to a MIME type now throws a `PlatformException` with code `unsupported_extension` before the picker opens. Its message identifies the first such extension. This applies to a mixed list such as `['xyz', 'zip']` and to a list where none are known, such as `['xyz']` or `['pfx', 'p12']` on devices without those mappings. Previously unknown extensions were omitted, or an all-unknown list opened an unrestricted picker.
+    * To pick these files, use `FileType.any`, omit `allowedExtensions`, and validate the returned files in your app before using them. For example:
+
+      ```dart
+      final files = await FilePicker.pickFiles(type: FileType.any);
+      final allowed = {'xyz', 'zip'};
+      final validFiles = files.where((file) {
+        final dot = file.name.lastIndexOf('.');
+        return dot >= 0 && allowed.contains(file.name.substring(dot + 1).toLowerCase());
+      }).toList();
+      ```
+
+    * This checks Android's extension-to-MIME mapping, not the installed picker apps. Installing a picker does not necessarily add a mapping. Known extensions still use the system MIME filter. Unrestricted `FileType.any` picks are unchanged.
+
 ## Migrating to v13
 
 1. **`PlatformFile.length()` Returns `Future<int?>`**:
