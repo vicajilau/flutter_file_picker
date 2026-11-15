@@ -109,6 +109,12 @@ abstract final class FilePicker {
   /// directories in the same dialog. On Android, Linux and Windows the system
   /// picker selects either files or a directory, so only files can be
   /// selected, as with [pickFiles]. Not supported on web.
+  @Deprecated(
+    'Only iOS and macOS can select files and directories in the same dialog. '
+    'Call FilePickerDarwin.pickFileAndDirectoryPaths() from '
+    'package:file_picker_darwin there, and use pickFiles() on the other '
+    'platforms. This will be removed in 14.0.0.',
+  )
   static Future<List<String>> pickFileAndDirectoryPaths({
     String? dialogTitle,
     String? initialDirectory,
