@@ -4,6 +4,7 @@
 - **BREAKING CHANGE**: Removed `FilePickerPlatform.skipEntitlementsChecks()`. It is now only on `FilePickerDarwin`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 - **BREAKING CHANGE**: Removed `MethodChannelFilePicker`, `FilePickerSaveUtils` and `IllegalCharacterInFileNameException`. Nothing in the plugin used them: `MethodChannelFilePicker` implemented no method, and no platform threw the exception. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - `onFileLoading` and `onFileSaving` are now typed as `void Function(FilePickerStatus status)?`. They had no return type before. Existing overrides and callers keep compiling. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- Documented what `compressionQuality` does: it recompresses images on Android and iOS, never videos, and the other platforms ignore it. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 4.2.0
 

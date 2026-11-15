@@ -4,6 +4,7 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` and `pickFileAndDirectoryPaths()` throw every `PlatformException`, not just `window_not_found`. They used to return `null` or an empty list, the same as a cancel. A confirmed pick without a path, on iOS or macOS, now fails with `unknown_path` instead of returning `null` or an empty list. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0. `skipEntitlementsChecks()` is no longer an override, since the platform interface and `file_picker` 14.0.0 no longer have it. Call it on `FilePickerDarwin` directly. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 - **BREAKING CHANGE**: Requires Flutter 3.41 and Dart 3.11, which provide `FlutterFramework` to plugins. `Package.swift` now depends on it, which Swift Package Manager builds warn about and future Flutter versions will require. [#2308](https://github.com/vicajilau/flutter_file_picker/issues/2308)
+- **BREAKING CHANGE**: `compressionQuality` now recompresses the picked JPEG and HEIC images on iOS, keeping their format, name and metadata. It was sent to the native side but ignored since the Swift rewrite, so apps that pass it now get smaller images. Videos, PNG files and macOS are not affected. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 2.5.1
 

@@ -15,9 +15,13 @@ struct PickLoader {
     ///
     /// The items load concurrently and may finish in any order, so the
     /// results are collected by index rather than appended as they arrive.
+    ///
+    /// With a `compressionQuality` from 1 to 100, the images among them are
+    /// recompressed once copied, see `ImageCompressor`.
     func loadMedia(
         _ items: [PickedMediaItem],
         preferringCompatible: Bool,
+        compressionQuality: Int = 0,
         queue: DispatchQueue = .main,
         completion: @escaping ([[String: Any]], [LoadFailure]) -> Void
     ) {
@@ -44,7 +48,9 @@ struct PickLoader {
                     }
                     // The file may be deleted when this returns, so it has to
                     // be copied.
-                    var info = try fileInfo(for: store(url, copying: true))
+                    let storedURL = try store(url, copying: true)
+                    ImageCompressor.compress(storedURL, quality: compressionQuality)
+                    var info = try fileInfo(for: storedURL)
                     if let assetIdentifier = item.assetIdentifier {
                         info["assetIdentifier"] = assetIdentifier
                     }
@@ -70,12 +76,20 @@ struct PickLoader {
     ///
     /// The picker opens with `asCopy`, so each file is already a copy the app
     /// owns, and moving it avoids storing it twice (#2261).
-    func moveDocuments(_ urls: [URL]) -> (loaded: [[String: Any]], failures: [LoadFailure]) {
+    ///
+    /// With a `compressionQuality` from 1 to 100, the images among them are
+    /// recompressed once moved, see `ImageCompressor`.
+    func moveDocuments(
+        _ urls: [URL],
+        compressionQuality: Int = 0
+    ) -> (loaded: [[String: Any]], failures: [LoadFailure]) {
         var loaded: [[String: Any]] = []
         var failures: [LoadFailure] = []
         for (index, url) in urls.enumerated() {
             do {
-                loaded.append(try fileInfo(for: store(url, copying: false)))
+                let storedURL = try store(url, copying: false)
+                ImageCompressor.compress(storedURL, quality: compressionQuality)
+                loaded.append(try fileInfo(for: storedURL))
             } catch {
                 failures.append(LoadFailure(index: index, error: error))
             }

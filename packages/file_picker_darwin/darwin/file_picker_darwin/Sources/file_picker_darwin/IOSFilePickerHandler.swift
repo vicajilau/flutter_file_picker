@@ -20,6 +20,7 @@ final class IOSFilePickerHandler: NSObject,
     private var assetRepresentationMode = PHPickerConfiguration.AssetRepresentationMode.automatic
     private var orderedSelection = true
     private var copyMedia = true
+    private var compressionQuality = 0
     private var isDirectoryPicker = false
     private var isFileAndDirectoryPicker = false
     private var isSaveFile = false
@@ -89,6 +90,7 @@ final class IOSFilePickerHandler: NSObject,
             arguments["assetRepresentationMode"] as? String)
         orderedSelection = (arguments["orderedSelection"] as? Bool) ?? true
         copyMedia = (arguments["copyMedia"] as? Bool) ?? true
+        compressionQuality = (arguments["compressionQuality"] as? Int) ?? 0
 
         switch call.method {
         case "any":
@@ -185,7 +187,11 @@ final class IOSFilePickerHandler: NSObject,
 
         eventSink?(true)
         isLoadingPickedItems = true
-        loader.loadMedia(results, preferringCompatible: preferringCompatible) {
+        loader.loadMedia(
+            results,
+            preferringCompatible: preferringCompatible,
+            compressionQuality: compressionQuality
+        ) {
             [weak self] loaded, failures in
             guard let self else {
                 return
@@ -280,7 +286,7 @@ final class IOSFilePickerHandler: NSObject,
             return
         }
 
-        let documents = loader.moveDocuments(urls)
+        let documents = loader.moveDocuments(urls, compressionQuality: compressionQuality)
         complete(
             currentResult,
             pickedCount: urls.count,
