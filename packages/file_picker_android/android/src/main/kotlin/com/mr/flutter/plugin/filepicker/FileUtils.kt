@@ -500,18 +500,19 @@ object FileUtils {
     /**
      * The MIME types a custom pick is filtered by.
      *
-     * The app's own [mimeTypes], from `FilePickerAndroidOptions.mimeTypes`,
-     * are used as they are when there are any, without looking up
-     * [allowedExtensions]. That is the way to filter by an extension Android
-     * has no MIME type for (#2333). Otherwise they come from
-     * [allowedExtensions], see [getMimeTypes].
+     * The [mimeTypes] from `FilePickerAndroidOptions.mimeTypes` are used
+     * as-is, if they are provided. Otherwise [allowedExtensions] is used to
+     * resolve MIME types, via [getMimeTypes].
+     *
+     * Passing [mimeTypes] is the way to filter by an extension Android has no
+     * MIME type for (#2333).
      */
     fun resolveMimeFilter(
-        mimeTypes: List<*>?,
-        allowedExtensions: ArrayList<String>?,
+        mimeTypes: List<String>?,
+        allowedExtensions: List<String>?,
         lookup: (String) -> String? = { MimeTypeMap.getSingleton().getMimeTypeFromExtension(it) }
     ): ArrayList<String> {
-        val explicit = mimeTypes.orEmpty().filterIsInstance<String>().distinct()
+        val explicit = mimeTypes.orEmpty().distinct()
         if (explicit.isNotEmpty()) {
             return ArrayList(explicit)
         }
@@ -519,7 +520,7 @@ object FileUtils {
     }
 
     fun getMimeTypes(
-        allowedExtensions: ArrayList<String>?,
+        allowedExtensions: List<String>?,
         lookup: (String) -> String? = { MimeTypeMap.getSingleton().getMimeTypeFromExtension(it) }
     ): ArrayList<String> {
         if (allowedExtensions.isNullOrEmpty()) {

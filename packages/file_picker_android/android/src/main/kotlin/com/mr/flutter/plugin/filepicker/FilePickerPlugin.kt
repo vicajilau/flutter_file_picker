@@ -171,8 +171,8 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
             "custom" -> {
                 val allowedExtensions = try {
                     resolveMimeFilter(
-                        arguments?.get("mimeTypes") as? List<*>,
-                        arguments?.get("allowedExtensions") as ArrayList<String>?
+                        arguments?.get("mimeTypes") as List<String>?,
+                        arguments?.get("allowedExtensions") as List<String>?
                     )
                 } catch (e: IllegalArgumentException) {
                     result.error("unsupported_extension", e.message, null)

@@ -95,9 +95,9 @@ final class FilePickerAndroidOptions extends AndroidOptions {
     return {'safOptions': safOptions.toMap(), 'mimeTypes': mimeTypes};
   }
 
-  static final RegExp _mimeType = RegExp(
-    r'^[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*/(\*|[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]*)$',
-  );
+  // Only catches what is clearly not a MIME type, such as an extension: it
+  // needs a type and a subtype around one slash, without spaces.
+  static final RegExp _mimeType = RegExp(r'^[^\s/]+/[^\s/]+$');
 
   /// Throws an [ArgumentError] if an entry of [mimeTypes] is not a MIME
   /// type, such as `application/zip` or `image/*`.
