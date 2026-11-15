@@ -540,11 +540,12 @@ object FileUtils {
     }
 
     /**
-     * The size the provider reports for [uri], or 0 when it reports none.
+     * The size the provider reports for [uri], or null when it reports none:
+     * 0 would say the file is known to be empty.
      * Read as a `Long`: a video of 2 GB or more overflows an `Int`.
      */
     @JvmStatic
-    fun getFileSize(uri: Uri, context: Context): Long {
+    fun getFileSize(uri: Uri, context: Context): Long? {
         try {
             context.contentResolver.query(
                 uri,
@@ -563,7 +564,7 @@ object FileUtils {
         } catch (ex: Exception) {
             Log.e(TAG, "Failed to read file size: $ex")
         }
-        return 0
+        return null
     }
 
     @JvmStatic

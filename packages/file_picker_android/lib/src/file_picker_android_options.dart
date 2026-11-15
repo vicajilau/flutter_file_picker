@@ -46,10 +46,16 @@ final class AndroidSAFOptions {
   ///
   /// When `false` the document is not copied: the picked file reports its
   /// `content://` URI as [PlatformFile.uri] (so [PlatformFile.path] is `null`)
-  /// and its size as reported by the document provider. Read it through the
-  /// content resolver. Use this for large files such as videos, where a second
-  /// copy costs storage and time, together with [AndroidSAFGrant.lifetime] when
-  /// the URI has to stay readable after the app restarts.
+  /// and its size as reported by the document provider, or no size when the
+  /// provider reports none. Use this for large files such as videos, where a
+  /// second copy costs storage and time, together with
+  /// [AndroidSAFGrant.lifetime] when the URI has to stay readable after the app
+  /// restarts.
+  ///
+  /// The plugin does not read content URIs itself, so
+  /// [PlatformFile.readAsBytes], [PlatformFile.readAsByteStream] and
+  /// [PlatformFile.xFile] do not work for a file that was not copied. Read the
+  /// URI through the system instead, for example with a `ContentResolver`.
   ///
   /// Defaults to `true`.
   final bool copyToCache;

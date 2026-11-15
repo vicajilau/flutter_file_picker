@@ -81,6 +81,20 @@ void main() {
       expect(withoutSize.lengthSync(), isNull);
     });
 
+    test('a document that was not copied can have no known size', () async {
+      const contentUri =
+          'content://com.android.providers.media.documents/document/video%3A42';
+      final file = AndroidPlatformFile.fromMap({
+        'path': contentUri,
+        'name': 'game.mp4',
+        'size': null,
+        'identifier': contentUri,
+      });
+
+      expect(file.lengthSync(), isNull);
+      expect(await file.length(), isNull);
+    });
+
     test('a reported empty file needs no size lookup', () async {
       final file = AndroidPlatformFile.fromMap({
         'path': '/tmp/empty.txt',
