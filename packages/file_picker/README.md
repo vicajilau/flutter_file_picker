@@ -108,6 +108,11 @@ The iOS and macOS native implementations live under the shared Darwin source tre
 
    * This checks Android's extension-to-MIME mapping, not the installed picker apps. Installing a picker does not necessarily add a mapping. Known extensions still use the system MIME filter. Unrestricted `FileType.any` picks are unchanged.
 
+7. **Unused Classes Removed**:
+   * `MethodChannelFilePicker`, `FilePickerSaveUtils` and `IllegalCharacterInFileNameException` are removed. Nothing in the plugin used them.
+   * If you caught `IllegalCharacterInFileNameException`, remove that `catch`: no platform threw it. Windows reports a file name with reserved characters with an `ArgumentError`.
+   * If you used `FilePickerSaveUtils.saveBytesToFile()`, write the file with `File(path).writeAsBytes(bytes)` from `dart:io`.
+
 ## Migrating to v13
 
 1. **`PlatformFile.length()` Returns `Future<int?>`**:
