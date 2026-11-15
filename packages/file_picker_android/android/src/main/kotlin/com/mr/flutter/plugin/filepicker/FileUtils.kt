@@ -497,8 +497,30 @@ object FileUtils {
         return bundle.getParcelableArrayList("selectedItems")
     }
 
+    /**
+     * The MIME types a custom pick is filtered by.
+     *
+     * The [mimeTypes] from `FilePickerAndroidOptions.mimeTypes` are used
+     * as-is, if they are provided. Otherwise [allowedExtensions] is used to
+     * resolve MIME types, via [getMimeTypes].
+     *
+     * Passing [mimeTypes] is the way to filter by an extension Android has no
+     * MIME type for (#2333).
+     */
+    fun resolveMimeFilter(
+        mimeTypes: List<String>?,
+        allowedExtensions: List<String>?,
+        lookup: (String) -> String? = { MimeTypeMap.getSingleton().getMimeTypeFromExtension(it) }
+    ): ArrayList<String> {
+        val explicit = mimeTypes.orEmpty().distinct()
+        if (explicit.isNotEmpty()) {
+            return ArrayList(explicit)
+        }
+        return getMimeTypes(allowedExtensions, lookup)
+    }
+
     fun getMimeTypes(
-        allowedExtensions: ArrayList<String>?,
+        allowedExtensions: List<String>?,
         lookup: (String) -> String? = { MimeTypeMap.getSingleton().getMimeTypeFromExtension(it) }
     ): ArrayList<String> {
         if (allowedExtensions.isNullOrEmpty()) {
@@ -513,7 +535,8 @@ object FileUtils {
             if (mime == null) {
                 throw IllegalArgumentException(
                     "Android has no MIME type for extension '$allowedExtension'. " +
-                            "Use FileType.any without allowedExtensions and validate the selected files in your app."
+                            "Pass its MIME type in FilePickerAndroidOptions.mimeTypes, or use FileType.any " +
+                            "without allowedExtensions and validate the selected files in your app."
                 )
             }
 

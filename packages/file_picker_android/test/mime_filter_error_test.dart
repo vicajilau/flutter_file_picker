@@ -9,7 +9,8 @@ void main() {
   group('unsupported extension', () {
     const message =
         "Android has no MIME type for extension 'xyz'. "
-        'Use FileType.any without allowedExtensions and validate the selected '
+        'Pass its MIME type in FilePickerAndroidOptions.mimeTypes, or use '
+        'FileType.any without allowedExtensions and validate the selected '
         'files in your app.';
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -93,6 +94,83 @@ void main() {
         ),
         multiple: false,
       );
+    });
+
+    test('explicit MIME types are sent with a custom pick', () async {
+      messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+        calls.add(call);
+        return null;
+      });
+
+      await picker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['xyz', 'zip'],
+        androidOptions: const FilePickerAndroidOptions(
+          mimeTypes: ['application/zip', 'application/octet-stream'],
+        ),
+      );
+
+      expect(calls.single.method, 'custom');
+      expect(calls.single.arguments['mimeTypes'], [
+        'application/zip',
+        'application/octet-stream',
+      ]);
+      expect(calls.single.arguments['allowedExtensions'], ['xyz', 'zip']);
+    });
+
+    test('no MIME types are sent by default', () async {
+      messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+        calls.add(call);
+        return null;
+      });
+
+      await picker.pickFiles(type: FileType.custom, allowedExtensions: ['zip']);
+      await picker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['zip'],
+        androidOptions: const AndroidOptions(),
+      );
+
+      expect(calls, hasLength(2));
+      for (final call in calls) {
+        expect(call.arguments['mimeTypes'], isEmpty);
+      }
+    });
+
+    test('an entry that is not a MIME type is rejected before the pick', () {
+      for (final entry in [
+        'zip',
+        '.zip',
+        'application/',
+        '/zip',
+        'a b/c',
+        '',
+      ]) {
+        expect(
+          () => picker.pickFiles(
+            type: FileType.custom,
+            androidOptions: FilePickerAndroidOptions(mimeTypes: [entry]),
+          ),
+          throwsArgumentError,
+          reason: entry,
+        );
+      }
+      expect(calls, isEmpty);
+    });
+
+    test('wildcard and vendor MIME types are accepted', () {
+      const options = FilePickerAndroidOptions(
+        mimeTypes: [
+          'image/*',
+          'application/vnd.ms-excel',
+          'application/x-pkcs12',
+          'text/comma-separated-values',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'image/svg+xml',
+        ],
+      );
+
+      expect(options.validate, returnsNormally);
     });
 
     test('reaches a multi pick and releases the status listener', () async {

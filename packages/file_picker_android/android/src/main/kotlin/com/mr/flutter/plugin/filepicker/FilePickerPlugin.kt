@@ -8,7 +8,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.mr.flutter.plugin.filepicker.FileUtils.clearCache
 import com.mr.flutter.plugin.filepicker.FileUtils.getFileExtension
-import com.mr.flutter.plugin.filepicker.FileUtils.getMimeTypes
+import com.mr.flutter.plugin.filepicker.FileUtils.resolveMimeFilter
 import com.mr.flutter.plugin.filepicker.FileUtils.saveFile
 import com.mr.flutter.plugin.filepicker.FileUtils.startFileExplorer
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -170,7 +170,10 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
 
             "custom" -> {
                 val allowedExtensions = try {
-                    getMimeTypes(arguments?.get("allowedExtensions") as ArrayList<String>?)
+                    resolveMimeFilter(
+                        arguments?.get("mimeTypes") as List<String>?,
+                        arguments?.get("allowedExtensions") as List<String>?
+                    )
                 } catch (e: IllegalArgumentException) {
                     result.error("unsupported_extension", e.message, null)
                     return

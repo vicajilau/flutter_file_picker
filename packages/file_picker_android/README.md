@@ -12,6 +12,26 @@ This package is endorsed, which means you can simply use `file_picker` as normal
 
 If your app overrides `onActivityResult` in a custom `MainActivity`, make sure it calls `super.onActivityResult(...)` for activities it doesn't handle itself. Otherwise the plugin's own `onActivityResult` (in `FilePickerDelegate`) never runs, and picking a file fails silently.
 
+### Filtering by MIME type
+
+Android filters the picker by MIME type, not by extension. With `FileType.custom`, each of `allowedExtensions` is turned into a MIME type through Android's own mapping. An extension that is not in that mapping cannot be used as a filter, so the pick throws a `PlatformException` with the `unsupported_extension` code before the picker opens.
+
+Files with such an extension still have a MIME type, the one their provider reports. If you know it, pass it in `FilePickerAndroidOptions.mimeTypes`, and the picker filters by it instead of looking up the extensions:
+
+```dart
+final files = await FilePicker.pickFiles(
+  type: FileType.custom,
+  // Used on the other platforms.
+  allowedExtensions: ['xyz', 'zip'],
+  // Used on Android instead of the extensions.
+  androidOptions: const FilePickerAndroidOptions(
+    mimeTypes: ['application/zip', 'application/octet-stream'],
+  ),
+);
+```
+
+Wildcards such as `image/*` are accepted. Several extensions can share a MIME type, so the user may be able to select files with other extensions: check `PlatformFile.extension` of the result if it matters. `mimeTypes` is ignored with any other `FileType`.
+
 ### `initialDirectory` is not supported for picking
 
 `initialDirectory` currently has no effect on `pickFile()`, `pickFiles()`, `pickFileAndDirectoryPaths()`, or `getDirectoryPath()` on Android. The native side launches `ACTION_OPEN_DOCUMENT`, `ACTION_OPEN_DOCUMENT_TREE`, and `ACTION_GET_CONTENT` intents, none of which are given a starting location. It only works for `saveFile()` today.
