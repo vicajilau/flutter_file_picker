@@ -98,6 +98,10 @@ class FilePickerAndroid extends FilePickerPlatform {
     AndroidOptions androidOptions = const FilePickerAndroidOptions(),
   }) async {
     final String typeName = type.name;
+    final mimeTypes = switch (androidOptions) {
+      FilePickerAndroidOptions opts => (opts..validate()).mimeTypes,
+      _ => const <String>[],
+    };
     StreamSubscription<Object?>? eventSubscription;
 
     try {
@@ -124,6 +128,7 @@ class FilePickerAndroid extends FilePickerPlatform {
           .invokeListMethod<Map<Object?, Object?>>(typeName, {
             'allowMultipleSelection': allowMultiple,
             'allowedExtensions': allowedExtensions,
+            'mimeTypes': mimeTypes,
             'compressionQuality': compressionQuality,
             'androidSafOptions': safOptionsMap,
           });

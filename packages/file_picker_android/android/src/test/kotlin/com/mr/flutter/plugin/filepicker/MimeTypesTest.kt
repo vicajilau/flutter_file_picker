@@ -88,13 +88,49 @@ class MimeTypesTest {
         assertUnsupported(arrayListOf("", "zip"), "")
     }
 
+    @Test
+    fun explicitMimeTypesAreTheFilterAndSkipTheExtensionLookup() {
+        assertEquals(
+            arrayListOf("application/zip", "application/octet-stream"),
+            FileUtils.resolveMimeFilter(
+                listOf("application/zip", "application/octet-stream"),
+                arrayListOf("xyz", "zip")
+            ) { error("Explicit MIME types must not look up extensions") }
+        )
+    }
+
+    @Test
+    fun explicitMimeTypesKeepTheirOrderWithoutDuplicates() {
+        assertEquals(
+            arrayListOf("image/*", "application/pdf"),
+            FileUtils.resolveMimeFilter(
+                listOf("image/*", "application/pdf", "image/*"),
+                null
+            ) { error("Explicit MIME types must not look up extensions") }
+        )
+    }
+
+    @Test
+    fun withoutExplicitMimeTypesTheExtensionsAreLookedUp() {
+        for (mimeTypes in listOf(null, emptyList<String>())) {
+            assertEquals(
+                arrayListOf("application/zip"),
+                FileUtils.resolveMimeFilter(mimeTypes, arrayListOf("zip"), knownTypes::get)
+            )
+            assertThrows(IllegalArgumentException::class.java) {
+                FileUtils.resolveMimeFilter(mimeTypes, arrayListOf("xyz"), knownTypes::get)
+            }
+        }
+    }
+
     private fun assertUnsupported(extensions: ArrayList<String>, extension: String) {
         val error = assertThrows(IllegalArgumentException::class.java) {
             FileUtils.getMimeTypes(extensions, knownTypes::get)
         }
         assertEquals(
             "Android has no MIME type for extension '$extension'. " +
-                    "Use FileType.any without allowedExtensions and validate the selected files in your app.",
+                    "Pass its MIME type in FilePickerAndroidOptions.mimeTypes, or use FileType.any " +
+                    "without allowedExtensions and validate the selected files in your app.",
             error.message
         )
     }
