@@ -272,8 +272,7 @@ class FilePickerLinux extends FilePickerPlatform {
 
   /// Get the file paths from a DBus response.
   ///
-  /// Returns null if the user cancelled the operation.
-  /// Throws a [PlatformException] with the `portal_error` code for any other [status] value.
+  /// Returns the paths when the user made a choice (0), or null when the
   /// user cancelled (1).
   ///
   /// Throws a [PlatformException] with the `portal_error` code for any other
