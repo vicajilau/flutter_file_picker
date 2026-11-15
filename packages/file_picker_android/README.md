@@ -22,7 +22,7 @@ Files with such an extension still have a MIME type, the one their provider repo
 final files = await FilePicker.pickFiles(
   type: FileType.custom,
   // Used on the other platforms.
-  allowedExtensions: ['xyz', 'zip'],
+  allowedExtensions: ['abc', 'zip'],
   // Used on Android instead of the extensions.
   androidOptions: const FilePickerAndroidOptions(
     mimeTypes: ['application/zip', 'application/octet-stream'],
@@ -30,7 +30,7 @@ final files = await FilePicker.pickFiles(
 );
 ```
 
-Wildcards such as `image/*` are accepted. Several extensions can share a MIME type, so the user may be able to select files with other extensions: check `PlatformFile.extension` of the result if it matters. `mimeTypes` is ignored with any other `FileType`.
+`application/octet-stream` is the type Android gives to files it cannot classify, so it also lets the user select every file of an unknown type, such as an `.abc` file, but not the ones with a known type, such as PDF or CSV files. Wildcards such as `image/*` are accepted. Several extensions can share a MIME type, so the user may be able to select files with other extensions: check `PlatformFile.extension` of the result if it matters. `mimeTypes` is ignored with any other `FileType`.
 
 ### `initialDirectory` is not supported for picking
 

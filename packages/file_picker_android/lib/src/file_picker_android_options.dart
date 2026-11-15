@@ -74,13 +74,17 @@ final class FilePickerAndroidOptions extends AndroidOptions {
   /// await FilePicker.pickFiles(
   ///   type: FileType.custom,
   ///   // Used on the other platforms.
-  ///   allowedExtensions: ['xyz', 'zip'],
+  ///   allowedExtensions: ['abc', 'zip'],
   ///   // Used on Android instead of the extensions.
   ///   androidOptions: const FilePickerAndroidOptions(
   ///     mimeTypes: ['application/zip', 'application/octet-stream'],
   ///   ),
   /// );
   /// ```
+  ///
+  /// `application/octet-stream` is the type Android gives to files it cannot
+  /// classify, so it also lets the user select every file of an unknown type,
+  /// but not the ones with a known type, such as PDF or CSV files.
   ///
   /// When not empty, these are the filter and `allowedExtensions` is not
   /// looked up on Android, so no extension is rejected. Since several

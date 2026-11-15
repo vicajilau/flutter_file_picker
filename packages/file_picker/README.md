@@ -119,24 +119,26 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * Videos are never compressed, and macOS, Linux, Windows and web ignore it.
 
 10. **Android Custom Filters Reject Extensions Without a MIME Type**:
-    * With `FileType.custom`, any extension that Android cannot map to a MIME type now throws a `PlatformException` with code `unsupported_extension` before the picker opens. Its message identifies the first such extension. This applies to a mixed list such as `['xyz', 'zip']` and to a list where none are known, such as `['xyz']` or `['pfx', 'p12']` on devices without those mappings. Previously unknown extensions were omitted, or an all-unknown list opened an unrestricted picker.
+    * With `FileType.custom`, any extension that Android cannot map to a MIME type now throws a `PlatformException` with code `unsupported_extension` before the picker opens. Its message identifies the first such extension. This applies to a mixed list such as `['abc', 'zip']` and to a list where none are known, such as `['abc']` or `['abc', 'qzx']`. Which extensions Android knows depends on the device and its version: `xyz`, `pfx` and `p12`, for example, are known on Android 17. Previously unknown extensions were omitted, or an all-unknown list opened an unrestricted picker.
     * If you know the MIME type of those files, pass it in `FilePickerAndroidOptions.mimeTypes`, from `package:android_file_picker`. Android then filters by those MIME types instead of looking up the extensions, which are still used on the other platforms:
 
       ```dart
       final files = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['xyz', 'zip'],
+        allowedExtensions: ['abc', 'zip'],
         androidOptions: const FilePickerAndroidOptions(
           mimeTypes: ['application/zip', 'application/octet-stream'],
         ),
       );
       ```
 
+      `application/octet-stream` is the type Android gives to files it cannot classify, so it also lets the user select every file of an unknown type, such as an `.abc` file, but not the ones with a known type, such as PDF or CSV files.
+
     * Otherwise, use `FileType.any`, omit `allowedExtensions`, and validate the returned files in your app before using them:
 
       ```dart
       final files = await FilePicker.pickFiles(type: FileType.any);
-      const allowed = {'xyz', 'zip'};
+      const allowed = {'abc', 'zip'};
       final validFiles = files
           .where((file) => allowed.contains(file.extension?.toLowerCase()))
           .toList();
