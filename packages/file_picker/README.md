@@ -44,6 +44,7 @@ If you have any feature that you want to see in this package, please feel free t
 |-------------------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
 | `clearTemporaryFiles()`       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                | :x:                |
 | `getDirectoryPath()`          | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
+| `pickDirectory()`             | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
 | `pickFileAndDirectoryPaths()` | Files only          | :white_check_mark: | Files only          | :white_check_mark: | Files only          | :x:                |
 | `pickFile()`                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | `pickFiles()`                 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -277,12 +278,14 @@ and only the most recent lost pick is kept. To reproduce it, enable
 #### Pick a directory
 
 ```dart
-String? selectedDirectory = await FilePicker.getDirectoryPath();
+Uri? selectedDirectory = await FilePicker.pickDirectory();
 
 if (selectedDirectory == null) {
   // User canceled the picker
 }
 ```
+
+On Android the result is the `content://` tree URI, which is what the app can read through the Storage Access Framework. On the other platforms it is a `file` URI, so `selectedDirectory.toFilePath()` gives the path. `getDirectoryPath()` still works, but is deprecated.
 
 #### Save-file / save-as dialog
 

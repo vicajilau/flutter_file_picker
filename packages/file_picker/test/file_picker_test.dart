@@ -45,6 +45,26 @@ class MockFilePickerPlatform extends FilePickerPlatform
     skipEntitlementsChecksCalled = true;
   }
 
+  ({String? dialogTitle, String? initialDirectory, AndroidOptions options})?
+  lastPickDirectory;
+
+  @override
+  Future<Uri?> pickDirectory({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    lastPickDirectory = (
+      dialogTitle: dialogTitle,
+      initialDirectory: initialDirectory,
+      options: androidOptions,
+    );
+    return Uri.directory('/picked');
+  }
+
   @override
   Future<PlatformFile?> pickFile({
     String? dialogTitle,
@@ -100,6 +120,24 @@ void main() {
       expect(files.first.path, testFilePath);
     },
   );
+
+  test('FilePicker.pickDirectory delegates to the platform and returns its '
+      'Uri', () async {
+    final mockPlatform = MockFilePickerPlatform();
+    FilePickerPlatform.instance = mockPlatform;
+    const options = AndroidOptions();
+
+    final uri = await FilePicker.pickDirectory(
+      dialogTitle: 'Pick a folder',
+      initialDirectory: '/start',
+      androidOptions: options,
+    );
+
+    expect(uri, Uri.directory('/picked'));
+    expect(mockPlatform.lastPickDirectory?.dialogTitle, 'Pick a folder');
+    expect(mockPlatform.lastPickDirectory?.initialDirectory, '/start');
+    expect(mockPlatform.lastPickDirectory?.options, same(options));
+  });
 
   test('FilePicker.skipEntitlementsChecks delegates to '
       'FilePickerPlatform.instance.skipEntitlementsChecks', () async {

@@ -1,3 +1,16 @@
+## 13.4.0
+
+- Added `FilePicker.pickDirectory()`, which returns the `Uri` of the picked directory: the `content://` tree URI on Android, which is what the app can read through the Storage Access Framework, and a `file` URI on the other platforms. On Android it throws when the pick fails, while the other platforms keep returning `null` for a failure, as `getDirectoryPath()` does. Requires `android_file_picker` 2.2.0 and `file_picker_platform_interface` 4.3.0.
+- Deprecated `FilePicker.getDirectoryPath()` in favor of `pickDirectory()`. It keeps working until a future major version.
+- Deprecated `FilePicker.pickFileAndDirectoryPaths()`. Only iOS and macOS can select files and directories in the same dialog, so in 14.0.0 it will only be on `FilePickerDarwin`, from `package:file_picker_darwin`. On Android, Linux and Windows it only selects files, use `pickFiles()` there. It keeps working until then.
+
+  ```dart
+  if (FilePickerPlatform.instance case final FilePickerDarwin darwin) {
+    final paths = await darwin.pickFileAndDirectoryPaths();
+  }
+  ```
+
+
 ## 13.3.3
 
 - Requires `android_file_picker` 2.1.5, `file_picker_linux` 2.0.4, `windows_file_picker` 2.0.2 and `file_picker_web` 4.2.1, with fixes for status callbacks, saving, cached and compressed files on Android, `FileType.media` on Windows and web, and empty files on every platform. See their changelogs for the details.
