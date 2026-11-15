@@ -120,7 +120,7 @@ void main() {
 
   Future<Uri?> save({
     WebSaveFileMode? saveMode,
-    Function(FilePickerStatus)? onFileSaving,
+    void Function(FilePickerStatus status)? onFileSaving,
   }) {
     return picker.saveFile(
       fileName: 'report.txt',

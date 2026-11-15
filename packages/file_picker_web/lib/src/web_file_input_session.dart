@@ -43,7 +43,7 @@ class WebFileInputSession {
   final FilePickerWebOptions webOptions;
 
   /// Optional callback triggered during file picking status transitions.
-  final Function(FilePickerStatus)? onFileLoading;
+  final void Function(FilePickerStatus status)? onFileLoading;
 
   /// Callback delegate used to process and convert the native [FileList] to [PlatformFile]s.
   final ProcessFilesCallback processFiles;
@@ -107,7 +107,7 @@ class WebFileInputSession {
   void _onCancel(Event _) {
     _cleanupListeners(null);
 
-    Future.delayed(const Duration(milliseconds: 500)).then((_) async {
+    Future<void>.delayed(const Duration(milliseconds: 500)).then((_) async {
       if (_eventTriggered) return;
       _eventTriggered = true;
 
