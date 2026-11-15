@@ -178,9 +178,7 @@ class FilePickerDarwin extends FilePickerPlatform {
   /// The [allowedExtensions], if provided, restrict which files can be
   /// selected. Directories can always be selected.
   ///
-  /// Only the pickers of iOS and macOS can select both in one dialog, so
-  /// this lives here and not in `FilePicker`. Reach it through the platform
-  /// instance:
+  /// Reach it through the platform instance:
   ///
   /// ```dart
   /// if (FilePickerPlatform.instance case final FilePickerDarwin darwin) {
