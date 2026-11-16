@@ -127,7 +127,6 @@ void main() {
   );
 
   test('pickDirectory delegates to the platform and returns its Uri', () async {
-      'Uri', () async {
     final mockPlatform = MockFilePickerPlatform();
     FilePickerPlatform.instance = mockPlatform;
     const options = AndroidOptions();
