@@ -6,6 +6,7 @@
 - `onFileLoading` and `onFileSaving` are now typed as `void Function(FilePickerStatus status)?`. They had no return type before. Existing overrides and callers keep compiling. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - Documented what `compressionQuality` does: it recompresses images on Android and iOS, never videos, and the other platforms ignore it. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - `pickDirectory()`, added in 4.3.0, also takes `darwinOptions` and passes it on to `getDirectoryPath()`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: Removed `FilePickerPlatform.pickFileAndDirectoryPaths()`. It is now only on `FilePickerDarwin`. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 4.3.0
 

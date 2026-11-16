@@ -15,6 +15,7 @@
 - **BREAKING CHANGE**: `compressionQuality` now recompresses the picked images on iOS, as it does on Android. It was ignored there, so apps that pass it now get smaller images on iOS. See the migration guide. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - On Android, `FilePickerAndroidOptions.mimeTypes` from `android_file_picker` 3.0.0 sets the MIME types a custom pick is filtered by, for extensions Android has no MIME type for. See the migration guide. [#2333](https://github.com/vicajilau/flutter_file_picker/issues/2333)
 - `pickDirectory()`, added in 13.4.0, also takes `darwinOptions`, like `getDirectoryPath()`, and throws a `PlatformException` when the pick fails on every platform. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: Removed `FilePicker.pickFileAndDirectoryPaths()`, deprecated since 13.4.0. Only iOS and macOS can pick files and directories in one dialog, so it only lives on `FilePickerDarwin`, from `package:file_picker_darwin`. On Android, Linux and Windows it only picked files, use `pickFiles()` there. See the migration guide. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 13.4.0
 

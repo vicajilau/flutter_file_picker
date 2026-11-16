@@ -149,22 +149,6 @@ class FilePickerAndroid extends FilePickerPlatform {
     }
   }
 
-  @override
-  Future<List<String>> pickFileAndDirectoryPaths({
-    String? dialogTitle,
-    String? initialDirectory,
-    FileType type = FileType.any,
-    List<String>? allowedExtensions,
-  }) async {
-    final files = await pickFiles(
-      dialogTitle: dialogTitle,
-      initialDirectory: initialDirectory,
-      type: type,
-      allowedExtensions: allowedExtensions,
-    );
-    return files.map((e) => e.path).nonNulls.toList();
-  }
-
   /// Returns the `content://` tree URI of the picked directory, which is
   /// what the Storage Access Framework grants access through.
   ///

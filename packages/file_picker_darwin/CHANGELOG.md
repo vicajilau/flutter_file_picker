@@ -5,6 +5,7 @@
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0. `skipEntitlementsChecks()` is no longer an override, since the platform interface and `file_picker` 14.0.0 no longer have it. Call it on `FilePickerDarwin` directly. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 - **BREAKING CHANGE**: Requires Flutter 3.41 and Dart 3.11, which provide `FlutterFramework` to plugins. `Package.swift` now depends on it, which Swift Package Manager builds warn about and future Flutter versions will require. [#2308](https://github.com/vicajilau/flutter_file_picker/issues/2308)
 - **BREAKING CHANGE**: `compressionQuality` now recompresses the picked JPEG and HEIC images on iOS, keeping their format, name and metadata. It was sent to the native side but ignored since the Swift rewrite, so apps that pass it now get smaller images. Videos, PNG files and macOS are not affected. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: `pickFileAndDirectoryPaths()` is no longer an override, since the platform interface and `file_picker` 14.0.0 no longer have it. Call it on `FilePickerDarwin` directly. Its `type` parameter, which had no effect, is removed. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 2.5.1
 
