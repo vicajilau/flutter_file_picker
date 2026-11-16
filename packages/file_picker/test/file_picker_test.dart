@@ -126,7 +126,7 @@ void main() {
     },
   );
 
-  test('FilePicker.pickDirectory delegates to the platform and returns its '
+  test('pickDirectory delegates to the platform and returns its Uri', () async {
       'Uri', () async {
     final mockPlatform = MockFilePickerPlatform();
     FilePickerPlatform.instance = mockPlatform;
