@@ -1,6 +1,7 @@
 ## 2.2.0
 
 - Added `pickDirectory()`, which returns the `content://` tree URI of the picked directory. Without `FilePickerAndroidOptions`, the grant is transient and read only. Unlike `getDirectoryPath()`, a failure is thrown and `null` only means the user canceled. Requires `file_picker_platform_interface` 4.3.0.
+- Added `AndroidSAFOptions.copyToCache`, `true` by default. With `copyToCache: false` a picked document is not copied into the app cache: the file reports its `content://` URI and the size the document provider reports, or no size when it reports none. Meant for large files such as videos, where a second copy costs storage and time. The plugin does not read content URIs itself, so `readAsBytes()`, `readAsByteStream()` and `xFile` do not work for these files, and the app has to read the URI through the system. [#1839](https://github.com/vicajilau/flutter_file_picker/issues/1839)
 
 ## 2.1.6
 

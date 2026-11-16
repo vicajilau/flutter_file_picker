@@ -1,6 +1,7 @@
 ## 13.4.0
 
 - Added `FilePicker.pickDirectory()`, which returns the `Uri` of the picked directory: the `content://` tree URI on Android, which is what the app can read through the Storage Access Framework, and a `file` URI on the other platforms. On Android it throws when the pick fails, while the other platforms keep returning `null` for a failure, as `getDirectoryPath()` does. Requires `android_file_picker` 2.2.0 and `file_picker_platform_interface` 4.3.0.
+- On Android, `AndroidSAFOptions.copyToCache` from `android_file_picker` 2.2.0 lets a pick skip the copy into the app cache and report the `content://` URI of the document instead, for large files such as videos. The plugin does not read those URIs, so `readAsBytes()` and `readAsByteStream()` do not work for them. [#1839](https://github.com/vicajilau/flutter_file_picker/issues/1839)
 - Deprecated `FilePicker.getDirectoryPath()` in favor of `pickDirectory()`. It keeps working until a future major version.
 - Deprecated `FilePicker.pickFileAndDirectoryPaths()`. Only iOS and macOS can select files and directories in the same dialog, so in 14.0.0 it will only be on `FilePickerDarwin`, from `package:file_picker_darwin`. On Android, Linux and Windows it only selects files, use `pickFiles()` there. It keeps working until then.
 
