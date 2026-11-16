@@ -56,20 +56,36 @@ See the [official API reference on pub.dev](https://pub.dev/documentation/file_p
 
 ### Darwin implementation notes
 
-The iOS and macOS native implementations live under the shared Darwin source tree (`file_picker_darwin`). The iOS implementation requires iOS 14.0 or newer because it uses `PHPickerViewController` and `PHPickerResult`.
+The iOS and macOS native implementations live under the shared Darwin source tree (`file_picker_darwin`). The iOS implementation requires iOS 14.0 or newer because it uses `PHPickerViewController` and `PHPickerResult`. The macOS implementation requires macOS 10.15 or newer.
 
 ## Migrating to v14
 
-1. **Web Reading Options Removed**:
+1. **Minimum Versions Raised**: Flutter 3.41, Dart 3.11, Android SDK 24 and macOS 10.15, required by `cross_file` 0.4.0.
+
+2. **`PlatformFile.xFile` Uses `cross_file` 0.4.0**:
+   * `XFile.path`, `XFile.mimeType`, `XFile.saveTo()` and `XFile.fromData` no longer exist, and `XFile.name` is now `Future<String?> name()`.
+   * Use `PlatformFile.path`, `PlatformFile.name`, `readAsBytes()` and `readAsByteStream()` when you do not need an `XFile`. For a file system path, check for a `FileSystemXFile`:
+
+     ```dart
+     import 'package:cross_file/cross_file.dart';
+
+     final path = switch (file.xFile) {
+       FileSystemXFile(:final path) => path,
+       _ => null,
+     };
+     ```
+   * See the [`cross_file` changelog](https://pub.dev/packages/cross_file/changelog) for the full list.
+
+3. **Web Reading Options Removed**:
    * `withData`, `withReadStream` and `readSequential` are removed from `FilePickerWebOptions`. Picked files are no longer read at pick time, and `readAsBytes()`/`readAsByteStream()` read them on demand.
    * **v13**: `FilePickerWebOptions(withData: false, withReadStream: true, cancelUploadOnWindowBlur: false)`
    * **v14**: `FilePickerWebOptions(cancelUploadOnWindowBlur: false)`
 
-2. **Android `saveFile()` Returns a `content://` URI**:
+4. **Android `saveFile()` Returns a `content://` URI**:
    * It used to return a `Uri` with only the path of the saved document, such as `/document/primary:Download/report.pdf`, which no API can open. It now returns the whole `content://` URI, which `ContentResolver` and the Storage Access Framework accept.
    * If you only showed the result, nothing changes. If you used `uri.path` as a file system path, it never pointed to a real file, so use the URI itself.
 
-3. **Failed Picks Throw Instead of Looking Cancelled**:
+5. **Failed Picks Throw Instead of Looking Cancelled**:
    * On Android, iOS and macOS a failed `getDirectoryPath()` used to return `null`, the same as a cancel. It now throws a `PlatformException`, and `null` only means the user cancelled.
    * On Linux, when the file chooser portal ends a request in some other way than a choice or a cancel, `pickFiles()`, `getDirectoryPath()` and `saveFile()` used to return `null` or an empty list, the same as a cancel. They now throw a `PlatformException` with the `portal_error` code.
 
@@ -87,51 +103,51 @@ The iOS and macOS native implementations live under the shared Darwin source tre
      }
      ```
 
-4. **`FilePicker.skipEntitlementsChecks()` Removed**:
+6. **`FilePicker.skipEntitlementsChecks()` Removed**:
    * Platform specific APIs now only live in their platform package. Add `file_picker_darwin` as a direct dependency and call it on `FilePickerDarwin`:
    * **v13**: `await FilePicker.skipEntitlementsChecks();`
    * **v14**: `if (FilePickerPlatform.instance case final FilePickerDarwin darwin) await darwin.skipEntitlementsChecks();`
-5. **`type` and `allowedExtensions` Removed from `saveFile()`**:
+7. **`type` and `allowedExtensions` Removed from `saveFile()`**:
    * They never had any effect on `saveFile()`, so just drop them.
    * **v13**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes, type: FileType.custom, allowedExtensions: ['pdf']);`
    * **v14**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes);`
 
-6. **Android Custom Filters Reject Extensions Without a MIME Type**:
-   * With `FileType.custom`, any extension that Android cannot map to a MIME type now throws a `PlatformException` with code `unsupported_extension` before the picker opens. Its message identifies the first such extension. This applies to a mixed list such as `['abc', 'zip']` and to a list where none are known, such as `['abc']` or `['abc', 'qzx']`. Which extensions Android knows depends on the device and its version: `xyz`, `pfx` and `p12`, for example, are known on Android 17. Previously unknown extensions were omitted, or an all-unknown list opened an unrestricted picker.
-   * If you know the MIME type of those files, pass it in `FilePickerAndroidOptions.mimeTypes`, from `package:android_file_picker`. Android then filters by those MIME types instead of looking up the extensions, which are still used on the other platforms:
-
-     ```dart
-     final files = await FilePicker.pickFiles(
-       type: FileType.custom,
-       allowedExtensions: ['abc', 'zip'],
-       androidOptions: const FilePickerAndroidOptions(
-         mimeTypes: ['application/zip', 'application/octet-stream'],
-       ),
-     );
-     ```
-
-     `application/octet-stream` is the type Android gives to files it cannot classify, so it also lets the user select every file of an unknown type, such as an `.abc` file, but not the ones with a known type, such as PDF or CSV files.
-
-   * Otherwise, use `FileType.any`, omit `allowedExtensions`, and validate the returned files in your app before using them:
-
-     ```dart
-     final files = await FilePicker.pickFiles(type: FileType.any);
-     const allowed = {'abc', 'zip'};
-     final validFiles = files
-         .where((file) => allowed.contains(file.extension?.toLowerCase()))
-         .toList();
-     ```
-
-   * This checks Android's extension-to-MIME mapping, not the installed picker apps. Installing a picker does not necessarily add a mapping. Known extensions still use the system MIME filter. Unrestricted `FileType.any` picks are unchanged.
-
-7. **Unused Classes Removed**:
+8. **Unused Classes Removed**:
    * `MethodChannelFilePicker`, `FilePickerSaveUtils` and `IllegalCharacterInFileNameException` are removed. Nothing in the plugin used them.
    * If you caught `IllegalCharacterInFileNameException`, remove that `catch`: no platform threw it. Windows reports a file name with reserved characters with an `ArgumentError`.
    * If you used `FilePickerSaveUtils.saveBytesToFile()`, write the file with `File(path).writeAsBytes(bytes)` from `dart:io`.
-8. **`compressionQuality` Now Works on iOS**:
+9. **`compressionQuality` Now Works on iOS**:
    * It was ignored on iOS. From v14, a value from 1 to 100 recompresses the picked JPEG and HEIC images there, keeping their format, name and metadata, as it already recompressed images on Android.
    * If you pass it and want the original images on iOS, pass `compressionQuality: 0`, the default, on that platform.
    * Videos are never compressed, and macOS, Linux, Windows and web ignore it.
+
+10. **Android Custom Filters Reject Extensions Without a MIME Type**:
+    * With `FileType.custom`, any extension that Android cannot map to a MIME type now throws a `PlatformException` with code `unsupported_extension` before the picker opens. Its message identifies the first such extension. This applies to a mixed list such as `['abc', 'zip']` and to a list where none are known, such as `['abc']` or `['abc', 'qzx']`. Which extensions Android knows depends on the device and its version: `xyz`, `pfx` and `p12`, for example, are known on Android 17. Previously unknown extensions were omitted, or an all-unknown list opened an unrestricted picker.
+    * If you know the MIME type of those files, pass it in `FilePickerAndroidOptions.mimeTypes`, from `package:android_file_picker`. Android then filters by those MIME types instead of looking up the extensions, which are still used on the other platforms:
+
+      ```dart
+      final files = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['abc', 'zip'],
+        androidOptions: const FilePickerAndroidOptions(
+          mimeTypes: ['application/zip', 'application/octet-stream'],
+        ),
+      );
+      ```
+
+      `application/octet-stream` is the type Android gives to files it cannot classify, so it also lets the user select every file of an unknown type, such as an `.abc` file, but not the ones with a known type, such as PDF or CSV files.
+
+    * Otherwise, use `FileType.any`, omit `allowedExtensions`, and validate the returned files in your app before using them:
+
+      ```dart
+      final files = await FilePicker.pickFiles(type: FileType.any);
+      const allowed = {'abc', 'zip'};
+      final validFiles = files
+          .where((file) => allowed.contains(file.extension?.toLowerCase()))
+          .toList();
+      ```
+
+    * This checks Android's extension-to-MIME mapping, not the installed picker apps. Installing a picker does not necessarily add a mapping. Known extensions still use the system MIME filter. Unrestricted `FileType.any` picks are unchanged.
 
 ## Migrating to v13
 

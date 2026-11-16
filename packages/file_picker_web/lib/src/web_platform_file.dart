@@ -1,20 +1,22 @@
 import 'dart:async';
+import 'dart:js_interop';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cross_file/cross_file.dart';
+import 'package:cross_file_web/cross_file_web.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
-
-import 'platform_file_web_fetch.dart';
 
 /// A Web-specific implementation of [PlatformFile].
 ///
 /// Wraps a file selected in a web environment. Its content is read on demand
-/// from a `blob:` or `data:` URI.
+/// through [xFile], from a `blob:` or `data:` URI.
 base class WebPlatformFile extends PlatformFile {
   /// Creates a new [WebPlatformFile] instance.
   ///
   /// Requires a file [name] and [uri]. Optional parameters include the file
-  /// size in [bytesLength] and an underlying [xFile].
+  /// size in [bytesLength] and an underlying [xFile]. Without [xFile], the
+  /// content is read from [uri].
   WebPlatformFile({
     required this.name,
     required this.uri,
@@ -43,11 +45,7 @@ base class WebPlatformFile extends PlatformFile {
 
   /// Returns an [XFile] instance representing this web file.
   @override
-  XFile get xFile {
-    final file = _xFile;
-    if (file != null) return file;
-    return XFile(uri.toString(), name: name);
-  }
+  XFile get xFile => _xFile ?? XFile.scopedStorage(uri: uri.toString());
 
   /// The browser's `File.size`, if known.
   @override
@@ -67,34 +65,34 @@ base class WebPlatformFile extends PlatformFile {
     }
   }
 
-  /// Asynchronously reads the file content as a byte array (`Uint8List`).
+  /// Reads the file content as a byte array (`Uint8List`).
   ///
-  /// Reads a `blob:` or `data:` URL directly, otherwise falls back to [xFile].
+  /// Throws if the content cannot be read.
   @override
-  Future<Uint8List> readAsBytes() async {
-    // Try fetching from blob or data URL
-    final fetched = await fetchBytesFromWebPath(uri.toString());
-    if (fetched != null) return fetched;
-
-    return xFile.readAsBytes();
-  }
+  Future<Uint8List> readAsBytes() => xFile.readAsBytes();
 
   /// The size of the chunks emitted by [readAsByteStream].
-  static const int streamChunkSize = webStreamChunkSize;
+  static const int streamChunkSize = 1024 * 1024;
 
-  /// Asynchronously opens a stream to read the file content in chunks.
+  /// Opens a stream to read the file content in chunks.
   ///
   /// Every chunk is [streamChunkSize] bytes long except the last one, which
-  /// may be shorter, so consumers can rely on evenly sized buffers.
+  /// may be shorter, so consumers can rely on evenly sized buffers. Read
+  /// failures are emitted as errors on the stream.
   @override
   Stream<Uint8List> readAsByteStream() async* {
-    final webStream = fetchStreamFromWebPath(uri.toString());
-    if (webStream != null) {
-      yield* webStream;
+    final extension = xFile.getExtension<WebScopedStorageXFileExtension>();
+    if (extension == null) {
+      yield* xFile.openRead();
       return;
     }
 
-    yield* xFile.openRead();
+    final blob = await extension.getBlob();
+    for (var start = 0; start < blob.size; start += streamChunkSize) {
+      final end = min(start + streamChunkSize, blob.size);
+      final buffer = await blob.slice(start, end).arrayBuffer().toDart;
+      yield buffer.toDart.asUint8List();
+    }
   }
 
   @override

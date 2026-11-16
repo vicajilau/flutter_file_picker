@@ -10,14 +10,14 @@ topics:
 resolution: workspace
 
 environment:
-  sdk: ">=3.10.0 <4.0.0"
-  flutter: ">=3.38.0"
+  sdk: ">=3.11.0 <4.0.0"
+  flutter: ">=3.41.0"
 
 dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.1.8
-  cross_file: ^0.3.5+4
+  cross_file: ^0.4.0
   path: ^1.9.1
 
 dev_dependencies:

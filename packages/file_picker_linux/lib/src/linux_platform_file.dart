@@ -23,11 +23,7 @@ base class LinuxPlatformFile extends PlatformFile {
     }
     final uri = Uri.file(path);
     final name = p.posix.basename(path);
-    return LinuxPlatformFile(
-      name: name,
-      uri: uri,
-      xFile: XFile(path, name: name),
-    );
+    return LinuxPlatformFile(name: name, uri: uri);
   }
 
   @override
@@ -40,14 +36,11 @@ base class LinuxPlatformFile extends PlatformFile {
   final int? _bytesLength;
 
   @override
-  XFile get xFile {
-    final file = _xFile;
-    if (file != null) return file;
-    if (uri.scheme == 'file') {
-      return XFile(uri.toFilePath(), name: name);
-    }
-    return XFile(uri.toString(), name: name);
-  }
+  XFile get xFile =>
+      _xFile ??
+      (uri.scheme == 'file'
+          ? XFile.fileSystem(path: uri.toFilePath())
+          : XFile.scopedStorage(uri: uri.toString()));
 
   /// Only known when this file was created with its bytes already in hand.
   ///
