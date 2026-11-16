@@ -35,6 +35,12 @@ base class TestPlatformFile extends PlatformFile {
   Stream<Uint8List> readAsByteStream() => const Stream.empty();
 }
 
+typedef PickDirectoryCall = ({
+  String? dialogTitle,
+  String? initialDirectory,
+  AndroidOptions options,
+});
+
 class MockFilePickerPlatform extends FilePickerPlatform
     with MockPlatformInterfaceMixin {
   DarwinOptions? lastDarwinOptions;
@@ -43,6 +49,25 @@ class MockFilePickerPlatform extends FilePickerPlatform
   @override
   Future<void> skipEntitlementsChecks() async {
     skipEntitlementsChecksCalled = true;
+  }
+
+  PickDirectoryCall? lastPickDirectory;
+
+  @override
+  Future<Uri?> pickDirectory({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    lastPickDirectory = (
+      dialogTitle: dialogTitle,
+      initialDirectory: initialDirectory,
+      options: androidOptions,
+    );
+    return Uri.directory('/picked');
   }
 
   @override
@@ -100,6 +125,23 @@ void main() {
       expect(files.first.path, testFilePath);
     },
   );
+
+  test('pickDirectory delegates to the platform and returns its Uri', () async {
+    final mockPlatform = MockFilePickerPlatform();
+    FilePickerPlatform.instance = mockPlatform;
+    const options = AndroidOptions();
+
+    final uri = await FilePicker.pickDirectory(
+      dialogTitle: 'Pick a folder',
+      initialDirectory: '/start',
+      androidOptions: options,
+    );
+
+    expect(uri, Uri.directory('/picked'));
+    expect(mockPlatform.lastPickDirectory?.dialogTitle, 'Pick a folder');
+    expect(mockPlatform.lastPickDirectory?.initialDirectory, '/start');
+    expect(mockPlatform.lastPickDirectory?.options, same(options));
+  });
 
   test('FilePicker.skipEntitlementsChecks delegates to '
       'FilePickerPlatform.instance.skipEntitlementsChecks', () async {

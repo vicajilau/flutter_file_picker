@@ -1,3 +1,7 @@
+## 2.2.0
+
+- Added `pickDirectory()`, which returns the `content://` tree URI of the picked directory. Without `FilePickerAndroidOptions`, the grant is transient and read only. Unlike `getDirectoryPath()`, a failure is thrown and `null` only means the user canceled. Requires `file_picker_platform_interface` 4.3.0.
+
 ## 2.1.6
 
 - Fixed the Android build failing with `Extension of type 'LibraryExtension' does not exist` when the app sets `android.newDsl=true` with Android Gradle Plugin 9. The plugin now configures the public `com.android.build.api.dsl.LibraryExtension`, which works with both the old and the new DSL. [#2336](https://github.com/vicajilau/flutter_file_picker/issues/2336)

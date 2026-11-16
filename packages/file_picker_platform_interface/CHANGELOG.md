@@ -1,3 +1,7 @@
+## 4.3.0
+
+- Added `FilePickerPlatform.pickDirectory()`, which returns the `Uri` of the picked directory. By default it calls `getDirectoryPath()` and turns the path into a `file` URI, so existing implementations keep working.
+
 ## 4.2.0
 
 - Added `DarwinOptions.copyMedia`, `true` by default. [#2245](https://github.com/vicajilau/flutter_file_picker/issues/2245)

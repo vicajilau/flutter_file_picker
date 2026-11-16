@@ -124,7 +124,50 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// The [androidOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
   /// allow platform-specific configurations for the directory picker.
   ///
+  /// Returns the [Uri] of the selected directory, or `null` if the user canceled the operation.
+  ///
+  /// The default implementation calls [getDirectoryPath] and turns its path
+  /// into a `file` [Uri], so implementations that do not override it keep
+  /// working. An implementation overrides it when another URI describes the
+  /// directory better. Android returns the `content://` tree URI, which is
+  /// what the app can read through the Storage Access Framework.
+  Future<Uri?> pickDirectory({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    final path = await getDirectoryPath(
+      dialogTitle: dialogTitle,
+      initialDirectory: initialDirectory,
+      androidOptions: androidOptions,
+      windowsOptions: windowsOptions,
+      linuxOptions: linuxOptions,
+      webOptions: webOptions,
+    );
+    if (path == null) {
+      return null;
+    }
+    return Uri.directory(
+      path,
+      windows: defaultTargetPlatform == TargetPlatform.windows,
+    );
+  }
+
+  /// Pick a single directory using the native file picker.
+  ///
+  /// The [dialogTitle], if provided, will be used as the title for the directory picker dialog.
+  /// The [initialDirectory], if provided, will be used as the initial directory path for the directory picker.
+  ///
+  /// The [androidOptions], [windowsOptions], [linuxOptions], and [webOptions] parameters
+  /// allow platform-specific configurations for the directory picker.
+  ///
   /// Returns the absolute path of the selected directory, or `null` if the user canceled the operation.
+  ///
+  /// Prefer [pickDirectory], which returns a [Uri]. On Android a path is
+  /// often not readable by the app, while the `content://` URI is.
   Future<String?> getDirectoryPath({
     String? dialogTitle,
     String? initialDirectory,
