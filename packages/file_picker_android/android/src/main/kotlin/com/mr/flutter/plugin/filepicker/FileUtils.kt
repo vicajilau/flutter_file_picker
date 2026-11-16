@@ -554,10 +554,12 @@ object FileUtils {
                 null,
                 null
             ).use { cursor ->
-                if (cursor != null && cursor.moveToFirst()) {
-                    val column = cursor.getColumnIndexOrThrow(OpenableColumns.SIZE)
-                    if (!cursor.isNull(column)) {
-                        return cursor.getLong(column)
+                cursor?.let {
+                    if (it.moveToFirst()) {
+                        val column = it.getColumnIndexOrThrow(OpenableColumns.SIZE)
+                        if (!it.isNull(column)) {
+                            return it.getLong(column)
+                        }
                     }
                 }
             }

@@ -87,7 +87,6 @@ void main() {
       final file = AndroidPlatformFile.fromMap({
         'path': contentUri,
         'name': 'game.mp4',
-        'size': null,
         'identifier': contentUri,
       });
 
