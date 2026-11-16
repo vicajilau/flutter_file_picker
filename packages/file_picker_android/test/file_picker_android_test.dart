@@ -24,6 +24,30 @@ void main() {
       expect(map['grant'], equals('lifetime'));
       expect(map['access'], equals('readWrite'));
       expect(map['autoPersist'], isTrue);
+      expect(map['copyToCache'], isTrue);
+    });
+
+    test('AndroidSAFOptions can opt out of the cache copy', () {
+      const safOptions = AndroidSAFOptions(copyToCache: false);
+      expect(safOptions.toMap()['copyToCache'], isFalse);
+    });
+
+    test('a document that was not copied keeps its content URI', () {
+      const contentUri =
+          'content://com.android.providers.media.documents/document/video%3A42';
+      final file = AndroidPlatformFile.fromMap({
+        'path': contentUri,
+        'name': 'game.mp4',
+        'size': 3 * 1024 * 1024 * 1024,
+        'identifier': contentUri,
+        'safHandle': {'uri': contentUri, 'access': 'readOnly'},
+      });
+
+      expect(file.uri, Uri.parse(contentUri));
+      expect(file.path, isNull);
+      expect(file.name, 'game.mp4');
+      expect(file.lengthSync(), 3 * 1024 * 1024 * 1024);
+      expect(file.safHandle?.uri, Uri.parse(contentUri));
     });
 
     test('AndroidSAFHandle parses map correctly', () {
@@ -55,6 +79,19 @@ void main() {
         'path': '/tmp/test_file.txt',
       });
       expect(withoutSize.lengthSync(), isNull);
+    });
+
+    test('a document that was not copied can have no known size', () async {
+      const contentUri =
+          'content://com.android.providers.media.documents/document/video%3A42';
+      final file = AndroidPlatformFile.fromMap({
+        'path': contentUri,
+        'name': 'game.mp4',
+        'identifier': contentUri,
+      });
+
+      expect(file.lengthSync(), isNull);
+      expect(await file.length(), isNull);
     });
 
     test('a reported empty file needs no size lookup', () async {
@@ -101,6 +138,7 @@ void main() {
         'grant': 'lifetime',
         'access': 'readWrite',
         'autoPersist': false,
+        'copyToCache': true,
       };
 
       late FilePickerAndroid picker;
