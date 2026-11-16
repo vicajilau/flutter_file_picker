@@ -35,6 +35,12 @@ base class TestPlatformFile extends PlatformFile {
   Stream<Uint8List> readAsByteStream() => const Stream.empty();
 }
 
+typedef PickDirectoryCall = ({
+  String? dialogTitle,
+  String? initialDirectory,
+  AndroidOptions options,
+});
+
 class MockFilePickerPlatform extends FilePickerPlatform
     with MockPlatformInterfaceMixin {
   DarwinOptions? lastDarwinOptions;
@@ -45,8 +51,7 @@ class MockFilePickerPlatform extends FilePickerPlatform
     skipEntitlementsChecksCalled = true;
   }
 
-  ({String? dialogTitle, String? initialDirectory, AndroidOptions options})?
-  lastPickDirectory;
+  PickDirectoryCall? lastPickDirectory;
 
   @override
   Future<Uri?> pickDirectory({

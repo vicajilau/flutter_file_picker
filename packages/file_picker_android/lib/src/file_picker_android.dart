@@ -183,11 +183,10 @@ class FilePickerAndroid extends FilePickerPlatform {
       _ => const AndroidSAFOptions(),
     };
 
-    // Sending the SAF options makes the native side answer with the tree
-    // URI instead of a file system path.
     final uri = await methodChannel.invokeMethod<String>('dir', {
       'androidSafOptions': safOptions.toMap(),
     });
+
     return uri == null ? null : Uri.parse(uri);
   }
 
