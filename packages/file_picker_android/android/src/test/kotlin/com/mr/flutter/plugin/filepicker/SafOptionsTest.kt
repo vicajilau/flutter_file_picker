@@ -27,6 +27,14 @@ class SafOptionsTest {
     }
 
     @Test
+    fun documentsAreCopiedToTheCacheUnlessToldOtherwise() {
+        assertTrue(SafOptions.from(null).copiesToCache)
+        assertTrue(SafOptions.from(emptyMap<String, Any>()).copiesToCache)
+        assertTrue(SafOptions.from(mapOf("copyToCache" to true)).copiesToCache)
+        assertFalse(SafOptions.from(mapOf("copyToCache" to false)).copiesToCache)
+    }
+
+    @Test
     fun lifetimeWithoutAutoPersistIsNotPersisted() {
         val options = SafOptions.from(mapOf("grant" to "lifetime", "autoPersist" to false))
 

@@ -15,6 +15,12 @@ data class SafOptions(
     val readWrite: Boolean,
     /** Whether a lifetime grant is persisted automatically. */
     val autoPersist: Boolean,
+    /**
+     * Whether a picked document is copied into the app cache (`copyToCache`).
+     * When false the document is reported by its content URI instead, which
+     * is what a multi-GB video needs: no second copy on the device.
+     */
+    val copiesToCache: Boolean = true,
 ) {
     /** Whether the plugin should call `takePersistableUriPermission`. */
     val persistsGrant: Boolean
@@ -34,6 +40,7 @@ data class SafOptions(
             lifetimeGrant = arguments?.get("grant") == "lifetime",
             readWrite = arguments?.get("access") == "readWrite",
             autoPersist = (arguments?.get("autoPersist") as? Boolean) ?: true,
+            copiesToCache = (arguments?.get("copyToCache") as? Boolean) ?: true,
         )
     }
 }

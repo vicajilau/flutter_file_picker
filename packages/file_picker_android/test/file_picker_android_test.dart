@@ -24,6 +24,30 @@ void main() {
       expect(map['grant'], equals('lifetime'));
       expect(map['access'], equals('readWrite'));
       expect(map['autoPersist'], isTrue);
+      expect(map['copyToCache'], isTrue);
+    });
+
+    test('AndroidSAFOptions can opt out of the cache copy', () {
+      const safOptions = AndroidSAFOptions(copyToCache: false);
+      expect(safOptions.toMap()['copyToCache'], isFalse);
+    });
+
+    test('a document that was not copied keeps its content URI', () {
+      const contentUri =
+          'content://com.android.providers.media.documents/document/video%3A42';
+      final file = AndroidPlatformFile.fromMap({
+        'path': contentUri,
+        'name': 'game.mp4',
+        'size': 3 * 1024 * 1024 * 1024,
+        'identifier': contentUri,
+        'safHandle': {'uri': contentUri, 'access': 'readOnly'},
+      });
+
+      expect(file.uri, Uri.parse(contentUri));
+      expect(file.path, isNull);
+      expect(file.name, 'game.mp4');
+      expect(file.lengthSync(), 3 * 1024 * 1024 * 1024);
+      expect(file.safHandle?.uri, Uri.parse(contentUri));
     });
 
     test('AndroidSAFHandle parses map correctly', () {
@@ -55,6 +79,19 @@ void main() {
         'path': '/tmp/test_file.txt',
       });
       expect(withoutSize.lengthSync(), isNull);
+    });
+
+    test('a document that was not copied can have no known size', () async {
+      const contentUri =
+          'content://com.android.providers.media.documents/document/video%3A42';
+      final file = AndroidPlatformFile.fromMap({
+        'path': contentUri,
+        'name': 'game.mp4',
+        'identifier': contentUri,
+      });
+
+      expect(file.lengthSync(), isNull);
+      expect(await file.length(), isNull);
     });
 
     test('a reported empty file needs no size lookup', () async {
@@ -101,6 +138,7 @@ void main() {
         'grant': 'lifetime',
         'access': 'readWrite',
         'autoPersist': false,
+        'copyToCache': true,
       };
 
       late FilePickerAndroid picker;
@@ -179,6 +217,102 @@ void main() {
           ),
         ),
       );
+    });
+
+    group('pickDirectory', () {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      const treeUri =
+          'content://com.android.externalstorage.documents/tree/primary%3ADocuments';
+      late FilePickerAndroid picker;
+      late List<MethodCall> calls;
+
+      setUp(() {
+        picker = FilePickerAndroid();
+        calls = [];
+      });
+
+      tearDown(
+        () => messenger.setMockMethodCallHandler(picker.methodChannel, null),
+      );
+
+      test('returns the content URI of the tree', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          calls.add(call);
+          return treeUri;
+        });
+
+        final uri = await picker.pickDirectory();
+
+        expect(uri?.scheme, 'content');
+        expect(uri.toString(), treeUri);
+        expect(calls.single.method, 'dir');
+      });
+
+      // The native side only answers with the tree URI when it gets SAF
+      // options, so they are sent even when the app passes none.
+      test('sends the default SAF options when the app passes none', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          calls.add(call);
+          return treeUri;
+        });
+
+        await picker.pickDirectory(androidOptions: const AndroidOptions());
+
+        expect(
+          (calls.single.arguments as Map)['androidSafOptions'],
+          const AndroidSAFOptions().toMap(),
+        );
+      });
+
+      test('sends the SAF options of the app', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          calls.add(call);
+          return treeUri;
+        });
+        const safOptions = AndroidSAFOptions(
+          grant: AndroidSAFGrant.lifetime,
+          accessMode: AndroidSAFAccessMode.readWrite,
+        );
+
+        await picker.pickDirectory(
+          androidOptions: const FilePickerAndroidOptions(
+            safOptions: safOptions,
+          ),
+        );
+
+        expect(
+          (calls.single.arguments as Map)['androidSafOptions'],
+          safOptions.toMap(),
+        );
+      });
+
+      test('returns null when the user cancels', () async {
+        messenger.setMockMethodCallHandler(
+          picker.methodChannel,
+          (call) async => null,
+        );
+
+        expect(await picker.pickDirectory(), isNull);
+      });
+
+      // Unlike getDirectoryPath, a failure is not swallowed.
+      test('throws when the pick fails', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          throw PlatformException(code: 'already_active');
+        });
+
+        await expectLater(
+          picker.pickDirectory(),
+          throwsA(
+            isA<PlatformException>().having(
+              (e) => e.code,
+              'code',
+              'already_active',
+            ),
+          ),
+        );
+      });
     });
 
     group('status updates', () {

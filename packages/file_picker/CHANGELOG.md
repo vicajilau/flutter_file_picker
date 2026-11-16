@@ -14,6 +14,21 @@
 - `onFileLoading` and `onFileSaving` are now typed as `void Function(FilePickerStatus status)?`. They had no return type before. Existing callers keep compiling. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: `compressionQuality` now recompresses the picked images on iOS, as it does on Android. It was ignored there, so apps that pass it now get smaller images on iOS. See the migration guide. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - On Android, `FilePickerAndroidOptions.mimeTypes` from `android_file_picker` 3.0.0 sets the MIME types a custom pick is filtered by, for extensions Android has no MIME type for. See the migration guide. [#2333](https://github.com/vicajilau/flutter_file_picker/issues/2333)
+- `pickDirectory()`, added in 13.4.0, also takes `darwinOptions`, like `getDirectoryPath()`, and throws a `PlatformException` when the pick fails on every platform. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+
+## 13.4.0
+
+- Added `FilePicker.pickDirectory()`, which returns the `Uri` of the picked directory: the `content://` tree URI on Android, which is what the app can read through the Storage Access Framework, and a `file` URI on the other platforms. On Android it throws when the pick fails, while the other platforms keep returning `null` for a failure, as `getDirectoryPath()` does. Requires `android_file_picker` 2.2.0 and `file_picker_platform_interface` 4.3.0.
+- On Android, `AndroidSAFOptions.copyToCache` from `android_file_picker` 2.2.0 lets a pick skip the copy into the app cache and report the `content://` URI of the document instead, for large files such as videos. The plugin does not read those URIs, so `readAsBytes()` and `readAsByteStream()` do not work for them. [#1839](https://github.com/vicajilau/flutter_file_picker/issues/1839)
+- Deprecated `FilePicker.getDirectoryPath()` in favor of `pickDirectory()`. It keeps working until a future major version.
+- Deprecated `FilePicker.pickFileAndDirectoryPaths()`. Only iOS and macOS can select files and directories in the same dialog, so in 14.0.0 it will only be on `FilePickerDarwin`, from `package:file_picker_darwin`. On Android, Linux and Windows it only selects files, use `pickFiles()` there. It keeps working until then.
+
+  ```dart
+  if (FilePickerPlatform.instance case final FilePickerDarwin darwin) {
+    final paths = await darwin.pickFileAndDirectoryPaths();
+  }
+  ```
+
 
 ## 13.3.3
 

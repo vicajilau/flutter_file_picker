@@ -36,6 +36,7 @@ jobs:
       actions: read
       contents: read
       packages: read
+      pull-requests: read
       security-events: write
     strategy:
       fail-fast: false
@@ -50,8 +51,28 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: subosito/flutter-action@v2
+      # Building Swift under CodeQL takes about half an hour, so on a pull
+      # request it only runs when the pull request touches what it builds.
+      # Pushes to main, the weekly run and manual runs always analyze it.
+      - name: Check whether the Swift analysis is needed
+        id: swift
         if: matrix.language == 'swift'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PULL_REQUEST: ${{ github.event.pull_request.number }}
+        run: |
+          needed=true
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PULL_REQUEST/files" --jq '.[].filename')
+            if ! grep -qE '^(packages/file_picker_darwin/|example/ios/|example/macos/|\.github/workflows/codeql\.yml$)' <<< "$files"; then
+              needed=false
+              echo "No Swift related file changed, skipping the Swift analysis."
+            fi
+          fi
+          echo "needed=$needed" >> "$GITHUB_OUTPUT"
+
+      - uses: subosito/flutter-action@v2
+        if: steps.swift.outputs.needed == 'true'
         with:
           channel: stable
           cache: true
@@ -61,7 +82,7 @@ jobs:
       # xcodebuild directly: when the flutter tool starts it through xcrun,
       # macOS drops the tracing CodeQL relies on, and CodeQL sees no Swift.
       - name: Prepare the example app for macOS and iOS
-        if: matrix.language == 'swift'
+        if: steps.swift.outputs.needed == 'true'
         working-directory: example
         run: |
           flutter config --enable-swift-package-manager
@@ -70,6 +91,7 @@ jobs:
           flutter build ios --debug --simulator --config-only
 
       - uses: github/codeql-action/init@v4
+        if: matrix.language != 'swift' || steps.swift.outputs.needed == 'true'
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -78,7 +100,7 @@ jobs:
       # `#if os(iOS)` and `#if os(macOS)`, so both are built to analyze all
       # of them.
       - name: Build the example app for macOS and iOS
-        if: matrix.language == 'swift'
+        if: steps.swift.outputs.needed == 'true'
         working-directory: example
         run: |
           xcodebuild build \
@@ -90,5 +112,6 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - uses: github/codeql-action/analyze@v4
+        if: matrix.language != 'swift' || steps.swift.outputs.needed == 'true'
         with:
           category: /language:${{ matrix.language }}

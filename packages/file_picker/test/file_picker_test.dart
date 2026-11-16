@@ -35,9 +35,36 @@ base class TestPlatformFile extends PlatformFile {
   Stream<Uint8List> readAsByteStream() => const Stream.empty();
 }
 
+typedef PickDirectoryCall = ({
+  String? dialogTitle,
+  String? initialDirectory,
+  AndroidOptions options,
+});
+
 class MockFilePickerPlatform extends FilePickerPlatform
     with MockPlatformInterfaceMixin {
   DarwinOptions? lastDarwinOptions;
+
+  PickDirectoryCall? lastPickDirectory;
+
+  @override
+  Future<Uri?> pickDirectory({
+    String? dialogTitle,
+    String? initialDirectory,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    lastDarwinOptions = darwinOptions;
+    lastPickDirectory = (
+      dialogTitle: dialogTitle,
+      initialDirectory: initialDirectory,
+      options: androidOptions,
+    );
+    return Uri.directory('/picked');
+  }
 
   @override
   Future<PlatformFile?> pickFile({
@@ -125,6 +152,26 @@ void main() {
       expect(files.first.path, testFilePath);
     },
   );
+
+  test('pickDirectory delegates to the platform and returns its Uri', () async {
+    final mockPlatform = MockFilePickerPlatform();
+    FilePickerPlatform.instance = mockPlatform;
+    const options = AndroidOptions();
+    const darwinOptions = DarwinOptions(acceptLabel: 'Choose');
+
+    final uri = await FilePicker.pickDirectory(
+      dialogTitle: 'Pick a folder',
+      initialDirectory: '/start',
+      androidOptions: options,
+      darwinOptions: darwinOptions,
+    );
+
+    expect(uri, Uri.directory('/picked'));
+    expect(mockPlatform.lastPickDirectory?.dialogTitle, 'Pick a folder');
+    expect(mockPlatform.lastPickDirectory?.initialDirectory, '/start');
+    expect(mockPlatform.lastPickDirectory?.options, same(options));
+    expect(mockPlatform.lastDarwinOptions, same(darwinOptions));
+  });
 
   group('FilePicker Darwin options', () {
     late MockFilePickerPlatform mockPlatform;

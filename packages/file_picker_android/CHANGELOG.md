@@ -6,6 +6,12 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` throws a `PlatformException` when the pick fails, such as an `unknown_path` for a folder that cannot be resolved, or an `already_active` for a second pick while one is open. It used to return `null`, the same as a cancel. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0, which no longer has `skipEntitlementsChecks()`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 - Added `FilePickerAndroidOptions.mimeTypes`. With `FileType.custom`, the picker filters by these MIME types instead of looking up `allowedExtensions`, so files with an extension Android has no MIME type for can be picked with a filter. [#2333](https://github.com/vicajilau/flutter_file_picker/issues/2333)
+- `pickDirectory()`, added in 2.2.0, also takes `darwinOptions`, which it ignores. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+
+## 2.2.0
+
+- Added `pickDirectory()`, which returns the `content://` tree URI of the picked directory. Without `FilePickerAndroidOptions`, the grant is transient and read only. Unlike `getDirectoryPath()`, a failure is thrown and `null` only means the user canceled. Requires `file_picker_platform_interface` 4.3.0.
+- Added `AndroidSAFOptions.copyToCache`, `true` by default. With `copyToCache: false` a picked document is not copied into the app cache: the file reports its `content://` URI and the size the document provider reports, or no size when it reports none. Meant for large files such as videos, where a second copy costs storage and time. The plugin does not read content URIs itself, so `readAsBytes()`, `readAsByteStream()` and `xFile` do not work for these files, and the app has to read the URI through the system. [#1839](https://github.com/vicajilau/flutter_file_picker/issues/1839)
 
 ## 2.1.6
 
