@@ -242,14 +242,29 @@ void main() {
         expect(
           () => FilePickerLinux.pathsFromResponse(status, {}),
           throwsA(
-            isA<PlatformException>().having(
-              (e) => e.code,
-              'code',
-              'portal_error',
+            isA<FilePickerException>().having(
+              (e) => e.errorCode,
+              'errorCode',
+              FilePickerErrorCode.loadFailed,
             ),
           ),
         );
       }
+    });
+
+    test('throws saveFailed when a save request fails', () {
+      expect(
+        () => FilePickerLinux.pathsFromResponse(2, {}, isSave: true),
+        throwsA(
+          isA<FilePickerException>()
+              .having(
+                (e) => e.errorCode,
+                'errorCode',
+                FilePickerErrorCode.saveFailed,
+              )
+              .having((e) => e.code, 'code', 'save_failed'),
+        ),
+      );
     });
   });
 

@@ -67,7 +67,7 @@ void main() {
       await expectLater(
         result,
         throwsA(
-          isA<PlatformException>()
+          isA<FilePickerException>()
               .having((error) => error.code, 'code', 'unsupported_extension')
               .having((error) => error.message, 'message', message),
         ),

@@ -86,7 +86,7 @@ final class FilePickerAndroidOptions extends AndroidOptions {
   /// Android filters by MIME type, and by default the plugin turns
   /// `allowedExtensions` into MIME types through Android's own mapping. An
   /// extension that is not in that mapping cannot be used as a filter, so
-  /// the pick throws a `PlatformException` with the `unsupported_extension`
+  /// the pick throws a `FilePickerException` with the `unsupportedExtension`
   /// code. Files with such an extension still have a MIME type, the one
   /// their provider reports, so pass it here to filter by it:
   ///

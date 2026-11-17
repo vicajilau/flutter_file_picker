@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:dbus/dbus.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 
 import 'file_picker_linux_options.dart';
 import 'filters.dart';
@@ -169,7 +168,10 @@ class FilePickerLinux extends FilePickerPlatform {
       ),
     );
 
-    final savedFilePath = (await _awaitPaths(replyPath))?.firstOrNull;
+    final savedFilePath = (await _awaitPaths(
+      replyPath,
+      isSave: true,
+    ))?.firstOrNull;
 
     if (savedFilePath != null) {
       final file = File(savedFilePath);
@@ -183,15 +185,22 @@ class FilePickerLinux extends FilePickerPlatform {
   /// Waits for the portal's response to the request at [replyPath] and
   /// returns the chosen paths, or `null` if the user cancelled.
   ///
-  /// Throws a [PlatformException] if the request failed.
-  Future<List<String>?> _awaitPaths(DBusObjectPath replyPath) async {
+  /// Throws a [FilePickerException] if the request failed.
+  Future<List<String>?> _awaitPaths(
+    DBusObjectPath replyPath, {
+    bool isSave = false,
+  }) async {
     final request = OrgFreedesktopPortalRequest(
       client,
       destination,
       path: replyPath,
     );
     await for (final response in request.response) {
-      return pathsFromResponse(response.response, response.results);
+      return pathsFromResponse(
+        response.response,
+        response.results,
+        isSave: isSave,
+      );
     }
     return null;
   }
@@ -259,22 +268,26 @@ class FilePickerLinux extends FilePickerPlatform {
   /// Returns the paths when the user made a choice (0), or null when the
   /// user cancelled (1).
   ///
-  /// Throws a [PlatformException] with the `portal_error` code for any other
-  /// status, such as 2 when the request ended in some other way, so a failure
-  /// is never mistaken for a cancel (#2286).
+  /// Throws a [FilePickerException] for any other status, such as 2 when the
+  /// request ended in some other way, so a failure is never mistaken for a
+  /// cancel (#2286). It is [FilePickerErrorCode.saveFailed] with [isSave], and
+  /// [FilePickerErrorCode.loadFailed] otherwise.
   @visibleForTesting
   static List<String>? pathsFromResponse(
     int status,
-    Map<String, DBusValue> results,
-  ) {
+    Map<String, DBusValue> results, {
+    bool isSave = false,
+  }) {
     switch (status) {
       case 0:
         break;
       case 1:
         return null;
       default:
-        throw PlatformException(
-          code: 'portal_error',
+        throw FilePickerException(
+          errorCode: isSave
+              ? FilePickerErrorCode.saveFailed
+              : FilePickerErrorCode.loadFailed,
           message:
               'The file chooser portal ended the request with status '
               '$status.',

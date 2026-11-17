@@ -22,8 +22,8 @@ class FilePickerDarwin extends FilePickerPlatform {
   ///
   /// Without a [viewId], panels attach to the key window, or open as a
   /// standalone modal window when no Flutter window is visible. With one, a
-  /// picker whose window is closed or hidden throws a [PlatformException] with
-  /// the code `window_not_found`. Ignored on iOS.
+  /// picker whose window is closed or hidden throws a [FilePickerException] with
+  /// the [FilePickerErrorCode.windowNotFound] code. Ignored on iOS.
   ///
   /// ```dart
   /// final picker = FilePickerDarwin(viewId: View.of(context).viewId);
@@ -138,20 +138,21 @@ class FilePickerDarwin extends FilePickerPlatform {
         );
       }
 
-      final List<Map<Object?, Object?>>? result = await methodChannel
-          .invokeListMethod<Map<Object?, Object?>>(typeName, {
-            'viewId': ?viewId,
-            'allowMultipleSelection': allowMultiple,
-            'allowedExtensions': allowedExtensions,
-            'compressionQuality': compressionQuality,
-            'assetRepresentationMode':
-                darwinOptions.assetRepresentationMode.name,
-            'acceptLabel': darwinOptions.acceptLabel,
-            'orderedSelection': darwinOptions.orderedSelection,
-            'copyMedia': darwinOptions.copyMedia,
-            'dialogTitle': dialogTitle,
-            'initialDirectory': initialDirectory,
-          });
+      final List<Map<Object?, Object?>>?
+      result = await FilePickerException.guard(
+        () => methodChannel.invokeListMethod<Map<Object?, Object?>>(typeName, {
+          'viewId': ?viewId,
+          'allowMultipleSelection': allowMultiple,
+          'allowedExtensions': allowedExtensions,
+          'compressionQuality': compressionQuality,
+          'assetRepresentationMode': darwinOptions.assetRepresentationMode.name,
+          'acceptLabel': darwinOptions.acceptLabel,
+          'orderedSelection': darwinOptions.orderedSelection,
+          'copyMedia': darwinOptions.copyMedia,
+          'dialogTitle': dialogTitle,
+          'initialDirectory': initialDirectory,
+        }),
+      );
 
       if (result == null) {
         return [];
@@ -186,19 +187,21 @@ class FilePickerDarwin extends FilePickerPlatform {
   /// }
   /// ```
   ///
-  /// Throws a `PlatformException` if the pick fails.
+  /// Throws a [FilePickerException] if the pick fails.
   Future<List<String>> pickFileAndDirectoryPaths({
     String? dialogTitle,
     String? initialDirectory,
     List<String>? allowedExtensions,
   }) async {
-    final List<String>? result = await methodChannel
-        .invokeListMethod<String>('pickFileAndDirectoryPaths', {
-          'viewId': ?viewId,
-          'dialogTitle': dialogTitle,
-          'initialDirectory': initialDirectory,
-          'allowedExtensions': allowedExtensions,
-        });
+    final List<String>? result = await FilePickerException.guard(
+      () =>
+          methodChannel.invokeListMethod<String>('pickFileAndDirectoryPaths', {
+            'viewId': ?viewId,
+            'dialogTitle': dialogTitle,
+            'initialDirectory': initialDirectory,
+            'allowedExtensions': allowedExtensions,
+          }),
+    );
     return result ?? [];
   }
 
@@ -212,14 +215,16 @@ class FilePickerDarwin extends FilePickerPlatform {
     LinuxOptions linuxOptions = const LinuxOptions(),
     WebOptions webOptions = const WebOptions(),
   }) async {
-    // A failure is thrown as a PlatformException, so the app can tell it
+    // A failure is thrown as a FilePickerException, so the app can tell it
     // apart from a cancel, which completes with null (#2286).
-    return methodChannel.invokeMethod<String>('dir', {
-      'viewId': ?viewId,
-      'dialogTitle': dialogTitle,
-      'initialDirectory': initialDirectory,
-      'acceptLabel': darwinOptions.acceptLabel,
-    });
+    return FilePickerException.guard(
+      () => methodChannel.invokeMethod<String>('dir', {
+        'viewId': ?viewId,
+        'dialogTitle': dialogTitle,
+        'initialDirectory': initialDirectory,
+        'acceptLabel': darwinOptions.acceptLabel,
+      }),
+    );
   }
 
   @override
@@ -287,15 +292,17 @@ class FilePickerDarwin extends FilePickerPlatform {
         );
       }
 
-      final String? savedPath = await methodChannel
-          .invokeMethod<String>("save", {
-            'viewId': ?viewId,
-            "fileName": fileName,
-            "fileType": mimeType,
-            "initialDirectory": initialDirectory,
-            "acceptLabel": darwinOptions.acceptLabel,
-            if (!isMacOS) "bytes": bytes,
-          });
+      final String? savedPath = await FilePickerException.guard(
+        () => methodChannel.invokeMethod<String>("save", {
+          'viewId': ?viewId,
+          "fileName": fileName,
+          "fileType": mimeType,
+          "initialDirectory": initialDirectory,
+          "acceptLabel": darwinOptions.acceptLabel,
+          if (!isMacOS) "bytes": bytes,
+        }),
+        isSave: true,
+      );
 
       if (savedPath != null && isMacOS) {
         await File(savedPath).writeAsBytes(bytes);
