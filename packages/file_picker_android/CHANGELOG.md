@@ -7,6 +7,7 @@
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0, which no longer has `skipEntitlementsChecks()`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 - Added `FilePickerAndroidOptions.mimeTypes`. With `FileType.custom`, the picker filters by these MIME types instead of looking up `allowedExtensions`, so files with an extension Android has no MIME type for can be picked with a filter. [#2333](https://github.com/vicajilau/flutter_file_picker/issues/2333)
 - `pickDirectory()`, added in 2.2.0, also takes `darwinOptions`, which it ignores. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
+- **BREAKING CHANGE**: Removed `pickFileAndDirectoryPaths()`, which only picked files here, as `pickFiles()` does. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
 ## 2.2.0
 

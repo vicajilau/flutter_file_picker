@@ -45,12 +45,10 @@ If you have any feature that you want to see in this package, please feel free t
 | `clearTemporaryFiles()`       | :white_check_mark: | :white_check_mark: | :x:                | :x:                | :x:                | :x:                |
 | `getDirectoryPath()`          | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
 | `pickDirectory()`             | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
-| `pickFileAndDirectoryPaths()` | Files only          | :white_check_mark: | Files only          | :white_check_mark: | Files only          | :x:                |
+| `pickFileAndDirectoryPaths()` | :x:                | :white_check_mark: | :x:                | :white_check_mark: | :x:                | :x:                |
 | `pickFile()`                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | `pickFiles()`                 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | `saveFile()`                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-
-**Files only**: the system picker on Android, Linux and Windows selects either files or a directory, never both in the same dialog. There, `pickFileAndDirectoryPaths()` only lets the user select files, as `pickFiles()` does.
 
 See the [official API reference on pub.dev](https://pub.dev/documentation/file_picker/latest/file_picker/FilePicker-class.html) for further details.
 
@@ -132,6 +130,21 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * It was ignored on iOS. From v14, a value from 1 to 100 recompresses the picked JPEG and HEIC images there, keeping their format, name and metadata, as it already recompressed images on Android.
    * If you pass it and want the original images on iOS, pass `compressionQuality: 0`, the default, on that platform.
    * Videos are never compressed, and macOS, Linux, Windows and web ignore it.
+
+9. **`FilePicker.pickFileAndDirectoryPaths()` Removed**:
+   * Only iOS and macOS can pick files and directories in the same dialog, so it now only lives in their platform package. Add `file_picker_darwin` as a direct dependency and call it on `FilePickerDarwin`. Its `type` parameter never had any effect and is removed.
+
+     ```dart
+     // v13
+     final paths = await FilePicker.pickFileAndDirectoryPaths();
+
+     // v14
+     if (FilePickerPlatform.instance case final FilePickerDarwin darwin) {
+       final paths = await darwin.pickFileAndDirectoryPaths();
+     }
+     ```
+
+   * On Android, Linux and Windows it only picked files. Use `pickFiles()` there, and read `path` from each result.
 
 ## Migrating to v13
 
