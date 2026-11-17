@@ -214,6 +214,11 @@ abstract final class FilePicker {
   ///
   /// Returns the [Uri] of the saved file, or `null` if the user canceled the operation.
   /// Depending on the platform, the [Uri.scheme] may be `file`, `content`, `http(s)`, `data` or `blob`.
+  ///
+  /// On web, [bytes] go into a `Blob`. Safari cannot build one of 2 GiB or
+  /// more, and closes the tab, so a file that large cannot be saved there. It
+  /// was tried on Safari 27.2. Reading a file of that size in chunks with
+  /// [PlatformFile.readAsByteStream] is not affected.
   static Future<Uri?> saveFile({
     required String fileName,
     required Uint8List bytes,
