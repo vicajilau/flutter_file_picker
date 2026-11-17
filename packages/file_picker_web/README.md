@@ -10,7 +10,7 @@ This package is endorsed, which means you can simply use `file_picker` as normal
 
 ## Saving large files
 
-`FilePicker.saveFile()` builds a `Blob` from the bytes you give it. Safari cannot build one of 2 GiB (2147483648 bytes) or more, and closes the tab. On Safari 27.2 a file of 2047 MB saved and one of 2049 MB failed. The package does not decide it, since a page with no Flutter fails the same way. Reading a file that size works, because `PlatformFile.readAsByteStream()` reads it in chunks.
+`FilePicker.saveFile()` builds a `Blob` from the bytes you give it, so the whole file is held in memory. Avoid saving large files on web. Safari, for one, cannot build a `Blob` of 2 GiB (2147483648 bytes) or more, and closes the tab. On Safari 27.2 a file of 2047 MB saved and one of 2049 MB failed. The package does not decide it, since a page with no Flutter fails the same way. Saving a large file properly needs a way to stream it into a file handle, which `saveFile()` does not offer yet. Reading a file that size works, because `PlatformFile.readAsByteStream()` reads it in chunks.
 
 ## WebAssembly in Safari and Firefox
 
