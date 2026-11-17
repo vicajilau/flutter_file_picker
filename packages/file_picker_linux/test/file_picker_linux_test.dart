@@ -4,7 +4,6 @@ import 'package:dbus/dbus.dart';
 
 import 'package:file_picker_linux/file_picker_linux.dart';
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
