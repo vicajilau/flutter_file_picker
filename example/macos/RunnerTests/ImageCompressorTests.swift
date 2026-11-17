@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import ImageIO
 import Testing
@@ -49,6 +50,51 @@ struct ImageCompressorTests {
         try #require(try url.resourceValues(forKeys: [.fileSizeKey]).fileSize)
     }
 
+    /// Writes a HEIC image with a synthetic HDR gain map, as an HDR photo of
+    /// a recent iPhone has.
+    private func writeHDRImage(to url: URL) throws {
+        let side = 256
+        var pixels = [UInt8](repeating: 255, count: side * side * 4)
+        for index in pixels.indices where index % 4 != 3 {
+            pixels[index] = UInt8.random(in: 0...255)
+        }
+        let colorSpace = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        let context = try #require(
+            CGContext(
+                data: &pixels, width: side, height: side, bitsPerComponent: 8,
+                bytesPerRow: side * 4, space: colorSpace,
+                bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        let image = try #require(context.makeImage())
+        let destination = try #require(
+            CGImageDestinationCreateWithURL(url as CFURL, UTType.heic.identifier as CFString, 1, nil))
+
+        let gainSide = 64
+        let metadata = CGImageMetadataCreateMutable()
+        CGImageMetadataRegisterNamespaceForPrefix(
+            metadata, "http://ns.apple.com/HDRGainMap/1.0/" as CFString, "HDRGainMap" as CFString, nil)
+        CGImageMetadataSetValueWithPath(
+            metadata, nil, "HDRGainMap:HDRGainMapVersion" as CFString, 65536 as CFNumber)
+        let gainMap: [CFString: Any] = [
+            kCGImageAuxiliaryDataInfoData: Data((0..<(gainSide * gainSide)).map { UInt8(($0 * 7) % 256) }),
+            kCGImageAuxiliaryDataInfoDataDescription: [
+                "Width": gainSide, "Height": gainSide, "BytesPerRow": gainSide,
+                "PixelFormat": 0x4C30_3038,  // 'L008'
+            ],
+            kCGImageAuxiliaryDataInfoMetadata: metadata,
+        ]
+        CGImageDestinationAddImage(
+            destination, image, [kCGImageDestinationLossyCompressionQuality: 1] as CFDictionary)
+        CGImageDestinationAddAuxiliaryDataInfo(
+            destination, kCGImageAuxiliaryDataTypeHDRGainMap, gainMap as CFDictionary)
+        #expect(CGImageDestinationFinalize(destination))
+    }
+
+    private func hasGainMap(_ url: URL) -> Bool {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return false }
+        return CGImageSourceCopyAuxiliaryDataInfoAtIndex(source, 0, kCGImageAuxiliaryDataTypeHDRGainMap)
+            != nil
+    }
+
     @Test("A JPEG gets smaller and keeps its name, format and orientation")
     func compressesJPEG() throws {
         let directory = try makeDirectory()
@@ -66,6 +112,23 @@ struct ImageCompressorTests {
         #expect(properties?[kCGImagePropertyOrientation] as? Int == 6)
         // Nothing else is left behind next to it.
         #expect(try FileManager.default.contentsOfDirectory(atPath: directory.path) == ["photo.jpg"])
+    }
+
+    // ImageIO can only carry the gain map over since iOS 18 and macOS 15.
+    @available(iOS 18.0, macOS 15.0, *)
+    @Test("An HDR photo keeps its gain map and still gets smaller")
+    func keepsTheGainMap() throws {
+        let directory = try makeDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("hdr.heic")
+        try writeHDRImage(to: url)
+        #expect(hasGainMap(url))
+        let originalSize = try size(of: url)
+
+        #expect(ImageCompressor.compress(url, quality: 30))
+
+        #expect(hasGainMap(url))
+        #expect(try size(of: url) < originalSize)
     }
 
     @Test("The default quality of 0 and out of range values change nothing")

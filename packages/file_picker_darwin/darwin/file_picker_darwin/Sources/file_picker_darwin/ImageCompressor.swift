@@ -15,6 +15,10 @@ enum ImageCompressor {
     /// keeping its format, its name and its metadata, such as the
     /// orientation and the EXIF data.
     ///
+    /// A photo that is HDR keeps its gain map on iOS 18 and macOS 15 or
+    /// later. Before them it comes back as a standard dynamic range image,
+    /// since ImageIO cannot carry the gain map over.
+    ///
     /// Returns whether the file was rewritten. It is left untouched, and this
     /// returns `false`, when:
     ///
@@ -53,9 +57,15 @@ enum ImageCompressor {
         }
         // Adding the image from its source, instead of from a decoded image,
         // carries its metadata over.
-        let options =
-            [kCGImageDestinationLossyCompressionQuality: Double(quality) / 100] as CFDictionary
-        CGImageDestinationAddImageFromSource(destination, source, 0, options)
+        var options: [CFString: Any] = [
+            kCGImageDestinationLossyCompressionQuality: Double(quality) / 100
+        ]
+        // Without this, the recompressed copy of an HDR photo lost its gain
+        // map and looked flat on an HDR display.
+        if #available(iOS 18.0, macOS 15.0, *) {
+            options[kCGImageDestinationPreserveGainMap] = true
+        }
+        CGImageDestinationAddImageFromSource(destination, source, 0, options as CFDictionary)
         guard CGImageDestinationFinalize(destination) else {
             return false
         }
