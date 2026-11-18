@@ -1,3 +1,7 @@
+## 2.5.2
+
+- Fixed `saveFile()` on iOS leaving its temporary export file behind after a save, a cancel or a failure. It is now deleted when the request ends, since the destination holds its own copy. [#2356](https://github.com/vicajilau/flutter_file_picker/issues/2356)
+
 ## 2.5.1
 
 - Fixed `clearTemporaryFiles()` on iOS deleting everything in the app's temporary directory, including the files of the app and of other plugins. It now only removes the plugin's own `flutter_file_picker` folder. Copies made by earlier versions sit outside it, so they are left for iOS to clean up. [#2322](https://github.com/vicajilau/flutter_file_picker/pull/2322)
