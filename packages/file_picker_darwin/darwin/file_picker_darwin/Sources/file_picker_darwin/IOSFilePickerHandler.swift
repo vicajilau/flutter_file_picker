@@ -23,6 +23,9 @@ final class IOSFilePickerHandler: NSObject,
     private var isDirectoryPicker = false
     private var isFileAndDirectoryPicker = false
     private var isSaveFile = false
+    /// The temporary file `saveFile` exports, which only lives until the
+    /// request ends.
+    private var exportFile: URL?
     /// The picker shown for the pending request, to tell a request that is
     /// still open from one whose picker went away without a callback.
     private weak var presentedPicker: UIViewController?
@@ -247,6 +250,7 @@ final class IOSFilePickerHandler: NSObject,
             currentResult(urls.first?.path)
             result = nil
             isSaveFile = false
+            discardExport()
             return
         }
 
@@ -351,6 +355,7 @@ final class IOSFilePickerHandler: NSObject,
         let fileName = (arguments["fileName"] as? String) ?? ""
         let bytes = arguments["bytes"] as? FlutterStandardTypedData
         let tempFile = PickerTemporaryFiles.uniqueExportURL(fileName: fileName)
+        exportFile = tempFile
 
         eventSink?(true)
 
@@ -377,6 +382,7 @@ final class IOSFilePickerHandler: NSObject,
                             details: nil))
                     self.result = nil
                     self.isSaveFile = false
+                    self.discardExport()
                 }
                 return
             }
@@ -448,6 +454,14 @@ final class IOSFilePickerHandler: NSObject,
         topViewController()?.present(picker, animated: true)
     }
 
+    /// Deletes the temporary file of a save once its request is over, after a
+    /// save, a cancel or a failure. `asCopy` gives the destination its own copy.
+    private func discardExport() {
+        guard let file = exportFile else { return }
+        exportFile = nil
+        PickerTemporaryFiles.removeExport(file)
+    }
+
     private func finishCurrentRequest(_ value: Any?) {
         guard let currentResult = result else {
             return
@@ -456,6 +470,7 @@ final class IOSFilePickerHandler: NSObject,
         if isSaveFile {
             eventSink?(false)
             isSaveFile = false
+            discardExport()
         }
 
         isDirectoryPicker = false
