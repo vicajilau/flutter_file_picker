@@ -36,6 +36,7 @@ class Filter {
     "*.jpeg",
     "*.jpg",
     "*.png",
+    "*.webp",
   ];
 
   static const List<String> _videoExtensions = [
