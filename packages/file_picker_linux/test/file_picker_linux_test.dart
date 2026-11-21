@@ -53,6 +53,18 @@ void main() {
       final filter = Filter(FileType.custom, ['png', 'jpg']);
       expect(filter.info.containsKey('Custom'), isTrue);
     });
+
+    test('media filter offers every image and video pattern', () {
+      Set<String> patterns(FileType type) => {
+        for (final (_, pattern) in Filter(type, null).info.values.single)
+          pattern,
+      };
+
+      expect(patterns(FileType.media), {
+        ...patterns(FileType.image),
+        ...patterns(FileType.video),
+      });
+    });
   });
 
   group('FilePickerLinux.resolveOptions', () {

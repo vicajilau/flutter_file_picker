@@ -5,6 +5,10 @@
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` take the new `darwinOptions` parameter of `file_picker_platform_interface` 5.0.0. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: Requires `file_picker_platform_interface` 5.0.0, which no longer has `skipEntitlementsChecks()`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 
+## 4.2.2
+
+- Documented in the README that `saveFile()` holds the whole file in memory, that Safari cannot save a file of 2 GiB or more, and how to run the WebAssembly build on Safari and Firefox. [#2354](https://github.com/vicajilau/flutter_file_picker/pull/2354)
+
 ## 4.2.1
 
 - Fixed a pick started while another one was open leaving the first one waiting forever. The first one now completes with an empty list. [#2324](https://github.com/vicajilau/flutter_file_picker/pull/2324)

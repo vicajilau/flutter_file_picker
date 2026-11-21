@@ -45,4 +45,45 @@ struct PickerTemporaryFilesTests {
         #expect(!manager.fileExists(atPath: export.path))
         try PickerTemporaryFiles.clear(in: temporary)
     }
+
+    @Test("Removing an export deletes its directory and nothing else")
+    func removesOnlyTheExport() throws {
+        let manager = FileManager.default
+        let temporary = manager.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try manager.createDirectory(at: temporary, withIntermediateDirectories: true)
+        defer { try? manager.removeItem(at: temporary) }
+        let hostFile = temporary.appendingPathComponent("host.txt")
+        try Data([1]).write(to: hostFile)
+        let kept = PickerTemporaryFiles.uniqueExportURL(fileName: "kept.pdf", in: temporary)
+        let removed = PickerTemporaryFiles.uniqueExportURL(fileName: "report.pdf", in: temporary)
+        for file in [kept, removed] {
+            try manager.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data([2]).write(to: file)
+        }
+
+        PickerTemporaryFiles.removeExport(removed, in: temporary)
+        #expect(!manager.fileExists(atPath: removed.path))
+        #expect(!manager.fileExists(atPath: removed.deletingLastPathComponent().path))
+        #expect(manager.fileExists(atPath: kept.path))
+        #expect(manager.fileExists(atPath: hostFile.path))
+
+        // A second removal, of a file that is already gone, does nothing.
+        PickerTemporaryFiles.removeExport(removed, in: temporary)
+    }
+
+    @Test("Removing a file outside the plugin directory does nothing")
+    func ignoresOtherFiles() throws {
+        let manager = FileManager.default
+        let temporary = manager.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let other = temporary.appendingPathComponent("other", isDirectory: true)
+        try manager.createDirectory(at: other, withIntermediateDirectories: true)
+        defer { try? manager.removeItem(at: temporary) }
+        let file = other.appendingPathComponent("data.txt")
+        try Data([1]).write(to: file)
+
+        PickerTemporaryFiles.removeExport(file, in: temporary)
+        #expect(manager.fileExists(atPath: file.path))
+    }
 }

@@ -21,23 +21,6 @@ class Filter {
     "*.webp",
   ];
 
-  static const List<String> _mediaExtensions = [
-    "*.avi",
-    "*.flv",
-    "*.m4v",
-    "*.mkv",
-    "*.mov",
-    "*.mp4",
-    "*.mpeg",
-    "*.webm",
-    "*.wmv",
-    "*.bmp",
-    "*.gif",
-    "*.jpeg",
-    "*.jpg",
-    "*.png",
-  ];
-
   static const List<String> _videoExtensions = [
     "*.avi",
     "*.flv",
@@ -48,6 +31,11 @@ class Filter {
     "*.mpeg",
     "*.webm",
     "*.wmv",
+  ];
+
+  static const List<String> _mediaExtensions = [
+    ..._imageExtensions,
+    ..._videoExtensions,
   ];
 
   FilterInfo info = {};
