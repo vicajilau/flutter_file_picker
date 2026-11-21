@@ -1,3 +1,7 @@
+## 2.0.5
+
+- Fixed `FileType.media` not offering `.webp` images, which `FileType.image` already did. The media filter is now built from the image and video lists, so it can no longer drift from them. [#2360](https://github.com/vicajilau/flutter_file_picker/pull/2360)
+
 ## 2.0.4
 
 - Fixed every portal request using the same `handle_token`, so two requests open at the same time could get mixed up. [#2315](https://github.com/vicajilau/flutter_file_picker/pull/2315)
