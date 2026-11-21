@@ -191,6 +191,19 @@ abstract final class FilePicker {
   ///
   /// Returns the [Uri] of the saved file, or `null` if the user canceled the operation.
   /// Depending on the platform, the [Uri.scheme] may be `file`, `content`, `http(s)`, `data` or `blob`.
+  ///
+  /// The whole file is held in memory, so avoid saving large files.
+  ///
+  /// On Android, [bytes] cross the method channel in one piece, and a file of
+  /// a few hundred MB can end the app with an `OutOfMemoryError` before the
+  /// dialog opens, which the plugin cannot catch.
+  ///
+  /// On web, [bytes] go into a `Blob`. Safari, for one, cannot build one of
+  /// 2 GiB or more and closes the tab, which was tried on Safari 27.2.
+  ///
+  /// Writing a large file properly needs a way to stream it into a file
+  /// handle, which `saveFile()` does not offer. Reading a large file in chunks
+  /// with [PlatformFile.readAsByteStream] is not affected.
   static Future<Uri?> saveFile({
     required String fileName,
     required Uint8List bytes,

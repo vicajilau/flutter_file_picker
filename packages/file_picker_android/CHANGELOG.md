@@ -9,6 +9,10 @@
 - `pickDirectory()`, added in 2.2.0, also takes `darwinOptions`, which it ignores. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 - **BREAKING CHANGE**: Removed `pickFileAndDirectoryPaths()`, which only picked files here, as `pickFiles()` does. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)
 
+## 2.2.1
+
+- `getDirectoryPath()` now logs every failure it turns into `null`, with its code and message, instead of only `unknown_path`, so a refused directory pick leaves a trace. It still returns `null`, use `pickDirectory()` to get the error. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
+
 ## 2.2.0
 
 - Added `pickDirectory()`, which returns the `content://` tree URI of the picked directory. Without `FilePickerAndroidOptions`, the grant is transient and read only. Unlike `getDirectoryPath()`, a failure is thrown and `null` only means the user canceled. Requires `file_picker_platform_interface` 4.3.0.

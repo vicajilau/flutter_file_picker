@@ -28,6 +28,25 @@ enum PickerTemporaryFiles {
             .appendingPathComponent(name, isDirectory: false)
     }
 
+    /// Removes an export made by `uniqueExportURL`, with the directory that
+    /// holds it. The picker exports a copy, so the destination does not need
+    /// this file once the request is over.
+    ///
+    /// Anything outside the plugin directory is left alone.
+    static func removeExport(
+        _ file: URL,
+        in temporaryDirectory: URL = URL(
+            fileURLWithPath: NSTemporaryDirectory(),
+            isDirectory: true
+        )
+    ) {
+        let directory = file.deletingLastPathComponent()
+        guard directory.deletingLastPathComponent().standardizedFileURL
+            == root(in: temporaryDirectory).standardizedFileURL
+        else { return }
+        try? FileManager.default.removeItem(at: directory)
+    }
+
     /// Only remove files created by the picker, never unrelated app temp data.
     static func clear(in temporaryDirectory: URL = URL(
         fileURLWithPath: NSTemporaryDirectory(),
