@@ -38,6 +38,8 @@ class FilePickerDelegate(
     var bytes: ByteArray? = null
     var saveFileName: String? = null
     var saveMimeType: String? = null
+    /** Whether the pending save writes chunk by chunk, see [SaveStreams]. */
+    var saveAsStream = false
     var androidSafOptions: java.util.HashMap<*, *>? = null
 
     fun setEventHandler(eventSink: EventSink?) {
@@ -63,7 +65,7 @@ class FilePickerDelegate(
     private fun handleSaveFileResult(resultCode: Int, data: Intent?): Boolean {
         val uri = data?.data
         when (ResultOutcome.of(resultCode, hasData = uri != null)) {
-            ResultOutcome.DELIVER -> saveFile(uri!!)
+            ResultOutcome.DELIVER -> if (saveAsStream) openSaveStream(uri!!) else saveFile(uri!!)
             ResultOutcome.CANCEL -> finishWithSuccess(null)
             ResultOutcome.FAIL -> finishWithError(
                 "unknown_result",
@@ -91,6 +93,30 @@ class FilePickerDelegate(
                 // Not only IOException: a SecurityException from the provider
                 // would otherwise escape the coroutine and crash the app.
                 Log.e(TAG, "Error while saving file", e)
+                Handler(Looper.getMainLooper()).post {
+                    finishWithError("Error while saving file", e.message)
+                }
+            }
+        }
+    }
+
+    /**
+     * Opens the document the user picked and answers with the id Dart sends its
+     * chunks to. The document is closed by `closeSaveStream` or `abortSaveStream`.
+     */
+    private fun openSaveStream(uri: Uri) {
+        val fileName = saveFileName
+        val mimeType = saveMimeType
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val stream = activity.applicationContext.contentResolver.openOutputStream(uri)
+                    ?: throw java.io.IOException(
+                        "Document provider did not return a writable output stream."
+                    )
+                val id = SaveStreams.open(SaveStreamSession(stream, uri, fileName, mimeType))
+                Handler(Looper.getMainLooper()).post { finishWithSuccess(id) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error while opening the file to save", e)
                 Handler(Looper.getMainLooper()).post {
                     finishWithError("Error while saving file", e.message)
                 }
@@ -145,7 +171,7 @@ class FilePickerDelegate(
         }
         LostDataStore.clearRequest(context)
         pendingResult?.let {
-            it.success(data?.takeIf { it is String }
+            it.success(data?.takeIf { it is String || it is Int }
                 ?: (data as? ArrayList<*>)?.mapNotNull { (it as? FileInfo)?.toMap() })
             clearPendingResult()
         }
@@ -181,5 +207,6 @@ class FilePickerDelegate(
         bytes = null
         saveFileName = null
         saveMimeType = null
+        saveAsStream = false
     }
 }

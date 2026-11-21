@@ -219,4 +219,43 @@ abstract class FilePickerPlatform extends PlatformInterface {
   }) async {
     throw UnimplementedError('saveFile() has not been implemented.');
   }
+
+  /// Whether [saveFileFromStream] works on this platform and browser.
+  ///
+  /// `false` unless the implementation overrides it.
+  bool get supportsSaveFileFromStream => false;
+
+  /// Saves the chunks of [data] to a file with the given [fileName], using the
+  /// native save file dialog, without holding the whole file in memory.
+  ///
+  /// It is the streaming counterpart of [saveFile], so a large file can be saved
+  /// without a copy of all of it in memory, which [saveFile] needs.
+  /// The chunks are written one at a time, and the next one is only requested
+  /// once the previous one is written.
+  ///
+  /// The other parameters mean what they mean in [saveFile]. The [fileName]
+  /// should include the file extension, since there are no bytes to
+  /// detect it from.
+  ///
+  /// Returns the [Uri] of the saved file, or `null` if the user canceled the operation.
+  /// If [data] throws or the file cannot be written, the half written file is
+  /// removed where the platform allows it, and the error is thrown.
+  ///
+  /// Throws an [UnsupportedError] if [supportsSaveFileFromStream] is `false`.
+  Future<Uri?> saveFileFromStream({
+    required String fileName,
+    required Stream<Uint8List> data,
+    required String mimeType,
+    String? dialogTitle,
+    String? initialDirectory,
+    Function(FilePickerStatus)? onFileSaving,
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    throw UnsupportedError(
+      'saveFileFromStream() is not supported on this platform, '
+      'check supportsSaveFileFromStream first.',
+    );
+  }
 }

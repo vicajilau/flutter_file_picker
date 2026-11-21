@@ -345,7 +345,8 @@ object FileUtils {
         type: String?,
         initialDirectory: String?,
         bytes: ByteArray?,
-        result: MethodChannel.Result
+        result: MethodChannel.Result,
+        asStream: Boolean = false
     ) {
         if (!this.setPendingMethodCallResult(result)) {
             finishWithAlreadyActiveError(result)
@@ -358,6 +359,7 @@ object FileUtils {
         }
         this.bytes = bytes
         this.saveFileName = fileName
+        this.saveAsStream = asStream
         if ("dir" != type) {
             try {
                 intent.type = getMimeTypeForBytes(fileName = fileName, bytes = bytes)
