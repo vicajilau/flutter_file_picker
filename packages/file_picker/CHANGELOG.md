@@ -1,3 +1,9 @@
+## 13.4.1
+
+- Requires `file_picker_linux` 2.0.5, which offers `.webp` images for `FileType.media`. [#2360](https://github.com/vicajilau/flutter_file_picker/pull/2360)
+- Documented that `saveFile()` holds the whole file in memory, so large files should not be saved with it: on Android a few hundred MB can end the app with an `OutOfMemoryError`, and on web Safari cannot save a file of 2 GiB or more. [#2354](https://github.com/vicajilau/flutter_file_picker/pull/2354)
+- `file_picker_darwin` stays at 2.4.2 or newer, since 2.5.0 requires Flutter 3.41. Apps on Flutter 3.41 or newer get 2.5.2, which deletes the temporary file `saveFile()` leaves on iOS, with `flutter pub upgrade`.
+
 ## 13.4.0
 
 - Added `FilePicker.pickDirectory()`, which returns the `Uri` of the picked directory: the `content://` tree URI on Android, which is what the app can read through the Storage Access Framework, and a `file` URI on the other platforms. On Android it throws when the pick fails, while the other platforms keep returning `null` for a failure, as `getDirectoryPath()` does. Requires `android_file_picker` 2.2.0 and `file_picker_platform_interface` 4.3.0.
