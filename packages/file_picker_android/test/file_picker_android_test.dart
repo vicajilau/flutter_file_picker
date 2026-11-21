@@ -278,7 +278,6 @@ void main() {
         () => messenger.setMockMethodCallHandler(picker.methodChannel, null),
       );
 
-      // Swallowed until 14.0.0 (#2286), but never without a trace.
       for (final code in ['already_active', 'unknown_path']) {
         test('logs $code and returns null', () async {
           messenger.setMockMethodCallHandler(picker.methodChannel, (_) async {
