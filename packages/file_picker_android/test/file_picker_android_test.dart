@@ -267,6 +267,38 @@ void main() {
       });
     });
 
+    group('getDirectoryPath', () {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      late FilePickerAndroid picker;
+
+      setUp(() => picker = FilePickerAndroid());
+
+      tearDown(
+        () => messenger.setMockMethodCallHandler(picker.methodChannel, null),
+      );
+
+      for (final code in ['already_active', 'unknown_path']) {
+        test('logs $code and returns null', () async {
+          messenger.setMockMethodCallHandler(picker.methodChannel, (_) async {
+            throw PlatformException(code: code, message: 'Failed.');
+          });
+          final logs = <String>[];
+
+          final path = await runZoned(
+            picker.getDirectoryPath,
+            zoneSpecification: ZoneSpecification(
+              print: (_, _, _, line) => logs.add(line),
+            ),
+          );
+
+          expect(path, isNull);
+          expect(logs, contains(contains('failed with $code (Failed.)')));
+          expect(logs, contains(contains('pickDirectory()')));
+        });
+      }
+    });
+
     group('status updates', () {
       late FilePickerAndroid picker;
       final messenger =

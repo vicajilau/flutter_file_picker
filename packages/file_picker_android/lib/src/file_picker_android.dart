@@ -214,6 +214,9 @@ class FilePickerAndroid extends FilePickerPlatform {
           '[$_tag] Could not resolve directory path. Maybe it\'s a protected one or unsupported (such as Downloads folder). Make sure that you are on SDK 21 or above.',
         );
       }
+      print(
+        '[$_tag] getDirectoryPath() failed with ${ex.code} (${ex.message}) and returns null, as for a cancel. Use pickDirectory() to get the error.',
+      );
     }
     return null;
   }
