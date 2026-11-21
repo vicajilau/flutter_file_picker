@@ -224,9 +224,10 @@ abstract final class FilePicker {
   /// On web, [bytes] go into a `Blob`. Safari, for one, cannot build one of
   /// 2 GiB or more and closes the tab, which was tried on Safari 27.2.
   ///
-  /// Writing a large file properly needs a way to stream it into a file
-  /// handle, which `saveFile()` does not offer. Reading a large file in chunks
-  /// with [PlatformFile.readAsByteStream] is not affected.
+  /// To save a large file, use [saveFileFromStream] where
+  /// [supportsSaveFileFromStream] is `true`, which writes it chunk by chunk.
+  /// Reading a large file in chunks with [PlatformFile.readAsByteStream] is not
+  /// affected.
   static Future<Uri?> saveFile({
     required String fileName,
     required Uint8List bytes,

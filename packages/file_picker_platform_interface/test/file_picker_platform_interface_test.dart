@@ -107,6 +107,23 @@ void main() {
       });
     });
 
+    group('saveFileFromStream', () {
+      test('is not supported unless an implementation says so', () {
+        expect(ExtendsFilePickerPlatform().supportsSaveFileFromStream, isFalse);
+      });
+
+      test('throws an UnsupportedError on the default instance', () {
+        expect(
+          () => ExtendsFilePickerPlatform().saveFileFromStream(
+            fileName: 'a.bin',
+            data: const Stream.empty(),
+            mimeType: 'application/octet-stream',
+          ),
+          throwsUnsupportedError,
+        );
+      });
+    });
+
     test('Can set instance', () {
       final ExtendsFilePickerPlatform instance = ExtendsFilePickerPlatform();
       FilePickerPlatform.instance = instance;

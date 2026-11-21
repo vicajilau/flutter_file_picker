@@ -1,3 +1,7 @@
+## 4.4.0
+
+- Added `FilePickerPlatform.saveFileFromStream()`, which saves a `Stream<Uint8List>` chunk by chunk, so a large file does not need a copy of all of it in memory like `saveFile()` does. `supportsSaveFileFromStream` tells whether a platform implements it, and it is `false` by default, so existing implementations keep working. [#2358](https://github.com/vicajilau/flutter_file_picker/issues/2358)
+
 ## 4.3.0
 
 - Added `FilePickerPlatform.pickDirectory()`, which returns the `Uri` of the picked directory. By default it calls `getDirectoryPath()` and turns the path into a `file` URI, so existing implementations keep working.
