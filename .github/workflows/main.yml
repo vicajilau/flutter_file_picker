@@ -209,9 +209,9 @@ jobs:
           # Empty flutter_version means the latest stable.
           - lane: agp-9.x
             flutter_version: ""
-            agp_version: 9.2.1
+            agp_version: 9.3.1
             gradle_version: 9.5.0
-            kotlin_version: 2.3.21
+            kotlin_version: 2.4.20
             built_in_kotlin: "false"
             new_dsl: ""
           # AGP 9's new DSL, which apps can opt into once every plugin supports
@@ -219,9 +219,9 @@ jobs:
           # build scripts that still configure the legacy DSL types (#2336).
           - lane: agp-9.x-new-dsl
             flutter_version: ""
-            agp_version: 9.2.1
+            agp_version: 9.3.1
             gradle_version: 9.5.0
-            kotlin_version: 2.3.21
+            kotlin_version: 2.4.20
             built_in_kotlin: "true"
             new_dsl: "true"
     name: Build Android (example app, ${{ matrix.lane }})

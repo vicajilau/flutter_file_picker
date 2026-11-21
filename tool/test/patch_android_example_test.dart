@@ -6,8 +6,8 @@ import '../patch_android_example.dart';
 const settingsSource = '''
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "9.2.1" apply false
-    id("org.jetbrains.kotlin.android") version "2.3.21" apply false
+    id("com.android.application") version "9.3.1" apply false
+    id("org.jetbrains.kotlin.android") version "2.4.20" apply false
 }
 include(":app")
 ''';
@@ -61,7 +61,7 @@ void main() {
       expect(
         () => patchSettingsGradle(
           'plugins {\n    id("org.jetbrains.kotlin.android") '
-          'version "2.3.21" apply false\n}\n',
+          'version "2.4.20" apply false\n}\n',
           agpVersion: '8.9.1',
           kotlinVersion: '2.2.20',
         ),
@@ -73,7 +73,7 @@ void main() {
       expect(
         () => patchSettingsGradle(
           'plugins {\n    id("com.android.application") '
-          'version "9.2.1" apply false\n}\n',
+          'version "9.3.1" apply false\n}\n',
           agpVersion: '8.9.1',
           kotlinVersion: '2.2.20',
         ),
