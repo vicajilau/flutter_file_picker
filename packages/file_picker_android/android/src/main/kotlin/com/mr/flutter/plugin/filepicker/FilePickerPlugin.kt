@@ -3,12 +3,15 @@ package com.mr.flutter.plugin.filepicker
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import android.provider.DocumentsContract
+import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.mr.flutter.plugin.filepicker.FileUtils.clearCache
 import com.mr.flutter.plugin.filepicker.FileUtils.getFileExtension
 import com.mr.flutter.plugin.filepicker.FileUtils.getMimeTypes
+import com.mr.flutter.plugin.filepicker.FileUtils.maybeRenameGenericMimeDuplicate
 import com.mr.flutter.plugin.filepicker.FileUtils.saveFile
 import com.mr.flutter.plugin.filepicker.FileUtils.startFileExplorer
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -21,6 +24,9 @@ import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * FilePickerPlugin
@@ -166,6 +172,74 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
                         )
                     ) "$fileNameWithoutExtension.${getFileExtension(bytes)}" else fileNameWithoutExtension
                 delegate?.saveFile(fileName, type, initialDirectory, bytes, result)
+            }
+
+            "openSaveStream" -> {
+                val type = resolveType(arguments?.get("fileType") as String)
+                val initialDirectory = arguments?.get("initialDirectory") as String?
+                val fileName = "${arguments?.get("fileName")}"
+                delegate?.saveFile(fileName, type, initialDirectory, null, result, asStream = true)
+            }
+
+            "writeSaveStream" -> {
+                val id = arguments?.get("id") as? Int
+                val bytes = arguments?.get("bytes") as? ByteArray
+                if (id == null || bytes == null) {
+                    result.error("invalid_arguments", "A save id and the bytes are required.", null)
+                } else {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            SaveStreams.write(id, bytes)
+                            result.success(null)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error while writing the file to save", e)
+                            result.error("Error while saving file", e.message, null)
+                        }
+                    }
+                }
+            }
+
+            "closeSaveStream" -> {
+                val id = arguments?.get("id") as? Int
+                val context = activity?.applicationContext
+                if (id == null || context == null) {
+                    result.error("invalid_arguments", "A save id is required.", null)
+                } else {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val session = SaveStreams.close(id)
+                            val target = session.target
+                            val saved = if (target == null) null else maybeRenameGenericMimeDuplicate(
+                                context = context,
+                                uri = target,
+                                originalFileName = session.fileName,
+                                mimeType = session.mimeType
+                            )
+                            result.success(saved?.path)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error while closing the file to save", e)
+                            result.error("Error while saving file", e.message, null)
+                        }
+                    }
+                }
+            }
+
+            "abortSaveStream" -> {
+                val id = arguments?.get("id") as? Int
+                val context = activity?.applicationContext
+                CoroutineScope(Dispatchers.IO).launch {
+                    // The save failed, so the half written document is removed.
+                    val session = id?.let { SaveStreams.abort(it) }
+                    val target = session?.target
+                    if (target != null && context != null) {
+                        try {
+                            DocumentsContract.deleteDocument(context.contentResolver, target)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Could not remove the document of a failed save", e)
+                        }
+                    }
+                    result.success(null)
+                }
             }
 
             "custom" -> {

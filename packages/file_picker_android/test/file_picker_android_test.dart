@@ -299,6 +299,175 @@ void main() {
       }
     });
 
+    group('saveFileFromStream', () {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      late FilePickerAndroid picker;
+      late List<MethodCall> calls;
+
+      setUp(() {
+        picker = FilePickerAndroid();
+        calls = [];
+      });
+
+      tearDown(
+        () => messenger.setMockMethodCallHandler(picker.methodChannel, null),
+      );
+
+      void mock({int? id = 7, String? savedPath = '/document/primary:a.bin'}) {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          calls.add(call);
+          return switch (call.method) {
+            'openSaveStream' => id,
+            'closeSaveStream' => savedPath,
+            _ => null,
+          };
+        });
+      }
+
+      Stream<Uint8List> chunks(List<List<int>> chunks) async* {
+        for (final chunk in chunks) {
+          yield Uint8List.fromList(chunk);
+        }
+      }
+
+      test('is supported', () {
+        expect(picker.supportsSaveFileFromStream, isTrue);
+      });
+
+      test('opens, writes every chunk in order and closes', () async {
+        mock();
+
+        final uri = await picker.saveFileFromStream(
+          fileName: 'a.bin',
+          mimeType: 'application/octet-stream',
+          data: chunks([
+            [1, 2],
+            [3],
+          ]),
+        );
+
+        expect(uri, Uri.parse('/document/primary:a.bin'));
+        expect(calls.map((c) => c.method), [
+          'openSaveStream',
+          'writeSaveStream',
+          'writeSaveStream',
+          'closeSaveStream',
+        ]);
+        expect(calls.first.arguments, containsPair('fileName', 'a.bin'));
+        expect(calls[1].arguments, {
+          'id': 7,
+          'bytes': Uint8List.fromList([1, 2]),
+        });
+        expect(calls[2].arguments, {
+          'id': 7,
+          'bytes': Uint8List.fromList([3]),
+        });
+        expect(calls.last.arguments, {'id': 7});
+      });
+
+      test('cuts a chunk bigger than a megabyte in pieces', () async {
+        mock();
+        const megabyte = 1024 * 1024;
+
+        await picker.saveFileFromStream(
+          fileName: 'a.bin',
+          mimeType: 'application/octet-stream',
+          data: Stream.value(Uint8List(megabyte * 2 + 5)),
+        );
+
+        final sizes = [
+          for (final call in calls.where((c) => c.method == 'writeSaveStream'))
+            (call.arguments['bytes'] as Uint8List).length,
+        ];
+        expect(sizes, [megabyte, megabyte, 5]);
+      });
+
+      test('returns null and reads no data when the user cancels', () async {
+        mock(id: null);
+        var listened = false;
+
+        final uri = await picker.saveFileFromStream(
+          fileName: 'a.bin',
+          mimeType: 'application/octet-stream',
+          data: Stream.fromFuture(
+            Future(() {
+              listened = true;
+              return Uint8List(1);
+            }),
+          ),
+        );
+
+        expect(uri, isNull);
+        expect(listened, isFalse);
+        expect(calls.map((c) => c.method), ['openSaveStream']);
+      });
+
+      test('aborts the save and rethrows when the stream fails', () async {
+        mock();
+        Stream<Uint8List> failing() async* {
+          yield Uint8List(1);
+          throw StateError('boom');
+        }
+
+        await expectLater(
+          picker.saveFileFromStream(
+            fileName: 'a.bin',
+            mimeType: 'application/octet-stream',
+            data: failing(),
+          ),
+          throwsStateError,
+        );
+
+        expect(calls.map((c) => c.method), [
+          'openSaveStream',
+          'writeSaveStream',
+          'abortSaveStream',
+        ]);
+        expect(calls.last.arguments, {'id': 7});
+      });
+
+      test('aborts the save when a chunk cannot be written', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          calls.add(call);
+          if (call.method == 'openSaveStream') return 7;
+          if (call.method == 'writeSaveStream') {
+            throw PlatformException(code: 'Error while saving file');
+          }
+          return null;
+        });
+
+        await expectLater(
+          picker.saveFileFromStream(
+            fileName: 'a.bin',
+            mimeType: 'application/octet-stream',
+            data: chunks([
+              [1],
+            ]),
+          ),
+          throwsA(isA<PlatformException>()),
+        );
+
+        expect(calls.last.method, 'abortSaveStream');
+      });
+
+      test('reports picking and then done', () async {
+        mock();
+        final statuses = <FilePickerStatus>[];
+
+        await picker.saveFileFromStream(
+          fileName: 'a.bin',
+          mimeType: 'application/octet-stream',
+          data: chunks([
+            [1],
+          ]),
+          onFileSaving: statuses.add,
+        );
+
+        expect(statuses, [FilePickerStatus.picking, FilePickerStatus.done]);
+      });
+    });
+
     group('status updates', () {
       late FilePickerAndroid picker;
       final messenger =

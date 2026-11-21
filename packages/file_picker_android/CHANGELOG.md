@@ -1,3 +1,7 @@
+## 2.3.0
+
+- Added `saveFileFromStream()`, which writes a `Stream<Uint8List>` into the document the user picked one chunk at a time, instead of sending the whole file through the method channel at once. A file of any size can be saved, and `saveFile()` ends the app with an `OutOfMemoryError` for a few hundred MB. If the stream fails, the half written document is deleted. Requires `file_picker_platform_interface` 4.4.0. [#2358](https://github.com/vicajilau/flutter_file_picker/issues/2358)
+
 ## 2.2.1
 
 - `getDirectoryPath()` now logs every failure it turns into `null`, with its code and message, instead of only `unknown_path`, so a refused directory pick leaves a trace. It still returns `null`, use `pickDirectory()` to get the error. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
