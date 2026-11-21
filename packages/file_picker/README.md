@@ -68,8 +68,8 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * If you only showed the result, nothing changes. If you used `uri.path` as a file system path, it never pointed to a real file, so use the URI itself.
 
 3. **Failed Picks Throw Instead of Looking Cancelled**:
-   * On Android, iOS and macOS a failed `getDirectoryPath()` used to return `null`, the same as a cancel. It now throws a `PlatformException`, and `null` only means the user cancelled.
-   * On Linux, when the file chooser portal ends a request in some other way than a choice or a cancel, `pickFiles()`, `getDirectoryPath()` and `saveFile()` used to return `null` or an empty list, the same as a cancel. They now throw a `PlatformException` with the `portal_error` code.
+   * On Android, iOS and macOS a failed `getDirectoryPath()` used to return `null`, the same as a cancel. It now throws a `FilePickerException`, and `null` only means the user cancelled.
+   * On Linux, when the file chooser portal ends a request in some other way than a choice or a cancel, `pickFiles()`, `getDirectoryPath()` and `saveFile()` used to return `null` or an empty list, the same as a cancel. They now throw a `FilePickerException`.
 
      ```dart
      // v13
@@ -80,7 +80,7 @@ The iOS and macOS native implementations live under the shared Darwin source tre
      try {
        final dir = await FilePicker.getDirectoryPath();
        if (dir == null) return; // cancelled
-     } on PlatformException catch (e) {
+     } on FilePickerException catch (e) {
        // The pick failed, tell the user.
      }
      ```
@@ -95,7 +95,7 @@ The iOS and macOS native implementations live under the shared Darwin source tre
    * **v14**: `await FilePicker.saveFile(fileName: 'report.pdf', bytes: bytes);`
 
 6. **Android Custom Filters Reject Extensions Without a MIME Type**:
-   * With `FileType.custom`, any extension that Android cannot map to a MIME type now throws a `PlatformException` with code `unsupported_extension` before the picker opens. Its message identifies the first such extension. This applies to a mixed list such as `['abc', 'zip']` and to a list where none are known, such as `['abc']` or `['abc', 'qzx']`. Which extensions Android knows depends on the device and its version: `xyz`, `pfx` and `p12`, for example, are known on Android 17. Previously unknown extensions were omitted, or an all-unknown list opened an unrestricted picker.
+   * With `FileType.custom`, any extension that Android cannot map to a MIME type now throws a `FilePickerException` with the `unsupportedExtension` error code before the picker opens. Its message identifies the first such extension. This applies to a mixed list such as `['abc', 'zip']` and to a list where none are known, such as `['abc']` or `['abc', 'qzx']`. Which extensions Android knows depends on the device and its version: `xyz`, `pfx` and `p12`, for example, are known on Android 17. Previously unknown extensions were omitted, or an all-unknown list opened an unrestricted picker.
    * If you know the MIME type of those files, pass it in `FilePickerAndroidOptions.mimeTypes`, from `package:android_file_picker`. Android then filters by those MIME types instead of looking up the extensions, which are still used on the other platforms:
 
      ```dart
@@ -145,6 +145,51 @@ The iOS and macOS native implementations live under the shared Darwin source tre
      ```
 
    * On Android, Linux and Windows it only picked files. Use `pickFiles()` there, and read `path` from each result.
+
+10. **Failures Throw a `FilePickerException` With the Same Codes on Every Platform**:
+    * A pick, a save or a directory choice that fails now throws a `FilePickerException`, on every platform that can fail at runtime: Android, iOS, macOS, Linux and Windows. Windows used to throw a `WindowsException`.
+    * Switch over its `errorCode`, a `FilePickerErrorCode`. The same situation has the same code everywhere, where iOS said `multiple_request` and Android said `already_active`. New values can be added in a minor release, so keep a default case.
+    * `FilePickerException` extends `PlatformException` for this release, so an `on PlatformException` handler still catches it. It will stop doing so in the next breaking release, so move to `on FilePickerException`.
+    * The `code` text is now the one of the error code, so a comparison with a platform string no longer matches. Use the table to update it:
+
+      | `FilePickerErrorCode` | `code` | It replaces |
+      | --- | --- | --- |
+      | `alreadyActive` | `already_active` | `multiple_request` on iOS and macOS |
+      | `loadFailed` | `load_failed` | `unknown_path`, `unknown_activity`, `unknown_result`, `invalid_type` and `file_picker_error` on Android, `unknown_path` on iOS and macOS, `portal_error` on Linux, a `WindowsException` on Windows |
+      | `invalidArguments` | `invalid_arguments` | The same code on iOS |
+      | `unsupportedExtension` | `unsupported_extension` | `Unsupported file extension` on iOS |
+      | `noPickerAvailable` | `no_picker_available` | `explorer_not_found` on Android |
+      | `windowNotFound` | `window_not_found` | The same code on macOS |
+      | `saveFailed` | `save_failed` | `Error while saving file` on Android, `save_file_error` on iOS and macOS, and the other failures of a save |
+      | `outOfMemory` | `out_of_memory` | The same code on Android |
+      | `missingEntitlement` | `missing_entitlement` | `ENTITLEMENT_NOT_FOUND`, `ENTITLEMENT_REQUIRED_WRITE` and `ENTITLEMENT_CHECK_FAILED` on macOS |
+      | `unknown` | `unknown` | Any other code. The message starts with the code the platform sent |
+
+      ```dart
+      // v13
+      try {
+        final files = await FilePicker.pickFiles();
+      } on PlatformException catch (e) {
+        if (e.code == 'multiple_request' || e.code == 'already_active') {
+          // A pick is already open.
+        }
+      }
+
+      // v14
+      try {
+        final files = await FilePicker.pickFiles();
+      } on FilePickerException catch (e) {
+        switch (e.errorCode) {
+          case FilePickerErrorCode.alreadyActive:
+            // A pick is already open.
+          default:
+            // Show e.message.
+        }
+      }
+      ```
+
+    * A mistake in the call, such as an invalid extension filter, is still an `ArgumentError`.
+    * `LostFilePickerResult.exception` on Android is now a `FilePickerException`.
 
 ## Migrating to v13
 

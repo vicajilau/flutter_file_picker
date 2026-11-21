@@ -1,4 +1,5 @@
 import 'package:file_picker_darwin/file_picker_darwin.dart';
+import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -59,7 +60,7 @@ void main() {
       await expectLater(
         pick(),
         throwsA(
-          isA<PlatformException>().having(
+          isA<FilePickerException>().having(
             (e) => e.code,
             'code',
             'window_not_found',
@@ -84,10 +85,10 @@ void main() {
         await expectLater(
           pick(),
           throwsA(
-            isA<PlatformException>().having(
-              (e) => e.code,
-              'code',
-              'unknown_path',
+            isA<FilePickerException>().having(
+              (e) => e.errorCode,
+              'errorCode',
+              FilePickerErrorCode.loadFailed,
             ),
           ),
         );
