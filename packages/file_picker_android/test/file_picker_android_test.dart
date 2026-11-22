@@ -382,19 +382,19 @@ void main() {
 
       test('cuts a chunk bigger than the max chunk size in pieces', () async {
         mock();
-        const megabyte = 1024 * 1024;
+        const chunkSize = FilePickerAndroid.saveChunkSize;
 
         await picker.saveFileFromStream(
           fileName: 'a.bin',
           mimeType: 'application/octet-stream',
-          data: Stream.value(Uint8List(megabyte * 2 + 5)),
+          data: Stream.value(Uint8List(chunkSize * 2 + 5)),
         );
 
         final sizes = [
           for (final call in calls.where((c) => c.method == 'writeSaveStream'))
             (call.arguments['bytes'] as Uint8List).length,
         ];
-        expect(sizes, [megabyte, megabyte, 5]);
+        expect(sizes, [chunkSize, chunkSize, 5]);
       });
 
       test('returns null and reads no data when the user cancels', () async {

@@ -107,21 +107,19 @@ void main() {
       });
     });
 
-    group('saveFileFromStream', () {
-      test('supportsSaveFileFromStream returns false by default', () {
-        expect(ExtendsFilePickerPlatform().supportsSaveFileFromStream, isFalse);
-      });
+    test('supportsSaveFileFromStream returns false by default', () {
+      expect(ExtendsFilePickerPlatform().supportsSaveFileFromStream, isFalse);
+    });
 
-      test('throws an UnsupportedError on the default instance', () {
-        expect(
-          () => ExtendsFilePickerPlatform().saveFileFromStream(
-            fileName: 'a.bin',
-            data: const Stream.empty(),
-            mimeType: 'application/octet-stream',
-          ),
-          throwsUnsupportedError,
-        );
-      });
+    test('saveFileFromStream throws an UnsupportedError by default', () {
+      expect(
+        () => ExtendsFilePickerPlatform().saveFileFromStream(
+          fileName: 'a.bin',
+          data: const Stream.empty(),
+          mimeType: 'application/octet-stream',
+        ),
+        throwsUnsupportedError,
+      );
     });
 
     test('Can set instance', () {

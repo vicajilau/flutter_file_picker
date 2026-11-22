@@ -311,11 +311,14 @@ class FilePickerAndroid extends FilePickerPlatform {
 
   /// The maximum chunk size for [saveFileFromStream].
   ///
-  /// This is 1 MB, to optimize memory usage.
+  /// This is 4 MiB. A chunk is held twice while it crosses the channel, once in
+  /// Dart and once on Android, so it stays small, and a bigger one means fewer
+  /// calls for a large file.
   ///
   /// A bigger chunk of the stream is cut in pieces, so none of them needs more
   /// than this much memory on either side.
-  static const int _saveChunkSize = 1024 * 1024;
+  @visibleForTesting
+  static const int saveChunkSize = 4 * 1024 * 1024;
 
   @override
   bool get supportsSaveFileFromStream => true;
@@ -345,9 +348,9 @@ class FilePickerAndroid extends FilePickerPlatform {
 
       try {
         await for (final Uint8List chunk in data) {
-          for (var start = 0; start < chunk.length; start += _saveChunkSize) {
-            final int end = start + _saveChunkSize < chunk.length
-                ? start + _saveChunkSize
+          for (var start = 0; start < chunk.length; start += saveChunkSize) {
+            final int end = start + saveChunkSize < chunk.length
+                ? start + saveChunkSize
                 : chunk.length;
             await methodChannel.invokeMethod<void>('writeSaveStream', {
               'id': id,

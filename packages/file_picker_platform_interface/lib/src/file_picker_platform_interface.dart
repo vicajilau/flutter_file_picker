@@ -221,21 +221,26 @@ abstract class FilePickerPlatform extends PlatformInterface {
   }
 
   /// Whether [saveFileFromStream] is supported on this platform.
-  ///
-  /// `false` unless the implementation overrides it.
   bool get supportsSaveFileFromStream => false;
 
   /// Saves the chunks of [data] to a file with the given [fileName], using the
   /// native save file dialog.
   ///
-  /// It is the streaming counterpart of [saveFile], so a large file can be saved
-  /// without a copy of all of it in memory, which [saveFile] needs.
-  /// The chunks are written one at a time, and the next one is only requested
-  /// once the previous one is written.
+  /// This method is preferred over [saveFile], since it avoids loading an entire
+  /// file into memory. The chunks are written one at a time, and the next one is
+  /// only requested once the previous one is written.
   ///
-  /// The other parameters mean what they mean in [saveFile]. The [fileName]
-  /// should include the file extension, since there are no bytes to
-  /// detect it from.
+  /// The [fileName] parameter specifies the default file name for saving (e.g. `myFile.txt`).
+  /// It should include the file extension, since there are no bytes to detect it from.
+  /// The [data] parameter provides the chunks of raw byte data to write.
+  /// The [mimeType] parameter specifies the MIME type of the file (e.g. `application/pdf`).
+  /// The [dialogTitle], if provided, will be used as the title for the save file dialog.
+  /// The [initialDirectory], if provided, will be used as the initial directory path for the save file dialog.
+  /// The [onFileSaving] callback, if provided, is triggered when the save dialog changes status.
+  /// Only Android reports it for now.
+  ///
+  /// The [windowsOptions], [linuxOptions], and [webOptions] parameters
+  /// allow platform-specific configurations for the save file dialog.
   ///
   /// Returns the [Uri] of the saved file, or `null` if the user canceled the operation.
   /// If [data] throws or the file cannot be written, the temporary file is
