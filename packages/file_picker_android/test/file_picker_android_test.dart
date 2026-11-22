@@ -305,6 +305,17 @@ void main() {
       late FilePickerAndroid picker;
       late List<MethodCall> calls;
 
+      // The calls as maps of the method and its arguments, so a test can
+      // compare all of their values at once.
+      List<Map<String, Object?>> sent() => [
+        for (final call in calls)
+          {
+            'method': call.method,
+            ...?(call.arguments as Map<Object?, Object?>?)
+                ?.cast<String, Object?>(),
+          },
+      ];
+
       setUp(() {
         picker = FilePickerAndroid();
         calls = [];
@@ -348,22 +359,25 @@ void main() {
         );
 
         expect(uri, Uri.parse('/document/primary:a.bin'));
-        expect(calls.map((c) => c.method), [
-          'openSaveStream',
-          'writeSaveStream',
-          'writeSaveStream',
-          'closeSaveStream',
+        expect(sent(), [
+          {
+            'method': 'openSaveStream',
+            'fileName': 'a.bin',
+            'fileType': 'application/octet-stream',
+            'initialDirectory': null,
+          },
+          {
+            'method': 'writeSaveStream',
+            'id': 7,
+            'bytes': Uint8List.fromList([1, 2]),
+          },
+          {
+            'method': 'writeSaveStream',
+            'id': 7,
+            'bytes': Uint8List.fromList([3]),
+          },
+          {'method': 'closeSaveStream', 'id': 7},
         ]);
-        expect(calls.first.arguments, containsPair('fileName', 'a.bin'));
-        expect(calls[1].arguments, {
-          'id': 7,
-          'bytes': Uint8List.fromList([1, 2]),
-        });
-        expect(calls[2].arguments, {
-          'id': 7,
-          'bytes': Uint8List.fromList([3]),
-        });
-        expect(calls.last.arguments, {'id': 7});
       });
 
       test('cuts a chunk bigger than the max chunk size in pieces', () async {
@@ -385,22 +399,17 @@ void main() {
 
       test('returns null and reads no data when the user cancels', () async {
         mock(id: null);
-        var listened = false;
+        final data = StreamController<Uint8List>();
 
         final uri = await picker.saveFileFromStream(
           fileName: 'a.bin',
           mimeType: 'application/octet-stream',
-          data: Stream.fromFuture(
-            Future(() {
-              listened = true;
-              return Uint8List(1);
-            }),
-          ),
+          data: data.stream,
         );
 
         expect(uri, isNull);
-        expect(listened, isFalse);
-        expect(calls.map((c) => c.method), ['openSaveStream']);
+        expect(data.hasListener, isFalse);
+        expect(sent().map((call) => call['method']), ['openSaveStream']);
       });
 
       test('aborts the save and rethrows when the stream fails', () async {
@@ -419,12 +428,14 @@ void main() {
           throwsStateError,
         );
 
-        expect(calls.map((c) => c.method), [
-          'openSaveStream',
-          'writeSaveStream',
-          'abortSaveStream',
+        expect(sent().skip(1), [
+          {
+            'method': 'writeSaveStream',
+            'id': 7,
+            'bytes': Uint8List.fromList([0]),
+          },
+          {'method': 'abortSaveStream', 'id': 7},
         ]);
-        expect(calls.last.arguments, {'id': 7});
       });
 
       test('aborts the save when a chunk cannot be written', () async {
@@ -448,7 +459,7 @@ void main() {
           throwsA(isA<PlatformException>()),
         );
 
-        expect(calls.last.method, 'abortSaveStream');
+        expect(sent().last, {'method': 'abortSaveStream', 'id': 7});
       });
 
       test('reports picking and then done', () async {
