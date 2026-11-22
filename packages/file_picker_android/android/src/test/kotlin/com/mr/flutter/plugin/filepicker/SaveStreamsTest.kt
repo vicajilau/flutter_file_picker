@@ -2,15 +2,18 @@ package com.mr.flutter.plugin.filepicker
 
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import android.net.Uri
 import java.io.OutputStream
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.Mockito.mock
 
 class SaveStreamsTest {
     private class TrackingStream : ByteArrayOutputStream() {
@@ -27,7 +30,7 @@ class SaveStreamsTest {
     }
 
     private fun open(stream: OutputStream) =
-        SaveStreams.open(SaveStreamSession(stream, null, "a.bin", "application/octet-stream"))
+        SaveStreams.open(SaveStreamSession(stream, mock(Uri::class.java), "a.bin", "application/octet-stream"))
 
     @Test
     fun chunksAreWrittenInOrderAndTheStreamIsClosed() {
@@ -66,6 +69,7 @@ class SaveStreamsTest {
 
         assertArrayEquals(byteArrayOf(1), first.toByteArray())
         assertArrayEquals(byteArrayOf(2), second.toByteArray())
+        assertFalse(first.toByteArray().contentEquals(second.toByteArray()))
     }
 
     @Test

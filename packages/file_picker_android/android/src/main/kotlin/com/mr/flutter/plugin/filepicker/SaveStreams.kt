@@ -8,11 +8,11 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A document being written chunk by chunk, after the user picked where to
- * save it. [target] is `null` only in unit tests.
+ * save it.
  */
 internal class SaveStreamSession(
     val stream: OutputStream,
-    val target: Uri?,
+    val target: Uri,
     val fileName: String?,
     val mimeType: String?,
 )
@@ -46,7 +46,10 @@ internal object SaveStreams {
         return session
     }
 
-    /** Closes the stream without flushing, for a save that failed. `null` if it is already gone. */
+    /**
+     * Closes the stream without flushing, for a save that failed, and returns
+     * its session. `null` if the save is already gone.
+     */
     fun abort(id: Int): SaveStreamSession? {
         val session = sessions.remove(id) ?: return null
         try {

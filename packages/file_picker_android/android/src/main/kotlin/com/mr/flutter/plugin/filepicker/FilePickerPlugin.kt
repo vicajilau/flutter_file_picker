@@ -177,7 +177,7 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
             "openSaveStream" -> {
                 val type = resolveType(arguments?.get("fileType") as String)
                 val initialDirectory = arguments?.get("initialDirectory") as String?
-                val fileName = "${arguments?.get("fileName")}"
+                val fileName = (arguments?.get("fileName") as? String).orEmpty()
                 delegate?.saveFile(fileName, type, initialDirectory, null, result, asStream = true)
             }
 
@@ -208,14 +208,13 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
                             val session = SaveStreams.close(id)
-                            val target = session.target
-                            val saved = if (target == null) null else maybeRenameGenericMimeDuplicate(
+                            val saved = maybeRenameGenericMimeDuplicate(
                                 context = context,
-                                uri = target,
+                                uri = session.target,
                                 originalFileName = session.fileName,
                                 mimeType = session.mimeType
                             )
-                            result.success(saved?.path)
+                            result.success(saved.path)
                         } catch (e: Exception) {
                             Log.e(TAG, "Error while closing the file to save", e)
                             result.error("Error while saving file", e.message, null)
@@ -230,10 +229,9 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
                 CoroutineScope(Dispatchers.IO).launch {
                     // The save failed, so the half written document is removed.
                     val session = id?.let { SaveStreams.abort(it) }
-                    val target = session?.target
-                    if (target != null && context != null) {
+                    if (session != null && context != null) {
                         try {
-                            DocumentsContract.deleteDocument(context.contentResolver, target)
+                            DocumentsContract.deleteDocument(context.contentResolver, session.target)
                         } catch (e: Exception) {
                             Log.w(TAG, "Could not remove the document of a failed save", e)
                         }

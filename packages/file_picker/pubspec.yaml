@@ -9,7 +9,7 @@ topics:
   - storage
   - desktop
   - web
-version: 13.4.1
+version: 13.5.0
 
 resolution: workspace
 
@@ -21,8 +21,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  file_picker_platform_interface: ^4.3.0
-  android_file_picker: ^2.2.0
+  file_picker_platform_interface: ^4.4.0
+  android_file_picker: ^2.3.0
   file_picker_darwin: ^2.4.2
   file_picker_linux: ^2.0.5
   windows_file_picker: ^2.0.2

@@ -97,5 +97,7 @@ dependencies {
     // The org.json in android.jar is a stub on the JVM, so unit tests need
     // the real implementation.
     add("testImplementation", "org.json:json:20260814")
+    // android.jar only has stubs of Uri, so tests mock one.
+    add("testImplementation", "org.mockito:mockito-core:5.14.2")
 }
 
