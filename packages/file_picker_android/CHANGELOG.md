@@ -1,6 +1,6 @@
 ## 2.3.0
 
-- Added `saveFileFromStream()`, which writes a `Stream<Uint8List>` into the document the user picked one chunk at a time, instead of sending the whole file through the method channel at once. A file of any size can be saved, and `saveFile()` ends the app with an `OutOfMemoryError` for a few hundred MB. If the stream fails, the half written document is deleted. Requires `file_picker_platform_interface` 4.4.0. [#2358](https://github.com/vicajilau/flutter_file_picker/issues/2358)
+- Added `saveFileFromStream()`, which writes a `Stream<Uint8List>` into the document the user picked, one chunk at a time. [#2358](https://github.com/vicajilau/flutter_file_picker/issues/2358)
 
 ## 2.2.1
 
