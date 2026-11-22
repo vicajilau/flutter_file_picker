@@ -262,7 +262,7 @@ abstract final class FilePicker {
     );
   }
 
-  /// Whether [saveFileFromStream] works on this platform and browser.
+  /// Whether [saveFileFromStream] is supported on this platform.
   static bool get supportsSaveFileFromStream =>
       FilePickerPlatform.instance.supportsSaveFileFromStream;
 
