@@ -108,7 +108,7 @@ void main() {
     });
 
     group('saveFileFromStream', () {
-      test('is not supported unless an implementation says so', () {
+      test('supportsSaveFileFromStream returns false by default', () {
         expect(ExtendsFilePickerPlatform().supportsSaveFileFromStream, isFalse);
       });
 
