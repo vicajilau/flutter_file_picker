@@ -238,7 +238,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
   /// detect it from.
   ///
   /// Returns the [Uri] of the saved file, or `null` if the user canceled the operation.
-  /// If [data] throws or the file cannot be written, the half written file is
+  /// If [data] throws or the file cannot be written, the temporary file is
   /// removed where the platform allows it, and the error is thrown.
   ///
   /// Throws an [UnsupportedError] if [supportsSaveFileFromStream] is `false`.
