@@ -267,7 +267,7 @@ abstract final class FilePicker {
       FilePickerPlatform.instance.supportsSaveFileFromStream;
 
   /// Opens a save file dialog to let the user select a location and a file name,
-  /// and saves the chunks of [data] to it without holding the whole file in
+  /// and saves the chunks of [data] to it, using streamed writes.
   /// memory.
   ///
   /// Unlike [saveFile], a file of any size can be saved, since only the chunk
