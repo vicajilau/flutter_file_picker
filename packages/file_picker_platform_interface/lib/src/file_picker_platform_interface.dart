@@ -220,7 +220,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
     throw UnimplementedError('saveFile() has not been implemented.');
   }
 
-  /// Whether [saveFileFromStream] works on this platform and browser.
+  /// Whether [saveFileFromStream] is supported on this platform.
   ///
   /// `false` unless the implementation overrides it.
   bool get supportsSaveFileFromStream => false;
