@@ -309,7 +309,9 @@ class FilePickerAndroid extends FilePickerPlatform {
     }
   }
 
-  /// The biggest piece of a file that crosses the method channel at once.
+  /// The maximum chunk size for [saveFileFromStream].
+  ///
+  /// This is 1 MB, to optimize memory usage.
   ///
   /// A bigger chunk of the stream is cut in pieces, so none of them needs more
   /// than this much memory on either side.
