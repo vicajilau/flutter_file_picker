@@ -366,7 +366,7 @@ void main() {
         expect(calls.last.arguments, {'id': 7});
       });
 
-      test('cuts a chunk bigger than a megabyte in pieces', () async {
+      test('cuts a chunk bigger than the max chunk size in pieces', () async {
         mock();
         const megabyte = 1024 * 1024;
 
