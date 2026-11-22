@@ -226,7 +226,7 @@ abstract class FilePickerPlatform extends PlatformInterface {
   bool get supportsSaveFileFromStream => false;
 
   /// Saves the chunks of [data] to a file with the given [fileName], using the
-  /// native save file dialog, without holding the whole file in memory.
+  /// native save file dialog.
   ///
   /// It is the streaming counterpart of [saveFile], so a large file can be saved
   /// without a copy of all of it in memory, which [saveFile] needs.
