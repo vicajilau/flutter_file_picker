@@ -20,8 +20,7 @@ import com.mr.flutter.plugin.filepicker.FilePickerDelegate.Companion.REQUEST_COD
 import com.mr.flutter.plugin.filepicker.FilePickerDelegate.Companion.SAVE_FILE_CODE
 import com.mr.flutter.plugin.filepicker.FilePickerDelegate.Companion.finishWithAlreadyActiveError
 import io.flutter.plugin.common.MethodChannel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -63,7 +62,7 @@ object FileUtils {
         type: String,
         androidSafOptions: java.util.HashMap<*, *>?
     ) {
-        CoroutineScope(Dispatchers.IO).launch {
+        ioScope.launch {
             if (data == null) {
                 finishWithError("unknown_activity", "Unknown activity error, please fill an issue.")
                 return@launch
@@ -149,6 +148,8 @@ object FileUtils {
                     "out_of_memory",
                     "Selected files are too large to process."
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 finishWithError("file_picker_error", e.message ?: "Unknown error")
             }
@@ -701,7 +702,7 @@ object FileUtils {
     private fun createImageFile(context: Context, compressFormat: Bitmap.CompressFormat): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ROOT).format(Date())
         val imageFileName = "IMAGE_" + timeStamp + "_"
-        val storageDir = context.cacheDir
+        val storageDir = File(context.cacheDir, "file_picker").apply { mkdirs() }
         return File.createTempFile(imageFileName, "." + getCompressFormatBasedFileExtension(compressFormat), storageDir)
     }
 
