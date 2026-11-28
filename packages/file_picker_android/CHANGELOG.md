@@ -1,3 +1,8 @@
+## 2.2.2
+
+- Fixed a detached activity being kept in memory, because the plugin left its `EventChannel` handler and its references to the activity in place. [#2365](https://github.com/vicajilau/flutter_file_picker/pull/2365)
+- Fixed `clearTemporaryFiles()` leaving behind a temporary file for each compressed image. [#2365](https://github.com/vicajilau/flutter_file_picker/pull/2365)
+
 ## 2.2.1
 
 - `getDirectoryPath()` now logs every failure it turns into `null`, with its code and message, instead of only `unknown_path`, so a refused directory pick leaves a trace. It still returns `null`, use `pickDirectory()` to get the error. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)
