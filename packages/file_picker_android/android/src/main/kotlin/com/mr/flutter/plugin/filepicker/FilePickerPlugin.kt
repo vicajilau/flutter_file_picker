@@ -112,6 +112,7 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
     private var observer: LifeCycleObserver? = null
     private var activity: Activity? = null
     private var channel: MethodChannel? = null
+    private var eventChannel: EventChannel? = null
 
     override fun onMethodCall(call: MethodCall, rawResult: MethodChannel.Result) {
         if (this.activity == null) {
@@ -286,7 +287,8 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
         this.channel = MethodChannel(messenger, CHANNEL)
         channel?.setMethodCallHandler(this)
         delegate?.let { it ->
-            EventChannel(messenger, EVENT_CHANNEL).setStreamHandler(object :
+            this.eventChannel = EventChannel(messenger, EVENT_CHANNEL)
+            eventChannel?.setStreamHandler(object :
                 EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventSink?) {
                     it.setEventHandler(events)
@@ -314,11 +316,15 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
             lifecycle?.removeObserver(it)
             application?.unregisterActivityLifecycleCallbacks(it)
         }
+        this.observer = null
         this.lifecycle = null
+        eventChannel?.setStreamHandler(null)
+        this.eventChannel = null
         delegate?.setEventHandler(null)
         this.delegate = null
         channel?.setMethodCallHandler(null)
         this.channel = null
+        this.activity = null
         this.application = null
     }
 

@@ -174,8 +174,8 @@ class FilePickerDelegate(
             // An Int is the id of a save opened for streaming, see [SaveStreams].
             it.success(data?.takeIf { it is String || it is Int }
                 ?: (data as? ArrayList<*>)?.mapNotNull { (it as? FileInfo)?.toMap() })
-            clearPendingResult()
         }
+        clearPendingResult()
     }
 
     fun finishWithError(errorCode: String, errorMessage: String?) {
@@ -208,6 +208,7 @@ class FilePickerDelegate(
         bytes = null
         saveFileName = null
         saveMimeType = null
+        androidSafOptions = null
         saveAsStream = false
     }
 }

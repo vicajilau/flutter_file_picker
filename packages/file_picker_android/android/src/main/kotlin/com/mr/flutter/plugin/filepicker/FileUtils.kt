@@ -703,7 +703,7 @@ object FileUtils {
     private fun createImageFile(context: Context, compressFormat: Bitmap.CompressFormat): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ROOT).format(Date())
         val imageFileName = "IMAGE_" + timeStamp + "_"
-        val storageDir = context.cacheDir
+        val storageDir = File(context.cacheDir, "file_picker").apply { mkdirs() }
         return File.createTempFile(imageFileName, "." + getCompressFormatBasedFileExtension(compressFormat), storageDir)
     }
 
