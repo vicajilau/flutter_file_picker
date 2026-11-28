@@ -1,3 +1,8 @@
+## 4.4.0
+
+- Added `FilePickerPlatform.saveFileFromStream()`, which saves a `Stream<Uint8List>` chunk by chunk. 
+- Added `supportsSaveFileFromStream` to indicate whether `FilePickerPlatform.saveFileFromStream()` is supported.
+
 ## 4.3.0
 
 - Added `FilePickerPlatform.pickDirectory()`, which returns the `Uri` of the picked directory. By default it calls `getDirectoryPath()` and turns the path into a `file` URI, so existing implementations keep working.

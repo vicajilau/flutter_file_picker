@@ -309,6 +309,72 @@ class FilePickerAndroid extends FilePickerPlatform {
     }
   }
 
+  /// The maximum chunk size for [saveFileFromStream].
+  ///
+  /// This is 4 MiB. A chunk is held twice while it crosses the channel, once in
+  /// Dart and once on Android, so it stays small, and a bigger one means fewer
+  /// calls for a large file.
+  ///
+  /// A bigger chunk of the stream is cut in pieces, so none of them needs more
+  /// than this much memory on either side.
+  @visibleForTesting
+  static const int saveChunkSize = 4 * 1024 * 1024;
+
+  @override
+  bool get supportsSaveFileFromStream => true;
+
+  @override
+  Future<Uri?> saveFileFromStream({
+    required String fileName,
+    required Stream<Uint8List> data,
+    required String mimeType,
+    String? dialogTitle,
+    String? initialDirectory,
+    Function(FilePickerStatus)? onFileSaving,
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    onFileSaving?.call(FilePickerStatus.picking);
+    try {
+      final int? id = await methodChannel.invokeMethod<int>('openSaveStream', {
+        'fileName': fileName,
+        'fileType': mimeType,
+        'initialDirectory': initialDirectory,
+      });
+
+      // The user canceled the dialog.
+      if (id == null) return null;
+
+      try {
+        await for (final Uint8List chunk in data) {
+          for (var start = 0; start < chunk.length; start += saveChunkSize) {
+            final int end = start + saveChunkSize < chunk.length
+                ? start + saveChunkSize
+                : chunk.length;
+            await methodChannel.invokeMethod<void>('writeSaveStream', {
+              'id': id,
+              'bytes': Uint8List.sublistView(chunk, start, end),
+            });
+          }
+        }
+        final String? savedPath = await methodChannel.invokeMethod<String>(
+          'closeSaveStream',
+          {'id': id},
+        );
+        if (savedPath == null) return null;
+        return Uri.tryParse(savedPath) ?? Uri.file(savedPath);
+      } catch (_) {
+        // The document exists already, so a failed save must not leave a half
+        // written file behind.
+        await methodChannel.invokeMethod<void>('abortSaveStream', {'id': id});
+        rethrow;
+      }
+    } finally {
+      onFileSaving?.call(FilePickerStatus.done);
+    }
+  }
+
   /// Releases the given Storage Access Framework [uri] grant on Android.
   Future<void> releaseSAFGrant(String uri) async {
     await methodChannel.invokeMethod('releaseSafGrant', {'uri': uri});

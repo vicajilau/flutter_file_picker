@@ -224,9 +224,11 @@ abstract final class FilePicker {
   /// On web, [bytes] go into a `Blob`. Safari, for one, cannot build one of
   /// 2 GiB or more and closes the tab, which was tried on Safari 27.2.
   ///
-  /// Writing a large file properly needs a way to stream it into a file
-  /// handle, which `saveFile()` does not offer. Reading a large file in chunks
-  /// with [PlatformFile.readAsByteStream] is not affected.
+  /// To save a large file, use [saveFileFromStream] if
+  /// [supportsSaveFileFromStream] indicatesthat the current platform supports it.
+  /// [supportsSaveFileFromStream] is `true`, which writes it chunk by chunk.
+  /// Reading a large file in chunks with [PlatformFile.readAsByteStream] is not
+  /// affected.
   static Future<Uri?> saveFile({
     required String fileName,
     required Uint8List bytes,
@@ -251,6 +253,54 @@ abstract final class FilePicker {
     return FilePickerPlatform.instance.saveFile(
       fileName: fileName,
       bytes: bytes,
+      mimeType: mimeType,
+      dialogTitle: dialogTitle,
+      initialDirectory: initialDirectory,
+      onFileSaving: onFileSaving,
+      windowsOptions: windowsOptions,
+      linuxOptions: linuxOptions,
+      webOptions: webOptions,
+    );
+  }
+
+  /// Whether [saveFileFromStream] is supported on this platform.
+  static bool get supportsSaveFileFromStream =>
+      FilePickerPlatform.instance.supportsSaveFileFromStream;
+
+  /// Opens a save file dialog to let the user select a location and a file name,
+  /// and saves the chunks of [data] to it, using streamed writes.
+  /// memory.
+  ///
+  /// Unlike [saveFile], a file of any size can be saved, since only the chunk
+  /// being written is in memory. The chunks are written one at a time, and the
+  /// next one is only requested once the previous one is written.
+  ///
+  /// The [fileName] parameter specifies the default file name for saving, and
+  /// should include the file extension (e.g. `myFile.txt`).
+  /// The [mimeType] parameter specifies the MIME type of the file (e.g. `application/pdf`).
+  /// The [dialogTitle], if provided, will be used as the title for the save file dialog.
+  /// The [initialDirectory], if provided, will be used as the initial directory path for the save file dialog.
+  /// The [onFileSaving] callback, if provided, is triggered when the save dialog changes status.
+  ///
+  /// Returns the [Uri] of the saved file, or `null` if the user canceled the operation.
+  /// If [data] throws or the file cannot be written, the temporary file is
+  /// removed where the platform allows it, and the error is thrown.
+  ///
+  /// Throws an [UnsupportedError] if [supportsSaveFileFromStream] is `false`.
+  static Future<Uri?> saveFileFromStream({
+    required String fileName,
+    required Stream<Uint8List> data,
+    String mimeType = 'application/octet-stream',
+    String? dialogTitle,
+    String? initialDirectory,
+    Function(FilePickerStatus)? onFileSaving,
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) {
+    return FilePickerPlatform.instance.saveFileFromStream(
+      fileName: fileName,
+      data: data,
       mimeType: mimeType,
       dialogTitle: dialogTitle,
       initialDirectory: initialDirectory,

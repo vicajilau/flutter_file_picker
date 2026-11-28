@@ -1,3 +1,7 @@
+## 2.3.0
+
+- Added `saveFileFromStream()`, which writes a `Stream<Uint8List>` into the document the user picked, one chunk at a time. [#2358](https://github.com/vicajilau/flutter_file_picker/issues/2358)
+
 ## 2.2.2
 
 - Fixed a detached activity being kept in memory, because the plugin left its `EventChannel` handler and its references to the activity in place. [#2365](https://github.com/vicajilau/flutter_file_picker/pull/2365)

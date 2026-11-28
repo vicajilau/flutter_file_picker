@@ -1,3 +1,7 @@
+## 13.5.0
+
+- Added `FilePicker.saveFileFromStream()` and `FilePicker.supportsSaveFileFromStream`. It saves a `Stream<Uint8List>` chunk by chunk, so a large file no longer needs a copy of all of it in memory like `saveFile()` does. Added support for `FilePicker.saveFileFromStream()` on Android.
+
 ## 13.4.1
 
 - Requires `file_picker_linux` 2.0.5, which offers `.webp` images for `FileType.media`. [#2360](https://github.com/vicajilau/flutter_file_picker/pull/2360)
