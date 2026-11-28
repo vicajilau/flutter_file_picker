@@ -319,7 +319,7 @@ void main() {
       await expectLater(
         picker.pickFiles(type: FileType.media),
         throwsA(
-          isA<PlatformException>()
+          isA<FilePickerException>()
               .having((e) => e.code, 'code', 'load_failed')
               .having((e) => e.details, 'details', details),
         ),
@@ -542,7 +542,7 @@ void main() {
 
         await expectLater(
           picker.pickFileAndDirectoryPaths(),
-          throwsA(isA<PlatformException>()),
+          throwsA(isA<FilePickerException>()),
         );
       },
     );
@@ -595,7 +595,7 @@ void main() {
       shouldFail = true;
       await expectLater(
         picker.pickFile(onFileLoading: statuses.add),
-        throwsA(isA<PlatformException>()),
+        throwsA(isA<FilePickerException>()),
       );
       expect(statuses.last, FilePickerStatus.done);
     });
@@ -708,9 +708,51 @@ void main() {
           mimeType: 'text/plain',
           onFileSaving: statuses.add,
         ),
-        throwsA(isA<PlatformException>()),
+        throwsA(isA<FilePickerException>()),
       );
       expect(statuses.last, FilePickerStatus.done);
+    });
+
+    test('saveFile throws saveFailed for the native save error', () async {
+      messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+        throw PlatformException(code: 'save_file_error', message: 'no space');
+      });
+
+      await expectLater(
+        picker.saveFile(
+          fileName: 'a.txt',
+          bytes: Uint8List.fromList([1]),
+          mimeType: 'text/plain',
+        ),
+        throwsA(
+          isA<FilePickerException>()
+              .having(
+                (e) => e.errorCode,
+                'errorCode',
+                FilePickerErrorCode.saveFailed,
+              )
+              .having((e) => e.message, 'message', 'no space'),
+        ),
+      );
+    });
+
+    test('a second pick throws alreadyActive', () async {
+      messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+        throw PlatformException(code: 'multiple_request');
+      });
+
+      await expectLater(
+        picker.pickFiles(),
+        throwsA(
+          isA<FilePickerException>()
+              .having(
+                (e) => e.errorCode,
+                'errorCode',
+                FilePickerErrorCode.alreadyActive,
+              )
+              .having((e) => e.code, 'code', 'already_active'),
+        ),
+      );
     });
   });
 }

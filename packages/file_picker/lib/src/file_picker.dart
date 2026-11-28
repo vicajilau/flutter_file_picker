@@ -117,7 +117,7 @@ abstract final class FilePicker {
   /// grants access through, which is what the app can actually read. On the
   /// other platforms it is a `file` URI, so `uri.toFilePath()` gives the path.
   ///
-  /// Throws a `PlatformException` if the pick fails, so a failure is never
+  /// Throws a [FilePickerException] if the pick fails, so a failure is never
   /// mistaken for a cancel. Not supported on web.
   static Future<Uri?> pickDirectory({
     String? dialogTitle,
@@ -148,7 +148,7 @@ abstract final class FilePicker {
   /// allow for platform-specific configurations when configuring the directory picker.
   ///
   /// Returns a [String] containing the selected directory path, or `null` if canceled.
-  /// Throws a `PlatformException` if the pick fails, so a failure is never
+  /// Throws a [FilePickerException] if the pick fails, so a failure is never
   /// mistaken for a cancel.
   @Deprecated(
     'Use pickDirectory() instead, which returns a Uri. '

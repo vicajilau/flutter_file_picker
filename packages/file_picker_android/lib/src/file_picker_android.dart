@@ -124,14 +124,15 @@ class FilePickerAndroid extends FilePickerPlatform {
         _ => null,
       };
 
-      final result = await methodChannel
-          .invokeListMethod<Map<Object?, Object?>>(typeName, {
-            'allowMultipleSelection': allowMultiple,
-            'allowedExtensions': allowedExtensions,
-            'mimeTypes': mimeTypes,
-            'compressionQuality': compressionQuality,
-            'androidSafOptions': safOptionsMap,
-          });
+      final result = await FilePickerException.guard(
+        () => methodChannel.invokeListMethod<Map<Object?, Object?>>(typeName, {
+          'allowMultipleSelection': allowMultiple,
+          'allowedExtensions': allowedExtensions,
+          'mimeTypes': mimeTypes,
+          'compressionQuality': compressionQuality,
+          'androidSafOptions': safOptionsMap,
+        }),
+      );
 
       if (result == null) {
         return [];
@@ -156,7 +157,7 @@ class FilePickerAndroid extends FilePickerPlatform {
   /// only, the defaults of [AndroidSAFOptions].
   ///
   /// Unlike [getDirectoryPath], a failure is thrown as a
-  /// [PlatformException], and `null` only means the user canceled.
+  /// [FilePickerException], and `null` only means the user canceled.
   @override
   Future<Uri?> pickDirectory({
     String? dialogTitle,
@@ -172,9 +173,11 @@ class FilePickerAndroid extends FilePickerPlatform {
       _ => const AndroidSAFOptions(),
     };
 
-    final uri = await methodChannel.invokeMethod<String>('dir', {
-      'androidSafOptions': safOptions.toMap(),
-    });
+    final uri = await FilePickerException.guard(
+      () => methodChannel.invokeMethod<String>('dir', {
+        'androidSafOptions': safOptions.toMap(),
+      }),
+    );
 
     return uri == null ? null : Uri.parse(uri);
   }
@@ -194,11 +197,13 @@ class FilePickerAndroid extends FilePickerPlatform {
       _ => null,
     };
 
-    // A failure is thrown as a PlatformException, so the app can tell it
+    // A failure is thrown as a FilePickerException, so the app can tell it
     // apart from a cancel, which completes with null (#2286).
-    return methodChannel.invokeMethod<String>('dir', {
-      'androidSafOptions': safOptionsMap,
-    });
+    return FilePickerException.guard(
+      () => methodChannel.invokeMethod<String>('dir', {
+        'androidSafOptions': safOptionsMap,
+      }),
+    );
   }
 
   /// Recovers the files picked before Android destroyed the activity, or the
@@ -222,9 +227,11 @@ class FilePickerAndroid extends FilePickerPlatform {
 
     if (data['errorCode'] case final String code) {
       return LostFilePickerResult(
-        exception: PlatformException(
-          code: code,
-          message: data['errorMessage'] as String?,
+        exception: FilePickerException.fromPlatformException(
+          PlatformException(
+            code: code,
+            message: data['errorMessage'] as String?,
+          ),
         ),
       );
     }
@@ -273,13 +280,15 @@ class FilePickerAndroid extends FilePickerPlatform {
         );
       }
 
-      final String? savedPath = await methodChannel
-          .invokeMethod<String>("save", {
-            "fileName": fileName,
-            "fileType": mimeType,
-            "initialDirectory": initialDirectory,
-            "bytes": bytes,
-          });
+      final String? savedPath = await FilePickerException.guard(
+        () => methodChannel.invokeMethod<String>("save", {
+          "fileName": fileName,
+          "fileType": mimeType,
+          "initialDirectory": initialDirectory,
+          "bytes": bytes,
+        }),
+        isSave: true,
+      );
 
       if (savedPath == null) return null;
       return Uri.tryParse(savedPath) ?? Uri.file(savedPath);

@@ -162,7 +162,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
         pickedFiles = file != null ? [file] : [];
       }
       hasUserAborted = pickedFiles.isEmpty;
-    } on PlatformException catch (e) {
+    } on FilePickerException catch (e) {
       _logException('Pick failed: $e');
     } catch (e) {
       _logException(e.toString());
@@ -239,7 +239,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
         initialDirectory: _initialDirectoryController.text,
       );
       hasUserAborted = pickedFilesAndDirectories.isEmpty;
-    } on PlatformException catch (e) {
+    } on FilePickerException catch (e) {
       _logException('Pick failed: $e');
     } catch (e) {
       _logException(e.toString());
@@ -316,7 +316,7 @@ class _FilePickerDemoState extends State<FilePickerDemo> {
         _ => pickedDirectory.toString(),
       };
       hasUserAborted = pickedDirectory == null;
-    } on PlatformException catch (e) {
+    } on FilePickerException catch (e) {
       _logException('Picking a folder failed: $e');
     } catch (e) {
       _logException(e.toString());

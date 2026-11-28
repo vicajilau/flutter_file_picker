@@ -1,6 +1,5 @@
 import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 
 import 'file_picker_android.dart';
 
@@ -20,5 +19,5 @@ class LostFilePickerResult {
   final List<PlatformFile> files;
 
   /// The error raised while processing the picked files, if any.
-  final PlatformException? exception;
+  final FilePickerException? exception;
 }

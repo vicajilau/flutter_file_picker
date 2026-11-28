@@ -210,7 +210,7 @@ void main() {
       await expectLater(
         picker.getDirectoryPath(),
         throwsA(
-          isA<PlatformException>().having(
+          isA<FilePickerException>().having(
             (e) => e.code,
             'code',
             'already_active',
@@ -305,7 +305,7 @@ void main() {
         await expectLater(
           picker.pickDirectory(),
           throwsA(
-            isA<PlatformException>().having(
+            isA<FilePickerException>().having(
               (e) => e.code,
               'code',
               'already_active',
@@ -364,7 +364,7 @@ void main() {
           fail = true;
           await expectLater(
             picker.pickFile(onFileLoading: statuses.add),
-            throwsA(isA<PlatformException>()),
+            throwsA(isA<FilePickerException>()),
           );
           expect(statuses.last, FilePickerStatus.done);
         },
@@ -391,7 +391,7 @@ void main() {
           await pumpEventQueue();
           await expectLater(
             FilePickerAndroid().pickFiles(onFileLoading: (_) {}),
-            throwsA(isA<PlatformException>()),
+            throwsA(isA<FilePickerException>()),
           );
           sink!.success(true);
           await pumpEventQueue();
@@ -415,9 +415,73 @@ void main() {
             mimeType: 'text/plain',
             onFileSaving: statuses.add,
           ),
-          throwsA(isA<PlatformException>()),
+          throwsA(isA<FilePickerException>()),
         );
         expect(statuses.last, FilePickerStatus.done);
+      });
+
+      test('saveFile throws saveFailed for the native save error', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          throw PlatformException(
+            code: 'Error while saving file',
+            message: 'disk full',
+          );
+        });
+
+        await expectLater(
+          picker.saveFile(
+            fileName: 'a.txt',
+            bytes: Uint8List.fromList([1]),
+            mimeType: 'text/plain',
+          ),
+          throwsA(
+            isA<FilePickerException>()
+                .having(
+                  (e) => e.errorCode,
+                  'errorCode',
+                  FilePickerErrorCode.saveFailed,
+                )
+                .having((e) => e.message, 'message', 'disk full'),
+          ),
+        );
+      });
+
+      test('a save that ends unexpectedly throws saveFailed', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          throw PlatformException(code: 'unknown_result');
+        });
+
+        await expectLater(
+          picker.saveFile(
+            fileName: 'a.txt',
+            bytes: Uint8List.fromList([1]),
+            mimeType: 'text/plain',
+          ),
+          throwsA(
+            isA<FilePickerException>().having(
+              (e) => e.errorCode,
+              'errorCode',
+              FilePickerErrorCode.saveFailed,
+            ),
+          ),
+        );
+      });
+
+      test('a missing file explorer throws noPickerAvailable', () async {
+        messenger.setMockMethodCallHandler(picker.methodChannel, (call) async {
+          throw PlatformException(code: 'explorer_not_found');
+        });
+
+        await expectLater(
+          picker.pickFiles(),
+          throwsA(
+            isA<FilePickerException>().having(
+              (e) => e.errorCode,
+              'errorCode',
+              FilePickerErrorCode.noPickerAvailable,
+            ),
+          ),
+        );
       });
     });
 

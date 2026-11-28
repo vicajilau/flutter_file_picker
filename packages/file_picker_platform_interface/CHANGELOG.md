@@ -1,5 +1,6 @@
 ## 5.0.0
 
+- Added `FilePickerException` and `FilePickerErrorCode`, the error every platform throws when a pick, a save or a directory choice fails. `FilePickerException.guard()` turns the `PlatformException` of a method channel call into one, so implementations translate the codes of their native side in one place. `FilePickerException` extends `PlatformException` for now, and a later breaking release will stop doing so. [#2262](https://github.com/vicajilau/flutter_file_picker/issues/2262)
 - **BREAKING CHANGE**: `getDirectoryPath()` and `saveFile()` now take a `darwinOptions` parameter. Implementations must add it to their overrides. [#1861](https://github.com/vicajilau/flutter_file_picker/issues/1861)
 - **BREAKING CHANGE**: Removed `FilePickerPlatform.skipEntitlementsChecks()`. It is now only on `FilePickerDarwin`. [#2246](https://github.com/vicajilau/flutter_file_picker/pull/2246)
 - **BREAKING CHANGE**: Removed `MethodChannelFilePicker`, `FilePickerSaveUtils` and `IllegalCharacterInFileNameException`. Nothing in the plugin used them: `MethodChannelFilePicker` implemented no method, and no platform threw the exception. [#2224](https://github.com/vicajilau/flutter_file_picker/issues/2224)

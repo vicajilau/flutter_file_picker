@@ -84,17 +84,19 @@ class FilePickerWindows extends FilePickerPlatform {
     final resolved = _resolveWindowsOptions(windowsOptions);
 
     final fileNames =
-        await compute(
-          _callPickFiles,
-          OpenSaveFileArgs(
-            dialogTitle: dialogTitle,
-            initialDirectory: initialDirectory,
-            type: type,
-            allowedExtensions: allowedExtensions,
-            allowMultiple: allowMultiple,
-            lockParentWindow: resolved.lockParentWindow,
-            parentWindowHandle: resolved.parentWindowHandle,
-            acceptLabel: resolved.acceptLabel,
+        await _guard(
+          () => compute(
+            _callPickFiles,
+            OpenSaveFileArgs(
+              dialogTitle: dialogTitle,
+              initialDirectory: initialDirectory,
+              type: type,
+              allowedExtensions: allowedExtensions,
+              allowMultiple: allowMultiple,
+              lockParentWindow: resolved.lockParentWindow,
+              parentWindowHandle: resolved.parentWindowHandle,
+              acceptLabel: resolved.acceptLabel,
+            ),
           ),
         ) ??
         <String>[];
@@ -117,13 +119,34 @@ class FilePickerWindows extends FilePickerPlatform {
   }) async {
     final resolved = _resolveWindowsOptions(windowsOptions);
 
-    return compute(_getDirectoryPathIsolate, {
-      'dialogTitle': dialogTitle,
-      'initialDirectory': initialDirectory,
-      'lockParentWindow': resolved.lockParentWindow,
-      'parentWindowHandle': resolved.parentWindowHandle,
-      'acceptLabel': resolved.acceptLabel,
-    });
+    return _guard(
+      () => compute(_getDirectoryPathIsolate, {
+        'dialogTitle': dialogTitle,
+        'initialDirectory': initialDirectory,
+        'lockParentWindow': resolved.lockParentWindow,
+        'parentWindowHandle': resolved.parentWindowHandle,
+        'acceptLabel': resolved.acceptLabel,
+      }),
+    );
+  }
+
+  /// Runs [action], and throws a [FilePickerException] in place of the
+  /// [WindowsException] a dialog call ends with.
+  static Future<T> _guard<T>(
+    Future<T> Function() action, {
+    bool isSave = false,
+  }) async {
+    try {
+      return await action();
+    } on WindowsException catch (e) {
+      throw FilePickerException(
+        errorCode: isSave
+            ? FilePickerErrorCode.saveFailed
+            : FilePickerErrorCode.loadFailed,
+        message: e.toString(),
+        details: e.hr.code,
+      );
+    }
   }
 
   /// Runs [IFileOpenDialog] inside a separate isolate to prompt for a directory path.
@@ -216,17 +239,20 @@ class FilePickerWindows extends FilePickerPlatform {
   }) async {
     final resolved = _resolveWindowsOptions(windowsOptions);
 
-    final savedFilePath = await compute(
-      _callSaveFile,
-      OpenSaveFileArgs(
-        defaultFileName: fileName,
-        dialogTitle: dialogTitle,
-        initialDirectory: initialDirectory,
-        lockParentWindow: resolved.lockParentWindow,
-        confirmOverwrite: true,
-        parentWindowHandle: resolved.parentWindowHandle,
-        acceptLabel: resolved.acceptLabel,
+    final savedFilePath = await _guard(
+      () => compute(
+        _callSaveFile,
+        OpenSaveFileArgs(
+          defaultFileName: fileName,
+          dialogTitle: dialogTitle,
+          initialDirectory: initialDirectory,
+          lockParentWindow: resolved.lockParentWindow,
+          confirmOverwrite: true,
+          parentWindowHandle: resolved.parentWindowHandle,
+          acceptLabel: resolved.acceptLabel,
+        ),
       ),
+      isSave: true,
     );
     if (savedFilePath != null) {
       final file = File(savedFilePath);
