@@ -1,3 +1,9 @@
+## 2.2.2
+
+- The plugin now removes its `EventChannel` handler and drops its references to the activity when it detaches, so a detached activity is no longer kept in memory. [#2365](https://github.com/vicajilau/flutter_file_picker/pull/2365)
+- Fixed `clearTemporaryFiles()` leaving the temporary files of compressed images behind. [#2365](https://github.com/vicajilau/flutter_file_picker/pull/2365)
+- The options of a finished request, including `AndroidSAFOptions`, are no longer kept until the next one. [#2365](https://github.com/vicajilau/flutter_file_picker/pull/2365)
+
 ## 2.2.1
 
 - `getDirectoryPath()` now logs every failure it turns into `null`, with its code and message, instead of only `unknown_path`, so a refused directory pick leaves a trace. It still returns `null`, use `pickDirectory()` to get the error. [#2286](https://github.com/vicajilau/flutter_file_picker/issues/2286)

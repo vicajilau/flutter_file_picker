@@ -11,11 +11,8 @@ import com.mr.flutter.plugin.filepicker.FileUtils.processFiles
 import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry.ActivityResultListener
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class FilePickerDelegate(
@@ -33,8 +30,6 @@ class FilePickerDelegate(
         }
     }
 
-    internal val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
     var isMultipleSelection = false
     var type: String? = null
     var compressionQuality = 0
@@ -47,12 +42,6 @@ class FilePickerDelegate(
 
     fun setEventHandler(eventSink: EventSink?) {
         this.eventSink = eventSink
-    }
-
-    fun dispose() {
-        ioScope.cancel()
-        eventSink = null
-        clearPendingResult()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
@@ -85,27 +74,19 @@ class FilePickerDelegate(
     }
 
     private fun saveFile(uri: Uri) {
-        val bytesToWrite = bytes
-        val fileNameToSave = saveFileName
-        val mimeTypeToSave = saveMimeType
-        bytes = null
-        saveFileName = null
-        saveMimeType = null
         dispatchEventStatus(true)
-        ioScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                val savedUri = FileUtils.writeBytesData(context = activity, uri, bytesToWrite) ?: uri
+                val savedUri = FileUtils.writeBytesData(context = activity, uri, bytes) ?: uri
                 val renamedUri = maybeRenameGenericMimeDuplicate(
                     context = activity,
                     uri = savedUri,
-                    originalFileName = fileNameToSave,
-                    mimeType = mimeTypeToSave
+                    originalFileName = saveFileName,
+                    mimeType = saveMimeType
                 )
                 Handler(Looper.getMainLooper()).post {
                     finishWithSuccess(renamedUri.path)
                 }
-            } catch (e: CancellationException) {
-                throw e
             } catch (e: Exception) {
                 // Not only IOException: a SecurityException from the provider
                 // would otherwise escape the coroutine and crash the app.

@@ -248,7 +248,7 @@ class FilePickerPlugin : MethodCallHandler, FlutterPlugin,
         this.lifecycle = null
         eventChannel?.setStreamHandler(null)
         this.eventChannel = null
-        delegate?.dispose()
+        delegate?.setEventHandler(null)
         this.delegate = null
         channel?.setMethodCallHandler(null)
         this.channel = null
